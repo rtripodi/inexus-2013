@@ -5,23 +5,16 @@ int foreward[5] = {1,2,3,4,5};
 /*
 You must run setupSerialComms() for anything to work!
 */
-Robot::Robot()
-{	
+Robot::Robot(Motor * inMotors)
+{
+  motors = inMotors;
   wheelEnc.init(8,9,11,10);
   lastError = 0;
   errorSum = 0;
 }
 
-void Robot::setupSerialComms()
-{
-  const byte establishBaudRate = 0xAA;
-  //Set up the serial connections
-  Serial.begin(9600);
-
-  //initialise motors and servos  
-  MotorControl.begin(38400);
-  MotorControl.write(establishBaudRate);
-}
+//stup incase we ever need setup code
+void Robot::setup(){}
 
 void Robot::sdebug()
 {
@@ -37,74 +30,6 @@ void Robot::sdebug()
     Serial.print("\t");
   }
   Serial.println();
-} 
-
-//Adjust the speed of both motors
-//Positive speed goes forwards, negative goes backwards
-void Robot::bothMotorSpd(int motorSpeed, int error)
-{
-//  int motorOne, motorTwo;
-//    motorOne = abs(wheelEnc.getCountsM1());
-//    motorTwo = abs(wheelEnc.getCountsM2());
-//  error = constrain(abs(motorOne)-abs(motorTwo),-5,5);
-    error = 0;
-    if(motorSpeed < 0)
-    error = - error;
-	
-    // If we stop, we need to remove the results. 76564x
-  if (motorSpeed == 0)
-  {
-    lastError = 0;
-    errorSum = 0;
-    error = 0;
-  }
-	
-  leftMotorSpd(motorSpeed - error);
-  rightMotorSpd(motorSpeed + error);
-}
-
-//Positive for forward, negative for backwards.
-//motorSpeed will be constrained between 0 and 127
-void Robot::leftMotorSpd(int motorSpeed)
-{
-  const byte leftMotorAntiClockwise = 0x8C,
-             leftMotorClockwise = 0x8E;
-
-  if(motorSpeed >= 0)
-  {
-    MotorControl.write(leftMotorAntiClockwise);
-    MotorControl.write(limit_0_to_127(motorSpeed));
-  }
-  else
-  {
-    motorSpeed = - motorSpeed;
-    MotorControl.write(leftMotorClockwise);
-    MotorControl.write(limit_0_to_127(motorSpeed));
-  }
-}
-
-//Positive for forward, negative for backwards.
-//motorSpeed will be constrained between 0 and 127
-void Robot::rightMotorSpd(int motorSpeed)
-{
-  const byte rightMotorAntiClockwise = 0x8A,
-             rightMotorClockwise = 0x88;
-			 
-  if(motorSpeed >= 0)
-  {
-    MotorControl.write(rightMotorClockwise);
-    MotorControl.write(limit_0_to_127(motorSpeed));
-  }
-  else
-  {
-    motorSpeed = - motorSpeed;
-    MotorControl.write(rightMotorAntiClockwise);
-    MotorControl.write(limit_0_to_127(motorSpeed));
-  }
-}
-
-void Robot::motorStop(){
-  bothMotorSpd(0,0);
 }
 
 void Robot::resetEncoders()
@@ -160,21 +85,21 @@ void Robot::moveTicks(int ticks, int motorSpeed)
     error = constrain(abs(motorOne)-abs(motorTwo),-5,5);
     if((error > 1) && (abs(motorTwo) < abs(ticks)))
     {
-      leftMotorSpd(0);
-      rightMotorSpd(motorSpeed);
+      motors->left(0);
+      motors->right(motorSpeed);
       sdebug();
   Serial.println(error);
     }
     else if((error < -1) && (abs(motorOne) < abs(ticks)))
     {
-      rightMotorSpd(0);
-      leftMotorSpd(motorSpeed);
+      motors->right(0);
+      motors->left(motorSpeed);
       sdebug();
   Serial.println(error);
      }
    else
     {
-      bothMotorSpd(motorSpeed, error);
+      motors->both(motorSpeed, error);
       sdebug();
   Serial.println(error);
     }  
@@ -190,7 +115,7 @@ void Robot::moveTicks(int ticks, int motorSpeed)
 // moveTicks moves the number of ticks given.
 // A positive ticks number will go forward, a negative ticks number 
 // will go backwards.
-// We do not stop after hitting the number of ticks. Call motorStop().
+// We do not stop after hitting the number of ticks. Call motors->stop().
 //void Robot::moveTicks(int ticks, int motorSpeed)
 //{
 //  int error, motorOne, motorTwo;
@@ -211,25 +136,25 @@ void Robot::moveTicks(int ticks, int motorSpeed)
 //  {
 //       if((abs(wheelEnc.getCountsM1())  > abs(ticks)) || (abs(wheelEnc.getCountsM2())  > abs(ticks)))
 //      {
-//        motorStop();
+//        motors->stop();
 //      break;
 //      }   
 //    //Serial.println(ticks);
 //    motorOne = abs(wheelEnc.getCountsM1());
 //    motorTwo = abs(wheelEnc.getCountsM2());
 //    error = errorTickAdjustment();
-//    bothMotorSpd(motorSpeed, error);
+//    motors->both(motorSpeed, error);
 //    //sdebug();
 //    if((wheelEnc.getCountsM1()  > ticks) || (wheelEnc.getCountsM2()  > ticks))
 //      {
-//        motorStop();
+//        motors->stop();
 //      break;
 //      }  
 //    
 //    //delayMicroseconds(500);
 //   }
 //    delay(500);
-//    motorStop();
+//    motors->stop();
 //    sdebug();
 //    Serial.println("corection");    
 //    Serial.print(abs(wheelEnc.getCountsM1()));
@@ -241,8 +166,8 @@ void Robot::moveTicks(int ticks, int motorSpeed)
 //
 //          while(abs(ticks) > abs(wheelEnc.getCountsM1()))
 //          {
-//             rightMotorSpd(0);
-//             leftMotorSpd(motorSpeed);  
+//             motors->right(0);
+//             motors->left(motorSpeed);  
 //             delayMicroseconds(500);
 //             Serial.print("one");
 //             Serial.print("\t");
@@ -253,8 +178,8 @@ void Robot::moveTicks(int ticks, int motorSpeed)
 //
 //          while(abs(ticks) > abs(wheelEnc.getCountsM2())) 
 //           {
-//             leftMotorSpd(0);
-//             rightMotorSpd(motorSpeed);
+//             motors->left(0);
+//             motors->right(motorSpeed);
 //             delayMicroseconds(500);
 //             Serial.print("two");
 //             Serial.print("\t");
@@ -290,22 +215,22 @@ void Robot::rotateTicks(int ticks, int motorSpeed)
     error = errorTickAdjustment();
     if(error < 0)
     {
-      leftMotorSpd( - motorSpeed);
-      rightMotorSpd(lowSpeed);
+      motors->left( - motorSpeed);
+      motors->right(lowSpeed);
     }
     else if(error > 0)
     {
-      rightMotorSpd(motorSpeed);
-      leftMotorSpd(- lowSpeed);
+      motors->right(motorSpeed);
+      motors->left(- lowSpeed);
     }
     else
     {
-      rightMotorSpd(motorSpeed);
-      leftMotorSpd( - motorSpeed);
+      motors->right(motorSpeed);
+      motors->left( - motorSpeed);
     }
     delay(1);   
   } while((motorTwo < abs(ticks)) || (motorOne < abs(ticks)));
-  motorStop();
+  motors->stop();
   resetEncoders();
 }
 
@@ -345,12 +270,3 @@ int Robot::errorTickAdjustment()
 // of wheels based on the position of the sensors over the line.
 // It will be between -15 and 15 *****REDACTED*******
 
-// Limits val between 0 and 127.
-int Robot::limit_0_to_127(int val)
-{
-  if (val < 0)
-    val = 0;
-  else if (val > 127)
-    val = 127;
-  return val;
-}

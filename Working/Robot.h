@@ -14,8 +14,8 @@
 #endif
 
 #include <PololuWheelEncoders.h>
+#include "Motor.h"
 
-#define MotorControl Serial1
 /*
 #define TURN_SPEED  40  
 #define STRAIGHT_SPEED 30  
@@ -27,17 +27,11 @@ class Robot
   public:
 /*****************************************************************************/
 /*  Initialisation                                                                   */
-    Robot();
-    void setupSerialComms();
+    Robot(Motor * inMotors);
+    void setup();
     void sdebug();
 /*****************************************************************************/
 /*****************************************************************************/	
-    
-  /* Direct motor control */
-    void bothMotorSpd(int motorSpeed, int error);//Adjust the speed of both motors, positive speed goes forwards, negative goes backwards
-    void leftMotorSpd(int motorSpeed);//Positive for forward, negative for backwards.
-    void rightMotorSpd(int motorSpeed);//Positive for forward, negative for backwards.
-    void motorStop();
     
   /* Wheel encoders */
     void resetEncoders();
@@ -56,11 +50,7 @@ class Robot
     int errorSum;
     
     PololuWheelEncoders wheelEnc;
-    
-/* Serial comms supporting functions */
-    int limit_0_to_127(int val);// Limits val between 0 and 127.
-    
-  protected:
+    Motor *motors;
 };
 
 #endif

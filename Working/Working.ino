@@ -1,14 +1,16 @@
 #include <PololuWheelEncoders.h>
 #include "Robot.h"
 
-Robot robot; 
+Motor motors;
+Robot robot(&motors);
 const int LED_PIN = 13;
 //int foreward[5] = {1,2,3,4,5};
 
 void setup()
 {
-  pinMode(LED_PIN, OUTPUT); 
-  robot.setupSerialComms();
+  pinMode(LED_PIN, OUTPUT);
+  motors.setup();
+  robot.setup();
 }
 
 void loop()
@@ -28,26 +30,26 @@ void loop()
   
   
 //  robot.sdebug();
-//  robot.bothMotorSpd(80,0);
+//  motors.both(80,0);
 //  delay(500);
-//  robot.motorStop();
+//  motorstop();
 /*  robot.leftMotorSpd(80);
   delay(500);
-  robot.motorStop();
+  motorstop();
   robot.rightMotorSpd(80);
   delay(500);
-  robot.motorStop();
+  motorstop();
   robot.rightMotorSpd(-80);
   delay(500);
-  robot.motorStop();
+  motorstop();
   robot.leftMotorSpd(-80);
   delay(500);
-  robot.motorStop();
-  robot.bothMotorSpd(-80,0);
+  motorstop();
+  motors.both(-80,0);
   delay(500);
-  robot.motorStop();
+  motorstop();
 */
-//  robot.bothMotorSpd(0,0);
+//  motors.both(0,0);
   robot.resetEncoders();
 //  robot.sdebug();
   delay(1000);
@@ -57,7 +59,7 @@ void loop()
   robot.moveTicks(120,50);
 //  robot.sdebug();
   delay(1000);
-  robot.bothMotorSpd(0,0);
+  motors.both(0,0);
 //  robot.sdebug();
   delay(1000);
 
@@ -71,7 +73,7 @@ void loop()
   robot.moveTicks(-120,50);
 //  robot.sdebug();
   delay(1000);
-  robot.bothMotorSpd(0,0);
+  motors.both(0,0);
 //  robot.sdebug();  
   delay(1000);
 
@@ -86,7 +88,7 @@ void loop()
   robot.moveTicks(10,-50);
   robot.sdebug();
   delay(1000);
-  robot.bothMotorSpd(0,0);
+  motors.both(0,0);
   robot.sdebug();  
   delay(1000);
 
@@ -101,7 +103,7 @@ void loop()
   robot.moveTicks(-10,-50);
 //  robot.sdebug();
   delay(1000);
-  robot.bothMotorSpd(0,0);
+  motors.both(0,0);
 //  robot.sdebug();  
   delay(1000);
 
@@ -109,29 +111,29 @@ void loop()
 
   robot.rotateTicks(90,80);
   delay(500);
-  robot.bothMotorSpd(0,0); 
+  motors.both(0,0); 
   delay(1000);
  
  
   robot.rotateTicks(90,-80);
   delay(500);
-  robot.bothMotorSpd(0,0); 
+  motors.both(0,0); 
   delay(1000);
  
  
   robot.rotateTicks(-90,80);
   delay(500);
-  robot.bothMotorSpd(0,0); 
+  motors.both(0,0); 
   delay(1000);
  
  
   robot.rotateTicks(-90,-80);
   delay(500);
-  robot.bothMotorSpd(0,0);
+  motors.both(0,0);
   delay(1000);
   
 */  
-  robot.bothMotorSpd(0,0);
+  motors.both(0,0);
 }
 
 

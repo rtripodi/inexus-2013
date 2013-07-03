@@ -6,71 +6,80 @@
 #include "Arduino.h"
 #include "Motor.h"
 
- Motor::Motor()
+Motor::Motor(){}
+
+void Motor::setup()
 {
-Serial1.begin(38400);
-  Serial1.write(0xAA);
+  const byte establishBaudRate = 0xAA;
+  //Set up the serial connections
+  Serial.begin(9600);
+
+  //initialise motors and servos  
+  MotorControl.begin(38400);
+  MotorControl.write(establishBaudRate);
 }
-  
-/* MOTOR DRIVE CONFIG */
-void Motor::leftDrive(int i)
+
+//Adjust the speed of both motors
+//Positive speed goes forwards, negative goes backwards
+void Motor::both(int motorSpeed, int error)
 {
-  if ( i >= 0 ){
-    if ( i > 127 ){
-      i = 127;  
-    }
-    Serial1.write(0x88);
-    Serial1.write(i);
+  if(motorSpeed < 0) { error = - error; }
+
+  left(motorSpeed - error);
+  right(motorSpeed + error);
+}
+
+//Positive for forward, negative for backwards.
+//motorSpeed will be constrained between 0 and 127
+void Motor::left(int motorSpeed)
+{
+  const byte leftMotorAntiClockwise = 0x8C,
+             leftMotorClockwise = 0x8E;
+
+  if(motorSpeed >= 0)
+  {
+    MotorControl.write(leftMotorAntiClockwise);
+    MotorControl.write(limit_0_to_127(motorSpeed));
   }
-  else if (i < 0){
-    if ( i < -127 ){
-      i = -127;  
-    }
-    i = i * (-1);
-    Serial1.write(0x8A);
-    Serial1.write(i);
+  else
+  {
+    motorSpeed = - motorSpeed;
+    MotorControl.write(leftMotorClockwise);
+    MotorControl.write(limit_0_to_127(motorSpeed));
   }
 }
 
-void Motor::rightDrive(int i)
+//Positive for forward, negative for backwards.
+//motorSpeed will be constrained between 0 and 127
+void Motor::right(int motorSpeed)
 {
-  if ( i >= 0 ){
-    if ( i > 127 ){
-      i = 127;  
-    }
-    Serial1.write(0x8C);
-    Serial1.write(i);
+  const byte rightMotorAntiClockwise = 0x8A,
+             rightMotorClockwise = 0x88;
+			 
+  if(motorSpeed >= 0)
+  {
+    MotorControl.write(rightMotorClockwise);
+    MotorControl.write(limit_0_to_127(motorSpeed));
   }
-  else if (i < 0){
-    if ( i < -127 ){
-      i = -127;  
-    }
-    i = i * (-1);
-    Serial1.write(0x8E);
-    Serial1.write(i);
+  else
+  {
+    motorSpeed = - motorSpeed;
+    MotorControl.write(rightMotorAntiClockwise);
+    MotorControl.write(limit_0_to_127(motorSpeed));
   }
 }
 
-void Motor::bothDrive(int i)
+void Motor::stop(){
+  both(0,0);
+}
+
+// Limits val between 0 and 127.
+int Motor::limit_0_to_127(int val)
 {
-  if ( i >= 0 ){
-    if ( i > 127 ){
-      i = 127;  
-    }
-    Serial1.write(0x88);
-    Serial1.write(i);
-    Serial1.write(0x8C);
-    Serial1.write(i);
-  }
-  else if (i < 0){
-    if ( i < -127 ){
-      i = -127;  
-    }
-    i = i * (-1);
-    Serial1.write(0x8A);
-    Serial1.write(i);
-    Serial1.write(0x8E);
-    Serial1.write(i);
-  }
+  if (val < 0)
+    val = 0;
+  else if (val > 127)
+    val = 127;
+  return val;
 }
 
