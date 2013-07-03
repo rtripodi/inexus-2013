@@ -1,26 +1,33 @@
 /*
   Motor.h - Library for controlling the Polou Motor Controller.
   Created by Alex Ahern, May 7, 2013.
+  Updated by Toby Scantlebury, July 3, 2013.
 */
 
-#include "Arduino.h"
+#if defined(ARDUINO) && ARDUINO >= 100
+  #include "Arduino.h"
+#else
+  #include "WProgram.h"
+#endif
+
 #include "Motor.h"
 
 Motor::Motor(){}
 
+//Init connection to motor controller.
+//Run in setup() function.
 void Motor::setup()
 {
   const byte establishBaudRate = 0xAA;
-  //Set up the serial connections
-  Serial.begin(9600);
 
-  //initialise motors and servos  
+  //initialise motor controller
   MotorControl.begin(38400);
   MotorControl.write(establishBaudRate);
 }
 
-//Adjust the speed of both motors
-//Positive speed goes forwards, negative goes backwards
+//Adjust speed of both motors.
+//Positive for forward, negative for backwards. 
+//motorSpeed will be constrained between 0 and 127.
 void Motor::both(int motorSpeed, int error)
 {
   if(motorSpeed < 0) { error = - error; }
@@ -69,17 +76,16 @@ void Motor::right(int motorSpeed)
   }
 }
 
-void Motor::stop(){
-  both(0,0);
-}
+//Stops both motors
+void Motor::stop() { both(0,0); }
 
-// Limits val between 0 and 127.
+//Returns val if it is between 0 and 127.
+//If less than 0, it returns 0.
+//If greater than 127, it returns 127.
 int Motor::limit_0_to_127(int val)
 {
-  if (val < 0)
-    val = 0;
-  else if (val > 127)
-    val = 127;
+  if(val < 0  ) { val = 0; }
+  else if(val > 127) { val = 127; }
   return val;
 }
 

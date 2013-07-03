@@ -1,5 +1,4 @@
 /*
- * TODO: Fix random moveticks issue.
  * The Robot class is here to represent what a robot can do.
  * The robot code is based on two wheels/encoders and a motor controller.
  */

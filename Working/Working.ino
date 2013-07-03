@@ -9,6 +9,7 @@ const int LED_PIN = 13;
 void setup()
 {
   pinMode(LED_PIN, OUTPUT);
+  Serial.begin(9600);
   motors.setup();
   robot.setup();
 }
