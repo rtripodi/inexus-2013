@@ -17,7 +17,7 @@
 #include "Robot.h"
 #include <Servo.h>
 PololuQTRSensorsRC lineSensors = PololuQTRSensorsRC(QTR_SENSOR_PINS_LIST, QTR_NUM_PINS, QTR_TIMEOUT, QTR_EMITTER_PIN);
-//alex try
+//alex try.  Here you go Alex.
 Motor motors;
 Robot robot(&motors);
 const int LED_PIN = 13;
