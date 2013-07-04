@@ -37,24 +37,3 @@ class Claw
 };
 
 Claw myClaw;
-
-
-void setup() 
-{
-  myClaw.setup(10, 9);
-  
-   int count = 0;
- 
- while(count < 1) 
-{ 
-  myClaw.shut();
-  delay(1000);
-  myClaw.close();
-  delay(1000);
-  myClaw.open();
-  delay(1000);
-  count++;
-} 
-} 
- 
-void loop() {}
