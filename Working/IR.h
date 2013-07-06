@@ -10,18 +10,37 @@
 class IR
 {
 	public:
-		//  Init connection to IR sensor
-		void setup();
-
-		//  Read value from medium ranged IR sensor and returns the distance in mm
-		int mediumScan(int inPin);
+		enum Range {shortRange, mediumRange, longRange};//Three types of IR sensor we use
 		
-		//  Read value from long ranged IR sensor and returns the distance in mm
-		int longScan(int inPin);
+		IR(int irPin, Range irType);
+	
+		//Placeholder incase initialisation is needed
+		void setup();
+		
+		//Returns distance read by sensor in mm
+		//Returns -1 on error
+		int getDist();
 
 	private:
+		int pin; //Analog pin IR sensor is attached to
+		Range type; //Type of sensor for determining function to use to convert readings to mm
+		
 		//  Read multiple raw values from IR sensor and returns the mean
-		int read(int inPin)
-}
+		int read();
+		
+		//Convert reading to distance in mm for 4-30cm sensor
+		//Returns -1 on error
+		int shortScan(int reading);
+		
+		//UNIMPLEMENTED
+		//Convert reading to distance in mm for 10-80cm sensor
+		//Returns -1 on error
+		int mediumScan(int reading);
+		
+		//UNIMPLEMENTED
+		//Convert reading to distance in mm for 20-150cm sensor
+		//Returns -1 on errorr
+		int longScan(int reading);
+};
 
 #endif

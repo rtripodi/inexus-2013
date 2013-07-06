@@ -8,59 +8,79 @@
 
 #define IR_ITERATIONS 5
 
-IR::IR(){}
-
-//  Init connection to IR sensor
-void IR::setup()
+IR::IR(int irPin, Range irType)
 {
-	Serial.begin(9600);
+	pin = irPin;
+	type = irType;
 }
 
-//  Read value from medium ranged IR sensor and returns the distance in mm
-//  TODO: check the effect on values outside 79-478 raw value range
-int IR::mediumScan(int inPin);
-(
-	int rawReading = read(inPin);
-	
-	int millimetres = 0;	//  Stub value for default
-	if(inRaw > 352 && inRaw <= 478)
-		millimetres = (int)(-0.1586*inRaw + 125.66);
-	else if(inRaw > 224 && inRaw <= 352)
-		millimetres = (int)(-0.3093*inRaw + 177.79);
-	else if(inRaw > 110 && inRaw <= 224)
-		millimetres = (int)(-0.855*inRaw + 298.04);
-	else if(inRaw >= 79 && inRaw <= 110)
-		millimetres = (int)(-2.7738*inRaw + 513.8);
-	else if(inRaw < 79)
-		distanceInCm = 31;	//  Stub value for out of range
-	return millimetres;
-}
+//No init necessary, placeholder function
+void IR::setup(){}
 
-//  Read value from long ranged IR sensor and returns the distance in mm
-//  TODO: actually implement
-int IR::longScan(int inPin);
-(
-	int rawReading;
-	rawReading = read(inPin);
-
-	int millimetres = 0;	//  Stub value for default
-	return millimetres;	//  Stub value
+//Returns distance read by sensor in mm
+//Returns -1 on error
+int IR::getDist()
+{
+	int reading = read();
+	int distInMillis = -1;
+	switch(type)
+	{
+		case shortRange:
+			distInMillis = shortScan(reading);
+			break;
+		case mediumRange:
+			distInMillis = mediumScan(reading);
+			break;
+		case longRange:
+			distInMillis = longScan(reading);
+			break;
+	}
+	return distInMillis;
 }
 
 //  Read multiple raw values from IR sensor and returns the mean
 //  TODO:	check if outputValue is needed
 //			implement outlier diregarding functionality
-int IR::read(int inPin)
+int IR::read()
 {
-	int mean,
-		sum = 0;
+	int sum = 0;
 	
 	for (int ii = 0; ii < IR_ITERATIONS; ii++)
 	{
 		sum += analogRead(pin);
 	}
 	
-	mean = (int)((float)sum / (float)IR_ITERATIONS + 0.5);	//  TODO: Check if values can be negative
+	int mean = (int)((float)sum / (float)IR_ITERATIONS + 0.5);	//  TODO: Check if values can be negative
 	
 	return mean;
 }
+
+//Convert reading to distance in mm for 4-30cm sensor
+//Returns -1 on error
+//  TODO: check the effect on values outside 79-478 raw value range
+int IR::shortScan(int reading)
+{
+	int millimetres = -1;	//Init to error value
+	float rawReading = (float) reading;
+	if(reading > 352 && reading <= 478)
+		millimetres = (int)(-0.1586*rawReading + 125.66);
+	else if(reading > 224 && reading <= 352)
+		millimetres = (int)(-0.3093*rawReading + 177.79);
+	else if(reading > 110 && reading <= 224)
+		millimetres = (int)(-0.855*rawReading + 298.04);
+	else if(reading >= 79 && reading <= 110)
+		millimetres = (int)(-2.7738*rawReading + 513.8);
+	else if(reading < 79)
+		millimetres = 310;	//  Stub value for out of range
+	return millimetres;
+}
+
+//UNIMPLEMENTED
+//Convert reading to distance in mm for 10-80cm sensor
+//Returns -1 on error
+int IR::mediumScan(int reading) { return -1; }
+
+//UNIMPLEMENTED
+//Convert reading to distance in mm for 20-150cm sensor
+//Returns -1 on error
+int IR::longScan(int reading) { return -1; }
