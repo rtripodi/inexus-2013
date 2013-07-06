@@ -1,9 +1,3 @@
-#if defined(ARDUINO) && ARDUINO >= 100
-  #include "Arduino.h"
-#else
-  #include "WProgram.h"
-#endif
-
 #include "IR.h"
 
 #define IR_ITERATIONS 5
