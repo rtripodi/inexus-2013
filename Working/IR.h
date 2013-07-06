@@ -12,17 +12,16 @@ class IR
 	public:
 		//  Init connection to IR sensor
 		void setup();
+
+		//  Read value from medium ranged IR sensor and returns the distance in mm
+		int mediumScan(int inPin);
 		
-		//  Read value from IR sensor
-		//  Outputs distance in mm
-		int read();
-	
+		//  Read value from long ranged IR sensor and returns the distance in mm
+		int longScan(int inPin);
+
 	private:
-		//  Converts raw reading from medium range IR into mm
-		int mediumIRtoMillimetres(int inRaw);
-		
-		//  Converts raw reading from far range IR into mm
-		int farIRtoMillimetres(int inRaw);
+		//  Read multiple raw values from IR sensor and returns the mean
+		int read(int inPin)
 }
 
 #endif

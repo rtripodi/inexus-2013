@@ -6,8 +6,7 @@
 
 #include "IR.h"
 
-#define IR_IN_PIN A0	//  TODO: Stub value
-#define IR_OUT_PIN 9	//  TODO: Stub value, not needed?
+#define IR_ITERATIONS 5
 
 IR::IR(){}
 
@@ -17,24 +16,12 @@ void IR::setup()
 	Serial.begin(9600);
 }
 
-//  Read value from IR sensor
-//  Outputs distance in mm
-//  TODO:	check if outputValue is needed
-//			allow for different range IR sensors
-int IR::read()
-{
-	int sensorValue = 0;
-//	int outputValue = 0;
-	sensorValue = analogRead(IR_IN_PIN);
-//	outputValue = map(sensorValue, 0, 1023, 0, 255);
-//	analogWrite(IR_OUT_PIN, outputValue);
-	return rawIRtoMillimetres(sensorValue);	//  Use sensorValue?
-}
-
-//  Converts raw reading from medium range IR into mm
+//  Read value from medium ranged IR sensor and returns the distance in mm
 //  TODO: check the effect on values outside 79-478 raw value range
-int IR::mediumIRtoMillimetres(int inRaw)
+int IR::mediumScan(int inPin);
 (
+	int rawReading = read(inPin);
+	
 	int millimetres = 0;	//  Stub value for default
 	if(inRaw > 352 && inRaw <= 478)
 		millimetres = (int)(-0.1586*inRaw + 125.66);
@@ -49,9 +36,31 @@ int IR::mediumIRtoMillimetres(int inRaw)
 	return millimetres;
 }
 
-//  Converts raw reading from far range IR into mm
+//  Read value from long ranged IR sensor and returns the distance in mm
 //  TODO: actually implement
-int IR::farIRtoMillimetres(int inRaw)
+int IR::longScan(int inPin);
 (
-	return inRaw;	//  Stub value
+	int rawReading;
+	rawReading = read(inPin);
+
+	int millimetres = 0;	//  Stub value for default
+	return millimetres;	//  Stub value
+}
+
+//  Read multiple raw values from IR sensor and returns the mean
+//  TODO:	check if outputValue is needed
+//			implement outlier diregarding functionality
+int IR::read(int inPin)
+{
+	int mean,
+		sum = 0;
+	
+	for (int ii = 0; ii < IR_ITERATIONS; ii++)
+	{
+		sum += analogRead(pin);
+	}
+	
+	mean = (int)((float)sum / (float)IR_ITERATIONS + 0.5);	//  TODO: Check if values can be negative
+	
+	return mean;
 }
