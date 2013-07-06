@@ -1,6 +1,8 @@
 #ifndef Claw_h
 #define Claw_h
 
+#include <servo.h>
+
 #if defined(ARDUINO) && ARDUINO >= 100
   #include "Arduino.h"
 #else
@@ -10,6 +12,8 @@
 class Claw
 {
 	public:
+		Claw(int leftServoPin, int rightServoPin);
+	
 		//  Init connection to left and right servos
 		void setup();
 		
@@ -21,6 +25,10 @@ class Claw
 		
 		//  Shuts claw completely
 		void shut();
+		
+	private:
+		int leftPin, rightPin;
+		Servo leftServo, rightServo;
 };
 
 #endif
