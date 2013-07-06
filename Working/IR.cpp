@@ -44,7 +44,7 @@ int IR::read()
 		sum += analogRead(pin);
 	}
 	
-	int mean = (int)((float)sum / (float)IR_ITERATIONS + 0.5);	//  TODO: Check if values can be negative
+	int mean = (int)((float)sum / (float)IR_ITERATIONS + 0.5);
 	
 	return mean;
 }
