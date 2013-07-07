@@ -4,12 +4,6 @@
   Updated by Toby Scantlebury, July 3, 2013.
 */
 
-#if defined(ARDUINO) && ARDUINO >= 100
-  #include "Arduino.h"
-#else
-  #include "WProgram.h"
-#endif
-
 #include "Motor.h"
 
 Motor::Motor(){}
