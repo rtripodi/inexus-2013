@@ -20,34 +20,38 @@
 #define MIN_BLACK (250)
 
 /********************************************
- *  Servos                                  *
+ *  Servos / Claw                           *
  ********************************************/
- 
+//Pins used for communication with servos
 #define CLAW_LEFT_PIN (6)
 #define CLAW_RIGHT_PIN (7)
  
+//Values for each servo to allow claw to be in open state
 #define CLAW_OPEN_LEFT (95)
 #define CLAW_OPEN_RIGHT (89)
 
+//Values for each servo to allow claw to be in closed state
 #define CLAW_CLOSE_LEFT (140)
 #define CLAW_CLOSE_RIGHT (44)
 
+//Values for each servo to allow claw to be in shut state
 #define CLAW_SHUT_LEFT (189)
 #define CLAW_SHUT_RIGHT (-1)
 
 /********************************************
  *  IR Sensors                              *
  ********************************************/
-
+//Pins used for communication with IR sensors
 #define IR_SHORT_PIN (0)
 #define IR_MEDIUM_PIN (1)
 #define IR_LONG1_PIN (2)
 #define IR_LONG2_PIN (3)
 
+//Amount of IR reads to determine mean value
 #define IR_ITERATIONS (5)
 
 /********************************************
  *  Motor                                   *
  ********************************************/
- 
+//Serial used for Motor Controller
 #define MotorControl Serial1
