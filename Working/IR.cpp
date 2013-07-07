@@ -30,24 +30,20 @@ int IR::getDist()
 	return distInMillis;
 }
 
-//  Read multiple raw values from IR sensor and returns the mean
-//  TODO:	check if outputValue is needed
-//			implement outlier diregarding functionality
+//Reads multiple raw values from IR sensor and returns an accurate mean
 int IR::read()
 {
-	int sum = 0;
+	int rawReadings[IR_ITERATIONS];
 	
 	for (int ii = 0; ii < IR_ITERATIONS; ii++)
 	{
-		sum += analogRead(pin);
+		rawReadings[ii] = analogRead(pin);
 	}
 	
-	int mean = (int)((float)sum / (float)IR_ITERATIONS + 0.5);
-	
-	return mean;
+	return calcMeanNoOutliers(rawReadings, IR_ITERATIONS);
 }
 
-//Convert reading to distance in mm for 4-30cm sensor
+//Converts reading to distance in mm for 4-30cm sensor
 //Returns -1 on error
 //  TODO: check the effect on values outside 79-478 raw value range
 int IR::shortScan(int reading)
@@ -68,11 +64,49 @@ int IR::shortScan(int reading)
 }
 
 //UNIMPLEMENTED
-//Convert reading to distance in mm for 10-80cm sensor
+//Converts reading to distance in mm for 10-80cm sensor
 //Returns -1 on error
 int IR::mediumScan(int reading) { return -1; }
 
 //UNIMPLEMENTED
-//Convert reading to distance in mm for 20-150cm sensor
+//Converts reading to distance in mm for 20-150cm sensor
 //Returns -1 on error
 int IR::longScan(int reading) { return -1; }
+
+//Returns the mean which best represents the inputted data by disregarding outliers
+int Robot::calcMeanNoOutliers(int[] data, int length)
+{
+	//Calculate raw mean
+	int dataSum = 0;
+	for (int ii = 0; ii < length; ii++)
+	{
+		dataSum += data[ii];
+	}
+	float mean = (float) dataSum / (float) length;
+
+	//Calculate standard deviation
+	float devSum = 0.0;
+	for(int ii = 0; ii < length; ii++) 
+	{
+		devSum += ((float) data[ii] - mean) * ((float) data[ii] - mean);
+	}
+	float stdDev = pow(devSum, 0.5) / (float) length;
+
+	//Sum all values inclusive of the standard deviation
+	dataSum = 0;
+	int newCount = 0;
+	for(int ii = 0; ii < length; ii++)
+	{
+		if ((data[ii] > (mean - stdDev)) && (data[ii] < (mean + stdDev)))
+		{
+			dataSum += data[ii];
+			newCount++;
+		}
+	}
+
+	//If at least one element is inclusive of the standard deviation, recalculate the mean
+	if (dataSum != 0)
+		mean = (float) dataSum / (float) newCount;
+
+	return (int) (mean + 0.5);
+}
