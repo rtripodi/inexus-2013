@@ -1,7 +1,5 @@
 #include "IR.h"
 
-#define IR_ITERATIONS 5
-
 IR::IR(int irPin, Range irType)
 {
 	pin = irPin;

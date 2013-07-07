@@ -7,6 +7,8 @@
   #include "WProgram.h"
 #endif
 
+#include "Config.h"
+
 class IR
 {
 	public:

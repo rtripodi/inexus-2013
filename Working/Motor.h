@@ -13,7 +13,7 @@
   #include "WProgram.h"
 #endif
 
-#define MotorControl Serial1
+#include "Config.h"
 
 class Motor
 {
