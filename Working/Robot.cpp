@@ -23,9 +23,9 @@ void Robot::sdebug()
   foreward[2] = getLeftEncoderCounts();
   foreward[3] = getRightEncoderCounts();
   foreward[4] = abs(getLeftEncoderCounts() - getRightEncoderCounts());
-    for (int i = 0; i < 5; i++)
+    for (int ii = 0; ii < 5; ++ii)
   {
-    Serial.print(foreward[i]);
+    Serial.print(foreward[ii]);
     Serial.print("\t");
     Serial.print("\t");
   }

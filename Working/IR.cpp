@@ -15,7 +15,7 @@ int IR::getDist()
 {
 	int reading = read();
 	int distInMillis = -1;
-	switch(type)
+	switch (type)
 	{
 		case shortRange:
 			distInMillis = shortScan(reading);
@@ -35,7 +35,7 @@ int IR::read()
 {
 	int rawReadings[IR_ITERATIONS];
 	
-	for (int ii = 0; ii < IR_ITERATIONS; ii++)
+	for (int ii = 0; ii < IR_ITERATIONS; ++ii)
 	{
 		rawReadings[ii] = analogRead(pin);
 	}
@@ -50,15 +50,15 @@ int IR::shortScan(int reading)
 {
 	int millimetres = -1;	//Init to error value
 	float rawReading = (float) reading;
-	if(reading > 352 && reading <= 478)
+	if (reading > 352 && reading <= 478)
 		millimetres = (int)(-0.1586*rawReading + 125.66);
-	else if(reading > 224 && reading <= 352)
+	else if (reading > 224 && reading <= 352)
 		millimetres = (int)(-0.3093*rawReading + 177.79);
-	else if(reading > 110 && reading <= 224)
+	else if (reading > 110 && reading <= 224)
 		millimetres = (int)(-0.855*rawReading + 298.04);
-	else if(reading >= 79 && reading <= 110)
+	else if (reading >= 79 && reading <= 110)
 		millimetres = (int)(-2.7738*rawReading + 513.8);
-	else if(reading < 79)
+	else if (reading < 79)
 		millimetres = 310;	//  Stub value for out of range
 	return millimetres;
 }
@@ -78,7 +78,7 @@ int Robot::calcMeanNoOutliers(int[] data, int length)
 {
 	//Calculate raw mean
 	int dataSum = 0;
-	for (int ii = 0; ii < length; ii++)
+	for (int ii = 0; ii < length; ++ii)
 	{
 		dataSum += data[ii];
 	}
@@ -86,7 +86,7 @@ int Robot::calcMeanNoOutliers(int[] data, int length)
 
 	//Calculate standard deviation
 	float devSum = 0.0;
-	for(int ii = 0; ii < length; ii++) 
+	for (int ii = 0; ii < length; ++ii) 
 	{
 		devSum += ((float) data[ii] - mean) * ((float) data[ii] - mean);
 	}
@@ -95,7 +95,7 @@ int Robot::calcMeanNoOutliers(int[] data, int length)
 	//Sum all values inclusive of the standard deviation
 	dataSum = 0;
 	int newCount = 0;
-	for(int ii = 0; ii < length; ii++)
+	for (int ii = 0; ii < length; ++ii)
 	{
 		if ((data[ii] > (mean - stdDev)) && (data[ii] < (mean + stdDev)))
 		{
