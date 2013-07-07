@@ -1,13 +1,17 @@
 #include "Config.h"
+#include "LineSensors.h"
 #include <PololuWheelEncoders.h>
 #include <PololuQTRSensors.h>
 #include "Robot.h"
 #include <Servo.h>
-PololuQTRSensorsRC lineSensors = PololuQTRSensorsRC(QTR_SENSOR_PINS_LIST, QTR_NUM_PINS, QTR_TIMEOUT, QTR_EMITTER_PIN);
-//alex try.  Here you go Alex.
+
 Motor motors;
 Robot robot(&motors);
 const int LED_PIN = 13;
+
+LineSensors ls;
+void lineFollowDemoSetup();
+void lineFollowDemo();
 
 void setup()
 {  
@@ -15,11 +19,38 @@ void setup()
   Serial.begin(9600);
   motors.setup();
   robot.setup();
+  lineFollowDemoSetup();
 }
 
 void loop()
 {
-  AlexTestingFunction();
+  lineFollowDemo();
+}
+
+void lineFollowDemoSetup()
+{
+  ls.calibrate();
+  delay(4000);
+  ls.calibrate();
+}
+
+//Note, this is NOT the best way to do it.  Just a quick example of how to use the class.
+void lineFollowDemo()
+{
+  LineSensor_ColourValues leftWhite[8] = {NUL,NUL,WHT,NUL,NUL,NUL,NUL,NUL};
+  LineSensor_ColourValues rightWhite[8] = {NUL,NUL,NUL,NUL,NUL,WHT,NUL,NUL};
+  LineSensor_ColourValues allBlack[8] = {BLK,BLK,BLK,BLK,BLK,BLK,BLK,BLK};
+  if(ls.see(leftWhite)){
+    motors.left(30);
+    motors.right(0);
+  }
+  if(ls.see(rightWhite)){
+    motors.right(30);
+    motors.left(0);
+  }
+  if(ls.see(allBlack)){
+    motors.stop();
+  }
 }
 
 void AlexTestingFunction()

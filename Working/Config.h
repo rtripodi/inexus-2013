@@ -15,6 +15,10 @@
 //Pin to control infrared emitter on sensors
 #define QTR_EMITTER_PIN (39)
 
+//Minimum reading of CALIBRATED sensors for it to be declared black
+//Anything above or equal to MIN_BLACK is black, anything below MIN_BLACK is white
+#define MIN_BLACK (250)
+
 /********************************************
  *  Servos                                  *
  ********************************************/

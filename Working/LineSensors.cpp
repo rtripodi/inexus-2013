@@ -2,10 +2,10 @@
 
 inline void LineSensors::readCalibrated()
 {
-	readCalibrated(reading);
+	PololuQTRSensors::readCalibrated(reading);
 }
 
-bool LineSensors::areReading(LineSensor_ColourValues vals[QTR_NUM_PINS])
+bool LineSensors::see(const LineSensor_ColourValues vals[QTR_NUM_PINS])
 {
 	for(int ii = 0; ii < QTR_NUM_PINS; ++ii)
 	{
