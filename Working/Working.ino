@@ -1,6 +1,8 @@
 #include "Config.h"
 #include <PololuWheelEncoders.h>
 #include <PololuQTRSensors.h>
+#include "Claw.h"
+#include "IR.h"
 #include "LineSensors.h"
 #include "Robot.h"
 #include <Servo.h>
@@ -8,6 +10,14 @@
 Motor motors;
 Robot robot(&motors);
 const int LED_PIN = 13;
+
+Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
+void clawTestSetup();
+void clawTest();
+
+IR ir(1, IR::shortRange);
+void irTestSetup();
+void irTest();
 
 LineSensors ls;
 void lineFollowDemoSetup();
@@ -28,14 +38,44 @@ void setup()
   {
     delay(500); 
   }
-  digitalWrite(LED_PIN,LOW);
+  digitalWrite(LED_PIN, LOW);
   digitalWrite(PUSHPIN, HIGH);
-  lineFollowDemoSetup();
+  clawTestSetup();
 }
 
 void loop()
 {
-  lineFollowDemo();
+  clawTest();
+}
+
+void clawTestSetup()
+{
+  claw.setup();
+  claw.shut();
+}
+
+void clawTest()
+{
+  delay(4000);
+  claw.open();
+  delay(4000);
+  claw.close();
+  delay(4000);
+  claw.shut();
+}
+
+void irTestSetup()
+{
+  ir.setup();
+  Serial.println("Raw\t\tMillimetres");
+}
+
+void irTest()
+{
+  Serial.print(analogRead(1));
+  Serial.print("\t\t");
+  Serial.println(ir.getDist());
+  delay(100);
 }
 
 void lineFollowDemoSetup()

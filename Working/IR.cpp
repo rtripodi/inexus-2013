@@ -33,14 +33,22 @@ int IR::getDist()
 //Reads multiple raw values from IR sensor and returns an accurate mean
 int IR::read()
 {
-	int rawReadings[IR_ITERATIONS];
+/*	int rawReadings[IR_ITERATIONS];
 	
 	for (int ii = 0; ii < IR_ITERATIONS; ++ii)
 	{
 		rawReadings[ii] = analogRead(pin);
 	}
 	
-	return calcMeanNoOutliers(rawReadings, IR_ITERATIONS);
+	return calcMeanNoOutliers(rawReadings, IR_ITERATIONS);*/
+
+        int dataSum = 0;
+	for (int ii = 0; ii < IR_ITERATIONS; ++ii)
+	{
+		dataSum += analogRead(pin);
+	}
+
+  return (int) ( (float) dataSum / (float) IR_ITERATIONS + 0.5);
 }
 
 //Converts reading to distance in mm for 4-30cm sensor
