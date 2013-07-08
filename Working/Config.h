@@ -1,4 +1,39 @@
 /********************************************
+ *  MISC Shield Pins
+ ********************************************/
+//Most prominant LED on shield, used for signalling info
+#define LED_PIN 2
+
+//The left-most (NOT CENTRE-MOST!) push button on the shield
+//Used for sending signals to the robot (ie, start moving)
+#define PUSH_PIN 3
+
+//Named for convenience, a XBee is connected to Serial3 (used for wireless comunication)
+#define XBee Serial3
+
+/********************************************
+ *  DIP Switches                             
+ *(The box at the front)
+ ********************************************/
+ //Those buttons labeled UNASSIGNED_SWITCH_n should be renamed
+ //when a purpose has been assigned to them
+#define UNASSIGNED_SWITCH_1 52 //Closest switch to the edge of the shield
+#define UNASSIGNED_SWITCH_2 50
+#define UNASSIGNED_SWITCH_3 48
+#define UNASSIGNED_SWITCH_4 46
+#define UNASSIGNED_SWITCH_5 44
+#define UNASSIGNED_SWITCH_6 42
+
+//Competitions usually allow the robot to be restarted
+//Use this pin to tell the robot that it is being restarted
+//(This normally means it's being moved back to the start point
+//and should wait to be told to start moving again)
+#define RESTART_PIN 40
+
+//Use this switch to turn debugging on and off
+#define DEBUG_PIN 38 //Closest switch to the centre of the shield
+
+/********************************************
  *  QTR Sensor                              *
  ********************************************/
 //Pins used for input from QTR sensors
