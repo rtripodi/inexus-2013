@@ -1,7 +1,7 @@
 #include "Config.h"
-#include "LineSensors.h"
 #include <PololuWheelEncoders.h>
 #include <PololuQTRSensors.h>
+#include "LineSensors.h"
 #include "Robot.h"
 #include <Servo.h>
 
@@ -13,12 +13,23 @@ LineSensors ls;
 void lineFollowDemoSetup();
 void lineFollowDemo();
 
+#define PUSHPIN 3
+
 void setup()
 {  
   pinMode(LED_PIN, OUTPUT);
   Serial.begin(9600);
   motors.setup();
   robot.setup();
+  digitalWrite(LED_PIN,HIGH);
+  pinMode(PUSHPIN, INPUT);
+  digitalWrite(PUSHPIN, HIGH);
+  while(digitalRead(PUSHPIN) == HIGH)
+  {
+    delay(500); 
+  }
+  digitalWrite(LED_PIN,LOW);
+  digitalWrite(PUSHPIN, HIGH);
   lineFollowDemoSetup();
 }
 
@@ -40,12 +51,13 @@ void lineFollowDemo()
   LineSensor_ColourValues leftWhite[8] = {NUL,NUL,WHT,NUL,NUL,NUL,NUL,NUL};
   LineSensor_ColourValues rightWhite[8] = {NUL,NUL,NUL,NUL,NUL,WHT,NUL,NUL};
   LineSensor_ColourValues allBlack[8] = {BLK,BLK,BLK,BLK,BLK,BLK,BLK,BLK};
+  ls.readCalibrated();
   if(ls.see(leftWhite)){
-    motors.left(30);
+    motors.left(127);
     motors.right(0);
   }
   if(ls.see(rightWhite)){
-    motors.right(30);
+    motors.right(127);
     motors.left(0);
   }
   if(ls.see(allBlack)){

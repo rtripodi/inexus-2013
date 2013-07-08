@@ -2,7 +2,7 @@
 
 //Obtains a new reading and stores it in the public member reading[]
 //(Just calls readCalibrated(unsigned int*) using the public member reading[])
-inline void LineSensors::readCalibrated()
+void LineSensors::readCalibrated()
 {
 	PololuQTRSensors::readCalibrated(reading);
 }

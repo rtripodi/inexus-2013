@@ -74,7 +74,7 @@ int IR::mediumScan(int reading) { return -1; }
 int IR::longScan(int reading) { return -1; }
 
 //Returns the mean which best represents the inputted data by disregarding outliers
-int Robot::calcMeanNoOutliers(int[] data, int length)
+int IR::calcMeanNoOutliers(int data[], int length)
 {
 	//Calculate raw mean
 	int dataSum = 0;

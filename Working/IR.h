@@ -45,7 +45,7 @@ class IR
 		int longScan(int reading);
 		
 		//Returns the mean which best representes the inputted data by disregarding outliers
-		int calcMeanNoOutliers(int[] data, int length);
+		int calcMeanNoOutliers(int data[], int length);
 };
 
 #endif
