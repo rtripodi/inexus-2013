@@ -56,7 +56,7 @@ int IR::shortScan(int reading)
 		millimetres = (int)(-0.3093*rawReading + 177.79);
 	else if (reading > 110 && reading <= 224)//108mm to 204mm
 		millimetres = (int)(-0.855*rawReading + 298.04);
-	else if (reading >= 79 && reading <= 110)//108mm to 295mm
+	else if (reading >= 79 && reading <= 110)//204mm to 295mm
 		millimetres = (int)(-2.7738*rawReading + 513.8);
 	else if (reading < 79)
 		millimetres = 310;	//  Stub value for out of range
