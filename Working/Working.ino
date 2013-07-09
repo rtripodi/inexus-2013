@@ -1,3 +1,4 @@
+//#include <SoftwareSerial.h>  //For colour sensor
 #include "Config.h"
 #include <PololuWheelEncoders.h>
 #include <PololuQTRSensors.h>
@@ -5,6 +6,7 @@
 #include "IR.h"
 #include "LineSensors.h"
 #include "Robot.h"
+//#include "Colour.h"
 #include <Servo.h>
 
 Motor motors;
@@ -22,6 +24,10 @@ void irTest();
 LineSensors ls;
 void lineFollowDemoSetup();
 void lineFollowDemo();
+
+//Colour colour;
+//void colourTestSetup();
+//void colourTest();
 
 #define PUSHPIN 3
 
@@ -104,6 +110,22 @@ void lineFollowDemo()
     motors.stop();
   }
 }
+
+//void colourTestSetup()
+//{
+//  colour.setup();
+//  delay(1000);
+//  colour.calibrateBlack();
+//  Serial.println("Black Done");
+//  delay(4000);
+//  colour.calibrateWhite();
+//  Serial.println("White Done");
+//}
+//
+//void colourTest()
+//{
+//  Serial.println(colour.senseColour() );
+//}
 
 void AlexTestingFunction()
 {
