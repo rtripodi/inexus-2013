@@ -24,6 +24,8 @@ class LineSensors : public PololuQTRSensorsRC
 		//Each item in vals may be either BLK, WHT or NUL.  That is black, white and null (disregard / don't care) respectively.
 		//Thus, the function is used to check if the line sensor is reading the state specified in vals[].
 		bool see(const LineSensor_ColourValues vals[8]);
+		
+		int error();
 };
 
 #endif

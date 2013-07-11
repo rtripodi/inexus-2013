@@ -8,9 +8,13 @@
 #include "Robot.h"
 //#include "Colour.h"
 #include <Servo.h>
+#include "Movement.h"
 
 Motor motors;
+<<<<<<< HEAD
 Robot robot(&motors);
+=======
+>>>>>>> Removed Robot and created Movement
 
 Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
 void clawTestSetup();
@@ -24,9 +28,7 @@ LineSensors ls;
 void lineFollowDemoSetup();
 void lineFollowDemo();
 
-//Colour colour;
-//void colourTestSetup();
-//void colourTest();
+Movement mover(&motors, &ls);
 
 #define PUSHPIN 3
 
@@ -35,7 +37,6 @@ void setup()
   pinMode(LED_PIN, OUTPUT);
   Serial.begin(9600);
   motors.setup();
-  robot.setup();
   digitalWrite(LED_PIN,HIGH);
   pinMode(PUSHPIN, INPUT);
   digitalWrite(PUSHPIN, HIGH);
@@ -108,48 +109,4 @@ void lineFollowDemo()
   if(ls.see(allBlack)){
     motors.stop();
   }
-}
-
-//void colourTestSetup()
-//{
-//  colour.setup();
-//  delay(1000);
-//  colour.calibrateBlack();
-//  Serial.println("Black Done");
-//  delay(4000);
-//  colour.calibrateWhite();
-//  Serial.println("White Done");
-//}
-//
-//void colourTest()
-//{
-//  Serial.println(colour.senseColour() );
-//}
-
-void AlexTestingFunction()
-{
-  Serial.print("Average Ticks");
-  Serial.print("\t");
-  Serial.print("Wheel Error");
-  Serial.print("\t");    
-  Serial.print("Left Wheel");
-  Serial.print("\t");
-  Serial.print("Right Wheel");
-  Serial.print("\t");
-  Serial.print("Difference");
-  Serial.println();
-  Serial.println(robot.errorTickAdjustment());
-  robot.resetEncoders();
-  delay(1000);
-  robot.moveTicks(120,50);
-  motors.both(0,0);//motors.stop()
-  delay(1000);
-  robot.resetEncoders();
-  delay(1000);
-  robot.moveTicks(-120,50);
-  motors.both(0,0);//motors.stop()
-  delay(1000);
-  robot.resetEncoders();
-  robot.sdebug();
-  delay(1000);
 }

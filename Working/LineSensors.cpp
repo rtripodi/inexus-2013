@@ -21,3 +21,19 @@ bool LineSensors::see(const LineSensor_ColourValues vals[QTR_NUM_PINS])
 	}
 	return true;
 }
+
+int LineSensors::error()
+{
+	const bool WHITE_LINES = true;
+    int error = PololuQTRSensors::readLine(reading, QTR_EMITTERS_ON, WHITE_LINES); //error = 0 to 6000
+  
+	error -= 3000; //give us -3000 to 3000
+
+	//-2 is to shift the robot a bit because the calculation is a little off
+	//(gives about -14 to 16).
+	error = ((15 * error) / 3000) - 2;
+  
+	if((error < 5) && (error > -5)){//amplify the forwardError if it's too low
+		error *= 2;
+	}
+}
