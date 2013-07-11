@@ -11,7 +11,6 @@
 
 Motor motors;
 Robot robot(&motors);
-const int LED_PIN = 13;
 
 Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
 void clawTestSetup();
