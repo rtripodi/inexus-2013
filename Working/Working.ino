@@ -5,16 +5,11 @@
 #include "Claw.h"
 #include "IR.h"
 #include "LineSensors.h"
-#include "Robot.h"
 //#include "Colour.h"
 #include <Servo.h>
 #include "Movement.h"
 
 Motor motors;
-<<<<<<< HEAD
-Robot robot(&motors);
-=======
->>>>>>> Removed Robot and created Movement
 
 Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
 void clawTestSetup();
