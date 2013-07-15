@@ -8,6 +8,7 @@
 //#include "Colour.h"
 #include <Servo.h>
 #include "Movement.h"
+#include "Routing.h"
 
 Motor motors;
 
@@ -24,6 +25,13 @@ void lineFollowDemoSetup();
 void lineFollowDemo();
 
 Movement mover(&motors, &ls);
+void testMover()
+{
+  for(int ii = 0; ii < 4; ++ii)
+    mover.moveTillPoint(80);
+  motors.stop();
+  delay(100000);
+}
 
 #define PUSHPIN 3
 
@@ -41,12 +49,13 @@ void setup()
   }
   digitalWrite(LED_PIN, LOW);
   digitalWrite(PUSHPIN, HIGH);
+  lineFollowDemoSetup();
   clawTestSetup();
 }
 
 void loop()
 {
-  clawTest();
+  testMover();
 }
 
 void clawTestSetup()

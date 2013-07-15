@@ -5,8 +5,8 @@ Movement::Movement(Motor * inMotors, LineSensors * inSensors)
 	motors = inMotors;
 	const int MOTOR_1_SIG_A = 8,
 	          MOTOR_1_SIG_B = 9,
-			  MOTOR_2_SIG_A = 11,
-			  MOTOR_2_SIG_B = 10;
+		  MOTOR_2_SIG_A = 11,
+		  MOTOR_2_SIG_B = 10;
 	wheelEnc.init(MOTOR_1_SIG_A, MOTOR_1_SIG_B, MOTOR_2_SIG_A, MOTOR_2_SIG_B);
 	ls = inSensors;
 }
@@ -19,8 +19,7 @@ bool Movement::onCross()
 
 void Movement::moveTillPoint(int speed)
 {
-	moveOffCross(speed);
-	
+	moveOffCross(speed);	
 	while(!onCross())
 	{
 		motors->both(speed, ls->error());

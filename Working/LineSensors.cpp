@@ -12,6 +12,7 @@ void LineSensors::readCalibrated()
 //Thus, the function is used to check if the line sensor is reading the state specified in vals[].
 bool LineSensors::see(const LineSensor_ColourValues vals[QTR_NUM_PINS])
 {
+  readCalibrated();
 	for(int ii = 0; ii < QTR_NUM_PINS; ++ii)
 	{
 		if(
@@ -25,15 +26,16 @@ bool LineSensors::see(const LineSensor_ColourValues vals[QTR_NUM_PINS])
 int LineSensors::error()
 {
 	const bool WHITE_LINES = true;
-    int error = PololuQTRSensors::readLine(reading, QTR_EMITTERS_ON, WHITE_LINES); //error = 0 to 6000
-  
+        int error = PololuQTRSensors::readLine(reading, QTR_EMITTERS_ON, WHITE_LINES); //error = 0 to 6000
+
 	error -= 3000; //give us -3000 to 3000
 
 	//-2 is to shift the robot a bit because the calculation is a little off
 	//(gives about -14 to 16).
 	error = ((15 * error) / 3000) - 2;
-  
+
 	if((error < 5) && (error > -5)){//amplify the forwardError if it's too low
 		error *= 2;
 	}
+        return error;
 }
