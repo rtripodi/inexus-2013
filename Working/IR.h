@@ -15,7 +15,7 @@ class IR
 		enum Range {shortRange, mediumRange, longRange};//Three types of IR sensor we use
 		
 		IR(int irPin, Range irType);
-	
+
 		//Placeholder incase initialisation is needed
 		void setup();
 		
