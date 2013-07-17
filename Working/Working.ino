@@ -15,9 +15,7 @@
 GridMap gm;
 Routing router(&gm);
 Path path;
-Point start(1,1);
-Point goal(4,7);
-Direction startDir = SOUTH;
+
 
 #define debugStream Serial
 void printPathAsListOfPoints(Path * inPath, Point start)
@@ -58,10 +56,29 @@ void printPathAsListOfPoints(Path * inPath, Point start)
 void setup()
 {  
   Serial.begin(9600);
-  Serial.println("started");
-
+  Point start(1,1);
+  Point goal(4,7);
+  Direction startDir = NORTH;
+//  //Uncomment for example of obstacle avoidance
+//  gm.setFlag(Point(1,2), OCCUPIED);
+//  gm.setFlag(Point(2,1), OCCUPIED);
+//  gm.setFlag(Point(2,0), OCCUPIED);
+//  gm.setFlag(Point(0,7), OCCUPIED);
+  Serial.println();
+  Serial.println("Facing North:");
   router.generateRoute(start, goal, startDir, &path);
-  Serial.println("here");
+  printPathAsListOfPoints(&path, start);
+  Serial.println();
+  Serial.println("Facing East:");
+  router.generateRoute(start, goal, EAST, &path);
+  printPathAsListOfPoints(&path, start);
+  Serial.println();
+  Serial.println("Facing South:");
+  router.generateRoute(start, goal, SOUTH, &path);
+  printPathAsListOfPoints(&path, start);
+  Serial.println();
+  Serial.println("Facing West:");
+  router.generateRoute(start, goal, WEST, &path);
   printPathAsListOfPoints(&path, start);
 }
 

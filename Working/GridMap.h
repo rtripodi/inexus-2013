@@ -66,13 +66,13 @@ class GridMap : public Maze
 		GridMap();
 		
 		//Change desired flag(s) to 1 for passed point
-		void setFlag(Point *inPoint, unsigned char inFlag);
+		void setFlag(Point pt, unsigned char inFlag);
 		
 		//Change desired flag(s) to 0 for passed point 
-		void removeFlag(Point *inPoint, unsigned char inFlag);
+		void removeFlag(Point pt, unsigned char inFlag);
 		
 		//Returns true if the passed flag(s) is/are set
-		bool isFlagSet(Point inPoint, unsigned char inFlag);
+		bool isFlagSet(Point pt, unsigned char inFlag);
 		
 		//Returns true if point is in grid
 		bool contains(Point point);

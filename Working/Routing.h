@@ -20,18 +20,11 @@
 #include "MazeImports.h"
 #include "GridMap.h"
 
-/***************************************************
-*END: Required Stuff to make Routing work
-***************************************************/
-
 //#define MINIMISE_MEMORY
 #if MAZE_X_RANGE <= 16 && MAZE_Y_RANGE <= 16 && defined(MINIMISE_MEMORY)
   #define ENCODE_COORDS
 #endif
 
-// Node is to represent both the open list and closed list for generateRoute().
-// We have created it like this to save memory.
-// read generateRoute() comments
 struct Node
 {
   private:
@@ -41,26 +34,15 @@ struct Node
       Point parentPt;
     #endif
   public:
-    static const byte OPEN = 0x00,
-                      CLOSED = 0x01,
-                      NONE = 0x02,
-		      GOAL = 0x04;
-  
     int sum; // F
     byte heuristic; // H
     byte listType;
     
-    Node()
-    {   
-      const Point DEFAULT_PARENT(0,0);
-      parent(DEFAULT_PARENT);
-      sum = -1;
-      heuristic = 0x00;
-      listType = NONE;
-    }
+    Node() {}
     
-    Point parent()
-    {
+    Node(byte inListType){ listType = inListType; }
+    
+    Point parent(){
       #if defined(ENCODE_COORDS)
         Point parentPt;
         parent.decodeCoordinates(encodedParent);
@@ -68,8 +50,7 @@ struct Node
       return parentPt;
     }
     
-    void parent(Point newParent)
-    {
+    void parent(Point newParent){
       #if defined(ENCODE_COORDS)
         encodedParent = newParent.encodeCoordinates();
       #else
@@ -77,26 +58,11 @@ struct Node
       #endif
     }
     
-    void set(Point inParent, int inSum, byte inHeuristic, byte inListType)
-    {
+    void set(Point inParent, int inSum, byte inHeuristic, byte inListType){
       parent(inParent);
       sum = inSum;
       heuristic = inHeuristic;
       listType = inListType;
-    }
-    
-    void updateNode(Point current, unsigned int movementCost, byte newHeuristic = 0x00)
-    {
-      if((listType == GOAL) && (sum == 0)) { set(current, movementCost + (int) newHeuristic, newHeuristic, GOAL); }
-      if((listType == OPEN) || (listType == GOAL))
-      {
-        if (movementCost < (sum - (int) heuristic)){// Store parent and cost to openClosedList array if the new way is quicker. (costs less to move)
-  	  set(current, movementCost + (int) heuristic, heuristic, OPEN);
-        }
-      }
-      else if(listType == NONE){
-        set(current, movementCost + (int) newHeuristic, newHeuristic, OPEN);
-      }
     }
     
     unsigned int calcCost() { return sum - (int) heuristic; }
@@ -107,83 +73,70 @@ struct NodeList
 	private:
 	  Node node[GRID_MAX_X+1][GRID_MAX_Y+1];
 	public:
+          static const byte NONE = 0x00,
+                            CLOSED = 0x01,
+                            OPEN = 0x02,
+    		            GOAL = 0x04;
 	  int xLength;
 	  int yLength;
   
 	  NodeList(){}
   
-	  NodeList(int inXLength, int inYLength)
-	  {
+	  NodeList(int inXLength, int inYLength){
 		xLength = inXLength;
 		yLength = inYLength;
 	  }
   
-	  void resetList(Point goal, Point start, Point pointBehindStart, byte startHeuristic)
-	  {
-		for (int x = 0; x < xLength; x++)
-		{
-		  for (int y = 0; y < yLength; y++)
-		  {
-			node[x][y] = Node();
+	  void resetList(Point goal, Point start, Point pointBehindStart, byte startHeuristic){
+		for (int x = 0; x < xLength; x++){
+		  for (int y = 0; y < yLength; y++){
+			node[x][y] = Node(NONE);
 		  }
 		}
                 const Point DEFAULT_PARENT(0,0);
                 const byte GOAL_COST = 0x00;
                 const int GOAL_SUM = 0;
-                node[goal.x][goal.y].set(DEFAULT_PARENT, GOAL_SUM, GOAL_COST, Node::GOAL);
-		node[start.x][start.y].set(pointBehindStart, startHeuristic, startHeuristic, Node::OPEN);
+                node[goal.x][goal.y].set(DEFAULT_PARENT, GOAL_SUM, GOAL_COST, GOAL);
+		node[start.x][start.y].set(pointBehindStart, startHeuristic, startHeuristic, OPEN);
 	  }
   
-	  void close(Point pt)
-	  {
-		node[pt.x][pt.y].listType = Node::CLOSED;
+	  void close(Point pt){
+		node[pt.x][pt.y].listType = CLOSED;
 	  }
   
-	  void update(Point pt, Point parent, unsigned int cost, byte heuristic)
-	  {
-		node[pt.x][pt.y].updateNode(parent, cost, heuristic);
-	  }
-
-	  void update(Point pt, Point parent, unsigned int cost)
-	  {
-		node[pt.x][pt.y].updateNode(parent, cost);
-	  }
+         void update(Point pt, Point parent, unsigned int cost, byte heuristic = 0x00){
+           if((node[pt.x][pt.y].listType == GOAL) && (node[pt.x][pt.y].sum == 0)) { node[pt.x][pt.y].set(parent, cost, heuristic, GOAL); }
+           if((node[pt.x][pt.y].listType == OPEN) || (node[pt.x][pt.y].listType == GOAL)){
+             if (cost < node[pt.x][pt.y].calcCost()){// Store parent and cost to openClosedList array if the new way is quicker. (costs less to move)
+      	       node[pt.x][pt.y].set(parent, cost + (int) heuristic, heuristic, OPEN);
+            }
+          }
+          else if(node[pt.x][pt.y].listType == NONE){
+            node[pt.x][pt.y].set(parent, cost + (int) heuristic, heuristic, OPEN);
+          }
+        }
  
 	  //Inefficient with time, efficient with space
-	  Point findNodeWithLowestSum()
-	  {
+	  Point findNodeWithLowestSum(){
 		Point current;
 		bool foundOneOpenPt = false;
 		for (int x = 0; x < xLength; x++){// Search through the open list to get the lowest sum node. Set it to current.
 		  for (int y = 0; y < yLength; y++){
-        	    if (node[x][y].listType == Node::OPEN){
-       		      if (!foundOneOpenPt){
+        	    if (node[x][y].listType == OPEN){
+       		      if (( ! foundOneOpenPt) || (node[x][y].sum < node[current.x][current.y].sum)){
    			current = Point(x,y);
         		foundOneOpenPt = true;
-        	      }
-        	      if (node[x][y].sum < node[current.x][current.y].sum){
-        	        current = Point(x,y);
         	      }
         	    }//if
 		  }//for
 		}//for
-		if( ! foundOneOpenPt){
-		  current.x = GRID_MAX_X + 1;
-		  current.y = GRID_MAX_Y + 1;
-		}
-		return current;
+		return foundOneOpenPt ? current : Point(GRID_MAX_X + 1, GRID_MAX_Y + 1);
 	  }
   
-	  void setNode(Point p, Node newNode){
-		node[p.x][p.y] = newNode;
-	  } 
-
+	  //Following functions hide Node class and array implementation from higher level code
 	  unsigned int calcCost(Point pt) { return node[pt.x][pt.y].calcCost(); }
-  
 	  Point getParent(Point pt) { return node[pt.x][pt.y].parent(); }
-
 	  byte getListType(Point pt) { return node[pt.x][pt.y].listType; }
-
 	  void setParent(Point pt, Point newParent) { node[pt.x][pt.y].parent(newParent); }
 };
   

@@ -12,21 +12,21 @@ GridMap::GridMap()
 }
 
 //Change desired flag(s) to 1 for passed point
-void GridMap::setFlag(Point *inPoint, unsigned char inFlag)
+void GridMap::setFlag(Point pt, unsigned char inFlag)
 {
-	(*inPoint).flags |= inFlag;
+	grid[pt.x][pt.y] |= inFlag;
 }
 
 //Change desired flag(s) to 0 for passed point 
-void GridMap::removeFlag(Point *inPoint, unsigned char inFlag)
+void GridMap::removeFlag(Point pt, unsigned char inFlag)
 {
-	(*inPoint).flags &= ~inFlag;
+	grid[pt.x][pt.y] &= ~inFlag;
 }
 
 //Returns true if the passed flag(s) is/are set
-bool GridMap::isFlagSet(Point inPoint, unsigned char inFlag)
+bool GridMap::isFlagSet(Point pt, unsigned char inFlag)
 {
-	return (inPoint.flags & inFlag);
+	return grid[pt.x][pt.y] & inFlag;
 }
 
 //Returns true if point is in grid

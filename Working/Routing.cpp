@@ -8,26 +8,12 @@ Routing::Routing(Maze *inMaze)
   nodeList = NodeList(GRID_MAX_X+1, GRID_MAX_Y+1);
 }
 
- //Returns the generated route.
  //The route will be generated using the A* pathfinding algorithm
  //Returns a path that only contains the startPoint if no path can be found
- //(Will not generate a path through unknown terrain)
- //Else it returns a path to the goal
+ //If not, it contains a path up to and including the goal but not including the start point
+ //(It will not generate a path through unknown or unpassable terrain)
  //
  //THE CODE EXPLAINED:
- //
- //We make an array of "Nodes" every Node in the array represents one point in the maze, 
- //
- //A Node holds:
- //heuristic (The approximate cost to get to the goal from the point)
- //sum (The sum of the heuristic and cost to move from the start point to the Node point)
- //encodedParent (The point from which the movementCost was calculated, encoded as a byte)
- //listType (NONE if it hasn't been set yet. GOAL if it is the goal point. OPEN means it remains to be tested. CLOSE means it has been completely tested.
- //"movementCost" can be derived from sum and heristic and is the cost of moving from the start to the point
- //
- //We then initialise all the Nodes with dummy values and a type of NONE.
- //We initialise the start point with no movement cost and put it on the open list (it is the first node we will examine)
- //We initialise the goal with no costs at all and give it the type GOAL
  //
  //We then loop continuously, every time we loop:
  //  We pick the the point with the lowest cost on the OPEN list
@@ -37,9 +23,9 @@ Routing::Routing(Maze *inMaze)
  //  Examine every point adjacent to it, for each of those points:
  //    If it is OPEN we check if we can get to it faster from "current" and if so chenge current to the pathParent of the point
  //    If it is NONE we make "current" the pathParent of the point
-	// If it is GOAL we're done so we goto "directlyAfterWhileLoop", the point after the while loop
-	// If it is CLOSED we've already considered it completely and so do nothing
- //keep looping (ie find the next, best, point on the OPEN list 
+ //	 If it is GOAL we set atGoal to true
+ //	 If it is CLOSED we've already considered it completely and so do nothing
+ //Finish if there are no points left that cost less to get to than the goal
 void Routing::generateRoute(Point start, Point goal, Direction currDir, Path * path)
 {
   generateRouteSetup(start, goal, currDir);
@@ -100,18 +86,17 @@ bool Routing::classifyPoint(Point adjacentPt, Point current, Point parentOfCurre
   //Make it OPEN if it is NONE; if it is OPEN check if we can get there faster via the current node, if so we change the parent
   switch (nodeList.getListType(adjacentPt))
   {
-    case Node::OPEN:
+    case NodeList::OPEN:
 	  nodeList.update(adjacentPt, current, adjacentPtCost);
 	  break;
-	case Node::NONE:
+	case NodeList::NONE:
 	  if( ! maze->isPassable(adjacentPt))
 		nodeList.close(adjacentPt);
 	  else
 		nodeList.update(adjacentPt, current, adjacentPtCost, calcHeuristic(adjacentPt, goal));
 	  break;
-	case Node::GOAL:
+	case NodeList::GOAL:
 	  nodeList.update(adjacentPt, current, adjacentPtCost);
-	  //nodeList.setParent(adjacentPt, current);
 	  return true;
   }
   return false;
@@ -119,8 +104,6 @@ bool Routing::classifyPoint(Point adjacentPt, Point current, Point parentOfCurre
 		  
 //Only parents are stored in Nodes so we have to work backwards from the goal to find the length of the path
 //This is used to set the array length of the Path we will return from generateRoute
-//We could do this with vectors but this works for the moment (vectors are basically arrays that double in size
-//every time they fill up.)
 int Routing::findPathLength(Point endPoint, Point start)
 { 
   Point tempPoint = endPoint; //(we start from the end and work backwards as we store parents but not children
@@ -161,10 +144,10 @@ int Routing::calcCost(Point from, Point thru, Point to)
 int Routing::turnCost(Point from, Point thru, Point to)
 {
   const int NO_TURN_COST = 0,
-            TURN_45_COST = 30,
-	    TURN_90_COST = 50,
-	    TURN_135_COST = 80,
-	    TURN_180_COST = 120;
+            TURN_45_COST = 15,
+	    TURN_90_COST = 15,
+	    TURN_135_COST = 45,
+	    TURN_180_COST = 75;
 
   if(from == thru) //this may occur if no valid "from" can be passed to this function
     return NO_TURN_COST;
@@ -191,12 +174,10 @@ int Routing::turnCost(Point from, Point thru, Point to)
 // If cost is greater than 255 then it will wrap around, need to fix this.
 byte Routing::calcHeuristic(Point one, Point two)
 {
-  const int HEURISTIC_WEIGHT = 1; // Here if we want to adjust the weight of the heuristic
-
-  // The distance in the x dimension plus the distance in the y dimension.
+  // The distance in the x dimension plus the distance in the y dimension. (Manhattan Distance)
   // The pythagoarean distance provides more accuracy but at the cost of speed
-  return (byte) (HEURISTIC_WEIGHT * (abs(one.x - two.x) + abs(one.y - two.y)));//TODO might need a better heuristic!
-  //return (byte) sqrt(((one.x - two.x)*(one.x - two.x) + (one.y - two.y)*(one.y - two.y)));
+  return (byte) (abs(one.x - two.x) + abs(one.y - two.y));//consistent and admissible IF cost of travel between 2 nodes is always >= 2
+  //return (byte) sqrt(((one.x - two.x)*(one.x - two.x) + (one.y - two.y)*(one.y - two.y)));//pythagoarean distance = admissible and consistent
 }
 
 Point Routing::pointBehind(Point pt, Direction dir)
