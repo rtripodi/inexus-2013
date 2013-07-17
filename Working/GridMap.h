@@ -17,6 +17,7 @@
 #endif
 
 #include "Config.h"
+#include "MazeImports.h"
 
 //Grid dimensions
 #define GRID_MAX_X (7)
@@ -30,12 +31,12 @@
 #define DROPZONE_X (GRID_MAX_X)
 #define DROPZONE_Y (GRID_MAX_Y)
 
-struct Point
-{
-	unsigned char x;
-	unsigned char y;
-	unsigned char flags;
-};
+//struct Point
+//{
+//	unsigned char x;
+//	unsigned char y;
+//	unsigned char flags;
+//};
 
 //The status of point on the grid is bitmapped to 1 byte and contains the following flags:
 //	Seen - The point has been seen
@@ -55,11 +56,11 @@ struct Point
 
 //Least significant nibble mask bits
 #define OCCUPIED	(0x08)
-#define RED			(0x04)
+#define RED		(0x04)
 #define GREEN		(0x02)
 #define BLUE		(0x01)
 
-class GridMap//TODO: inherit Maze
+class GridMap : public Maze
 {
 	public:
 		GridMap();
@@ -77,7 +78,7 @@ class GridMap//TODO: inherit Maze
 		bool contains(Point point);
 		
 		//Returns true if there is a connection between pt1 and pt2, and are both inMaze()
-		bool pointsJoined(Point pt1, Point pt2);
+		bool joined(Point pt1, Point pt2);
 		
 		//Returns true if point is not occupied
 		bool isPassable(Point point);

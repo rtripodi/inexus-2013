@@ -17,118 +17,8 @@
   #include "WProgram.h"
 #endif
 
-struct Point
-{
-  int x;
-  int y;
-
-  Point(){}
-  
-  Point(int inX, int inY) { x = inX; y = inY; }
-
-  bool operator==(const Point &a){
-    return ((a.x == x) && (a.y == y));
-  }
-
-  bool operator!=(const Point &a){
-    return ((a.x != x) || (a.y != y));
-  }
-  
-  Point & operator+=(const Point &a) 
-  {
-    x += a.x;
-	y += a.y;
-    return *this;
-  }
-  
-  //prints:
-  //name = (x,y)
-  void debug(char name[])
-  {
-    Serial.print(name);
-    Serial.print(" = (");
-    Serial.print(x);
-    Serial.print(",");
-    Serial.print(y);
-    Serial.println(")");
-  }
-  
-  //Takes coordinates in the form of 2 ints and transforms them into a byte for sending between robots
-  byte encodeCoordinates() const
-  {
-    byte x_nibble = ((byte) x) << 4;
-    byte y_nibble = (byte) y;
-    return x_nibble + y_nibble;
-  }
-
-  //Receives a byte from encodeCoordinates and transforms it to a Point
-  void decodeCoordinates(byte coords)
-  {
-    x = (int) ((coords & 0xF0) >> 4);
-    y = (int) (coords & 0x0F);
-  }
-};
-  
-/***************************************************
-*START: Required Stuff to make Routing work
-***************************************************/
-// Path structure is here to return the path that the bot should take.
-struct Path
-{
-  int length;
-  Point path[256];
-  
-  Path(){
-    length = 0;
-  }
-  
-  Path(int inLength){
-    length = inLength;
-  }
-  
-  Path operator=(Path inPath)
-  {
-    length = inPath.length;
-    for(int ii = 0; ii < length; ii++)
-    {
-      path[ii] = inPath.path[ii];
-    }
-  };
-
-  Point last(){
-    if(length > 0)
-      return path[length - 1];
-    else
-    {
-      Point temp = Point(-1,-1);
-      return temp;
-    }
-  }
-  
-  bool pointInPath(Point p)
-  {
-  for(int ii = 0; ii < length; ii++)
-  {
-    if(p == path[ii])
-      return true;
-  }
-  return false;
-  }
-};
-
-#define MAZE_X_RANGE 16
-#define MAZE_Y_RANGE 16
-
-enum Direction {NORTH, NEAST, EAST, SEAST, SOUTH, SWEST, WEST, NWEST};
-
-class Maze
-{
-	public:
-		//if p1 == p2 or either point is outside the maze  then pointsJoined() also returns false
-		virtual bool joined(Point p1, Point p2) = 0;
-		virtual bool inMaze(Point pt) = 0;
-		virtual bool isPassable(Point pt) = 0;
-};
+#include "MazeImports.h"
+#include "GridMap.h"
 
 /***************************************************
 *END: Required Stuff to make Routing work
@@ -197,13 +87,11 @@ struct Node
     
     void updateNode(Point current, unsigned int movementCost, byte newHeuristic = 0x00)
     {
-      if(listType == OPEN)
+      if((listType == GOAL) && (sum == 0)) { set(current, movementCost + (int) newHeuristic, newHeuristic, GOAL); }
+      if((listType == OPEN) || (listType == GOAL))
       {
         if (movementCost < (sum - (int) heuristic)){// Store parent and cost to openClosedList array if the new way is quicker. (costs less to move)
   	  set(current, movementCost + (int) heuristic, heuristic, OPEN);
-        }
-        else{
-          set(parent(), sum, heuristic, OPEN);
         }
       }
       else if(listType == NONE){
@@ -217,7 +105,7 @@ struct Node
 struct NodeList
 {
 	private:
-	  Node node[MAZE_X_RANGE][MAZE_Y_RANGE];
+	  Node node[GRID_MAX_X+1][GRID_MAX_Y+1];
 	public:
 	  int xLength;
 	  int yLength;
@@ -280,8 +168,8 @@ struct NodeList
 		  }//for
 		}//for
 		if( ! foundOneOpenPt){
-		  current.x = MAZE_X_RANGE + 1;
-		  current.y = MAZE_Y_RANGE + 1;
+		  current.x = GRID_MAX_X + 1;
+		  current.y = GRID_MAX_Y + 1;
 		}
 		return current;
 	  }

@@ -5,7 +5,7 @@ Routing::Routing(){}
 Routing::Routing(Maze *inMaze)
 {
   maze = inMaze;
-  nodeList = NodeList(MAZE_X_RANGE, MAZE_Y_RANGE);
+  nodeList = NodeList(GRID_MAX_X+1, GRID_MAX_Y+1);
 }
 
  //Returns the generated route.
@@ -43,10 +43,9 @@ Routing::Routing(Maze *inMaze)
 void Routing::generateRoute(Point start, Point goal, Direction currDir, Path * path)
 {
   generateRouteSetup(start, goal, currDir);
-  
   bool atGoal = false;        //  atGoal is set to true if the goal point was considered while looping
   Point current = start;
-  while(maze->inMaze(current) && !atGoal)// loop continuously, it will break if we run out of points to investigate or if we find the goal
+  while(maze->contains(current) && !(atGoal && (nodeList.calcCost(current) > nodeList.calcCost(goal))))// loop continuously, it will break if we run out of points to investigate or if we find the goal
   {
     Point parentOfCurrent = nodeList.getParent(current);
     nodeList.close(current); //We have finished with this point so we close it
@@ -58,11 +57,11 @@ void Routing::generateRoute(Point start, Point goal, Direction currDir, Path * p
 	Point adjacentPt(current.x + xDelta, current.y + yDelta); //This will hold every new point adjacent to current that we investigate
         if(maze->joined(current, adjacentPt))//if current = adjacentPt or either point is outside the maze maze->joined() also returns false
         {
-	  atGoal = classifyPoint(adjacentPt, current, parentOfCurrent, goal);
-          if(atGoal) { break; }
+          if(atGoal && (nodeList.calcCost(current) > nodeList.calcCost(goal))) { break; }
+	  atGoal = classifyPoint(adjacentPt, current, parentOfCurrent, goal) || atGoal;
         }//if
       }//for
-      if(atGoal) { break; }
+      if(atGoal && (nodeList.calcCost(current) > nodeList.calcCost(goal))) { break; }
     }//for
      current = nodeList.findNodeWithLowestSum();//get new point, returns {-1,-1} if no OPEN points left
   }//while
@@ -73,7 +72,7 @@ void Routing::generateRoute(Point start, Point goal, Direction currDir, Path * p
 void Routing::generateRouteSetup(Point start, Point goal, Direction currDir)
 {
   Point pointBehindStart = pointBehind(start, currDir);
-  if( ! maze->inMaze(pointBehindStart))
+  if( ! maze->contains(pointBehindStart))
     pointBehindStart = start;
   nodeList.resetList(goal, start, pointBehindStart, calcHeuristic(start,goal));
 }
@@ -98,7 +97,6 @@ void Routing::makePath(Path* path, bool atGoal, Point goal, Point start)
 bool Routing::classifyPoint(Point adjacentPt, Point current, Point parentOfCurrent, Point goal)
 {
   unsigned int adjacentPtCost = calcCost(parentOfCurrent, current, adjacentPt) + nodeList.calcCost(current);
-
   //Make it OPEN if it is NONE; if it is OPEN check if we can get there faster via the current node, if so we change the parent
   switch (nodeList.getListType(adjacentPt))
   {
@@ -112,7 +110,8 @@ bool Routing::classifyPoint(Point adjacentPt, Point current, Point parentOfCurre
 		nodeList.update(adjacentPt, current, adjacentPtCost, calcHeuristic(adjacentPt, goal));
 	  break;
 	case Node::GOAL:
-	  nodeList.setParent(adjacentPt, current);
+	  nodeList.update(adjacentPt, current, adjacentPtCost);
+	  //nodeList.setParent(adjacentPt, current);
 	  return true;
   }
   return false;
@@ -162,10 +161,10 @@ int Routing::calcCost(Point from, Point thru, Point to)
 int Routing::turnCost(Point from, Point thru, Point to)
 {
   const int NO_TURN_COST = 0,
-            TURN_45_COST = 20,
-	    TURN_90_COST = 25,
-	    TURN_135_COST = 40,
-	    TURN_180_COST = 100;
+            TURN_45_COST = 30,
+	    TURN_90_COST = 50,
+	    TURN_135_COST = 80,
+	    TURN_180_COST = 120;
 
   if(from == thru) //this may occur if no valid "from" can be passed to this function
     return NO_TURN_COST;
@@ -196,8 +195,8 @@ byte Routing::calcHeuristic(Point one, Point two)
 
   // The distance in the x dimension plus the distance in the y dimension.
   // The pythagoarean distance provides more accuracy but at the cost of speed
-  //return (byte) (HEURISTIC_WEIGHT * (abs(one.x - two.x) + abs(one.y - two.y)));//TODO might need a better heuristic!
-  return (byte) sqrt(((one.x - two.x)*(one.x - two.x) + (one.y - two.y)*(one.y - two.y)));
+  return (byte) (HEURISTIC_WEIGHT * (abs(one.x - two.x) + abs(one.y - two.y)));//TODO might need a better heuristic!
+  //return (byte) sqrt(((one.x - two.x)*(one.x - two.x) + (one.y - two.y)*(one.y - two.y)));
 }
 
 Point Routing::pointBehind(Point pt, Direction dir)

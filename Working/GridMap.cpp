@@ -4,7 +4,7 @@ GridMap::GridMap()
 {
 	for (unsigned char x = 0; x <= GRID_MAX_X; ++x)
 	{
-		for (unsigned char y = 0; x <= GRID_MAX_Y; ++y)
+		for (unsigned char y = 0; y <= GRID_MAX_Y; ++y)
 		{
 			grid[x][y] = 0x00;
 		}
@@ -36,7 +36,7 @@ bool GridMap::contains(Point point)
 }
 
 //Returns true if there is a connection between pt1 and pt2, and are both inMaze()
-bool GridMap::pointsJoined(Point pt1, Point pt2)
+bool GridMap::joined(Point pt1, Point pt2)
 {
 	unsigned char xDel = abs(pt1.x - pt2.x);
 	unsigned char yDel = abs(pt1.y - pt2.y);

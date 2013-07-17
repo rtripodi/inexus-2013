@@ -8,109 +8,64 @@
 //#include "Colour.h"
 #include <Servo.h>
 #include "Movement.h"
+#include "MazeImports.h"
+#include "GridMap.h"
 #include "Routing.h"
 
-Motor motors;
+GridMap gm;
+Routing router(&gm);
+Path path;
+Point start(1,1);
+Point goal(4,7);
+Direction startDir = SOUTH;
 
-Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
-void clawTestSetup();
-void clawTest();
-
-IR ir(1, IR::shortRange);
-void irTestSetup();
-void irTest();
-
-LineSensors ls;
-void lineFollowDemoSetup();
-void lineFollowDemo();
-
-Movement mover(&motors, &ls);
-void testMover()
+#define debugStream Serial
+void printPathAsListOfPoints(Path * inPath, Point start)
 {
-  for(int ii = 0; ii < 4; ++ii)
-    mover.moveTillPoint(80);
-  motors.stop();
-  delay(100000);
+  //Print "(x,y)" (where x = start.x, y = start.y)
+  debugStream.print("(");
+  debugStream.print(start.x);
+  debugStream.print(",");
+  debugStream.print(start.y);
+  debugStream.print(")");
+  
+  const int CNTR_START_OFFSET = 5,//Number of chars in "(n,n)" could be "(nn,nn)" though! @TODO
+            CNTR_INC = 9,//Number of chars in " -> (n,n)" could be " -> (nn,nn)" though! @TODO
+            MAX_LINE_WIDTH = 57;//Currently only an approx line width due to the 2 consts above being incorrect.
+  int counter = CNTR_START_OFFSET;
+  
+  for(int ii = 0; ii < inPath->length; ii++)
+  {
+    counter += CNTR_INC;
+    if(counter > MAX_LINE_WIDTH)
+    {
+      debugStream.println();
+      counter = 0;
+    }
+    
+    //print " -> (x,y)" (where x = inPath->path[ii].x and y = inPath->path[ii].y) = the coords of the next point in the path
+    debugStream.print(" -> ");
+    debugStream.print("(");
+    debugStream.print(inPath->path[ii].x);
+    debugStream.print(",");
+    debugStream.print(inPath->path[ii].y);
+    debugStream.print(")");
+  }
 }
 
 #define PUSHPIN 3
 
 void setup()
 {  
-  pinMode(LED_PIN, OUTPUT);
   Serial.begin(9600);
-  motors.setup();
-  digitalWrite(LED_PIN,HIGH);
-  pinMode(PUSHPIN, INPUT);
-  digitalWrite(PUSHPIN, HIGH);
-  while(digitalRead(PUSHPIN) == HIGH)
-  {
-    delay(500); 
-  }
-  digitalWrite(LED_PIN, LOW);
-  digitalWrite(PUSHPIN, HIGH);
-  lineFollowDemoSetup();
-  clawTestSetup();
+  Serial.println("started");
+
+  router.generateRoute(start, goal, startDir, &path);
+  Serial.println("here");
+  printPathAsListOfPoints(&path, start);
 }
 
 void loop()
 {
-  testMover();
-}
 
-void clawTestSetup()
-{
-  claw.setup();
-  claw.shut();
-}
-
-void clawTest()
-{
-  delay(4000);
-  claw.open();
-  delay(4000);
-  claw.close();
-  delay(4000);
-  claw.shut();
-}
-
-void irTestSetup()
-{
-  ir.setup();
-  Serial.println("Raw\t\tMillimetres");
-}
-
-void irTest()
-{
-  Serial.print(analogRead(1));
-  Serial.print("\t\t");
-  Serial.println(ir.getDist());
-  delay(100);
-}
-
-void lineFollowDemoSetup()
-{
-  ls.calibrate();
-  delay(4000);
-  ls.calibrate();
-}
-
-//Note, this is NOT the best way to do it.  Just a quick example of how to use the class.
-void lineFollowDemo()
-{
-  LineSensor_ColourValues leftWhite[8] = {NUL,NUL,WHT,NUL,NUL,NUL,NUL,NUL};
-  LineSensor_ColourValues rightWhite[8] = {NUL,NUL,NUL,NUL,NUL,WHT,NUL,NUL};
-  LineSensor_ColourValues allBlack[8] = {BLK,BLK,BLK,BLK,BLK,BLK,BLK,BLK};
-  ls.readCalibrated();
-  if(ls.see(leftWhite)){
-    motors.left(127);
-    motors.right(0);
-  }
-  if(ls.see(rightWhite)){
-    motors.right(127);
-    motors.left(0);
-  }
-  if(ls.see(allBlack)){
-    motors.stop();
-  }
 }
