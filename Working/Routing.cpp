@@ -33,8 +33,6 @@ void Routing::generateRoute(Point start, Point goal, Direction currDir, Path * p
   Point current = start;
   while(maze->contains(current) && !(atGoal && (nodeList.calcCost(current) > nodeList.calcCost(goal))))// loop continuously, it will break if we run out of points to investigate or if we find the goal
   {
-    Point parentOfCurrent = nodeList.getParent(current);
-    nodeList.close(current); //We have finished with this point so we close it
     //Check every adjacent node to the current one, allowing diagonal movement
     for (int xDelta = -1; xDelta <= 1; xDelta++)
     {
@@ -43,11 +41,12 @@ void Routing::generateRoute(Point start, Point goal, Direction currDir, Path * p
 	Point adjacentPt(current.x + xDelta, current.y + yDelta); //This will hold every new point adjacent to current that we investigate
         if(maze->joined(current, adjacentPt))//if current = adjacentPt or either point is outside the maze maze->joined() also returns false
         {
-	  atGoal = classifyPoint(adjacentPt, current, parentOfCurrent, goal) || atGoal;
+	  atGoal = classifyPoint(adjacentPt, current, nodeList.getParent(current), goal) || atGoal;
         }//if
       }//for
     }//for
-     current = nodeList.findNodeWithLowestSum();//get new point, returns {-1,-1} if no OPEN points left
+    nodeList.close(current); //We have finished with this point so we close it
+    current = nodeList.findNodeWithLowestSum();//get new point, returns {-1,-1} if no OPEN points left
   }//while
   
   makePath(path, atGoal, goal, start);
@@ -85,17 +84,17 @@ bool Routing::classifyPoint(Point adjacentPt, Point current, Point parentOfCurre
   switch (nodeList.getListType(adjacentPt))
   {
     case NodeList::OPEN:
-	  nodeList.update(adjacentPt, current, adjacentPtCost);
-	  break;
-	case NodeList::NONE:
-	  if( ! maze->isPassable(adjacentPt))
-		nodeList.close(adjacentPt);
-	  else
-		nodeList.update(adjacentPt, current, adjacentPtCost, calcHeuristic(adjacentPt, goal));
-	  break;
-	case NodeList::GOAL:
-	  nodeList.update(adjacentPt, current, adjacentPtCost);
-	  return true;
+      nodeList.update(adjacentPt, current, adjacentPtCost);
+      break;
+    case NodeList::NONE:
+      if( ! maze->isPassable(adjacentPt))
+        nodeList.close(adjacentPt);
+      else
+	nodeList.update(adjacentPt, current, adjacentPtCost, calcHeuristic(adjacentPt, goal));
+      break;
+    case NodeList::GOAL:
+      nodeList.update(adjacentPt, current, adjacentPtCost);
+      return true;
   }
   return false;
 }
