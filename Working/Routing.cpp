@@ -43,11 +43,9 @@ void Routing::generateRoute(Point start, Point goal, Direction currDir, Path * p
 	Point adjacentPt(current.x + xDelta, current.y + yDelta); //This will hold every new point adjacent to current that we investigate
         if(maze->joined(current, adjacentPt))//if current = adjacentPt or either point is outside the maze maze->joined() also returns false
         {
-          if(atGoal && (nodeList.calcCost(current) > nodeList.calcCost(goal))) { break; }
 	  atGoal = classifyPoint(adjacentPt, current, parentOfCurrent, goal) || atGoal;
         }//if
       }//for
-      if(atGoal && (nodeList.calcCost(current) > nodeList.calcCost(goal))) { break; }
     }//for
      current = nodeList.findNodeWithLowestSum();//get new point, returns {-1,-1} if no OPEN points left
   }//while
