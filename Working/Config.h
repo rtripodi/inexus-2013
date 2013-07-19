@@ -89,7 +89,7 @@
  *  Motor                                   *
  ********************************************/
 //Serial used for Motor Controller
-#define MotorControl Serial1
+#define MotorControl Serial2
 
 /********************************************
  *  Colour Sensor                           *
