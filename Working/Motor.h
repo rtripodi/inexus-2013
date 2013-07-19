@@ -27,7 +27,7 @@ class Motor
     //Adjust speed of both motors.
     //Positive for forward, negative for backwards. 
     //motorSpeed will be constrained between 0 and 127.
-    void both(int motorSpeed, int error);
+    void both(int motorSpeed, int error = 0);
 	
     //Positive for forward, negative for backwards. 
     //motorSpeed will be constrained between 0 and 127.
