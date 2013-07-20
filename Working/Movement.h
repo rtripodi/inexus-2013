@@ -4,6 +4,7 @@
 #include "PololuWheelEncoders.h"
 #include "LineSensors.h"
 #include "Motor.h"
+#include "Config.h"
 
 class Movement
 {

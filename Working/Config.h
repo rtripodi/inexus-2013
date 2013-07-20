@@ -106,3 +106,15 @@
 #define COLOUR_BAUD (4800)
 
 #define COLOUR_DELAY (200)
+
+/********************************************
+ *  Movement
+ * TODO: Rename MOTOR_1, MOTOR_2 to LEFT, RIGHT (need to look at HW to determine which is which)
+ ********************************************/
+
+//#defines for wheel encoders,
+//Quadrature encoders use 2 signals per motor, signal A and signal B
+#define MOTOR_1_SIG_A 8
+#define MOTOR_1_SIG_B 9
+#define MOTOR_2_SIG_A 11
+#define MOTOR_2_SIG_B 10
