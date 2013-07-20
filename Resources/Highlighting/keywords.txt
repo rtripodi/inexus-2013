@@ -1,0 +1,257 @@
+#######################################
+# This file is split into 1 section per class
+# KEYWORD1 is for class and enum names
+# KEYWORD2 is used for functions and public members
+#KEYWORD3 is used for Serial aliases
+#The 2 literal types have no distinction yet
+#LITERAL1 is used for constants
+#LITERAL2 is used for constants
+####################################
+###
+#######################################
+# Suggested colour scheme:
+# (Edit theme.txt in <ARDUINO>\lib\theme\)
+# (To copy/paste, remove ONE initial '#' from each line)
+#######################################
+## TEXT - KEYWORDS
+#
+## e.g abstract, final, private
+#editor.keyword1.style = #cc6600,plain
+#
+## e.g. beginShape, point, line
+#editor.keyword2.style = #9900cc,plain
+#
+## e.g. byte, char, short, color
+#editor.keyword3.style = #cc6600,bold
+#
+#
+## TEXT - LITERALS
+#
+## constants: e.g. null, true, this, RGB, TWO_PI
+#editor.literal1.style = #006699,plain
+#
+# p5 built in variables: e.g. mouseX, width, pixels
+#editor.literal2.style = #ff3366,plain
+#######################################
+
+
+#######################################
+# Claw
+#######################################
+Claw	KEYWORD1
+
+shut	KEYWORD2
+open	KEYWORD2
+close	KEYWORD2
+setup	KEYWORD2
+
+CLAW_RIGHT_PIN	LITERAL2
+CLAW_LEFT_PIN	LITERAL2
+CLAW_OPEN_LEFT	LITERAL1
+CLAW_OPEN_RIGHT	LITERAL1
+CLAW_CLOSE_LEFT	LITERAL1
+CLAW_CLOSE_RIGHT	LITERAL1
+CLAW_SHUT_LEFT	LITERAL1
+CLAW_SHUT_RIGHT	LITERAL1
+
+#######################################
+# Colour
+#######################################
+COLOUR_PIN	LITERAL1
+COLOUR_UNUSED_PIN	LITERAL1
+COLOUR_BAUD	LITERAL1
+COLOUR_DELAY	LITERAL1
+
+#######################################
+# Config.h
+#######################################
+Config	KEYWORD1
+
+Xbee	KEYWORD3
+
+LED_PIN	LITERAL1
+PUSH_PIN	LITERAL1
+XBee Serial	LITERAL1
+UNASSIGNED_SWITCH_1	LITERAL1
+UNASSIGNED_SWITCH_2	LITERAL1
+UNASSIGNED_SWITCH_3	LITERAL1
+UNASSIGNED_SWITCH_4	LITERAL1
+UNASSIGNED_SWITCH_5	LITERAL1
+UNASSIGNED_SWITCH_6	LITERAL1
+RESTART_PIN	LITERAL1
+DEBUG_PIN	LITERAL1
+
+#######################################
+# Direction
+#######################################
+Direction	KEYWORD1
+
+#constants
+NORTH	LITERAL2
+NEAST	LITERAL2
+EAST	LITERAL2
+SEAST	LITERAL2
+SOUTH	LITERAL2
+SWEST	LITERAL2
+WEST	LITERAL2
+NWEST	LITERAL2
+
+#######################################
+# GridMap
+#######################################
+GridMap	KEYWORD1
+
+setFlag	KEYWORD2
+removeFlag	KEYWORD2
+isFlagSet	KEYWORD2
+contains	KEYWORD2
+joined	KEYWORD2
+isPassable	KEYWORD2
+
+SEEN	LITERAL2
+VISITED	LITERAL2
+UNUSED1	LITERAL2
+UNUSED2	LITERAL2
+OCCUPIED	LITERAL2
+RED	LITERAL2
+GREEN	LITERAL2
+BLUE	LITERAL2
+
+#######################################
+# IR
+#######################################
+IR	KEYWORD1
+
+Range	KEYWORD1
+shortRange	KEYWORD2
+mediumRange	KEYWORD2
+longRange	KEYWORD2
+getDist	KEYWORD2
+
+IR_SHORT1_PIN	LITERAL1
+IR_MEDIUM_PIN	LITERAL1
+IR_LONG1_PIN	LITERAL1
+IR_LONG2_PIN	LITERAL1
+IR_ITERATIONS	LITERAL1
+
+#######################################
+# LineSensors
+#######################################
+LineSensors	KEYWORD1
+LineSensor_ColourValues	KEYWORD1
+
+reading	KEYWORD2
+see	KEYWORD2
+error	KEYWORD2
+
+QTR_SENSOR_PINS_LIST	LITERAL1
+QTR_NUM_PINS	LITERAL1
+QTR_TIMEOUT	LITERAL1
+QTR_EMITTER_PIN	LITERAL1
+MIN_BLACK	LITERAL1
+BLK	LITERAL2
+WHT	LITERAL2
+NUL	LITERAL2
+
+#######################################
+# MazeMap
+#######################################
+MazeMap	KEYWORD1
+
+updateMap	KEYWORD2
+getNext	KEYWORD2
+resetToStart	KEYWORD2
+resetToEnd	KEYWORD2
+
+#######################################
+# MazeImports
+#######################################
+MazeImports	KEYWORD1
+
+#######################################
+# Motor
+#######################################
+Motor	KEYWORD1
+
+both	KEYWORD2
+left	KEYWORD2
+right	KEYWORD2
+
+MotorControl	KEYWORD3
+
+#######################################
+# Movement
+#######################################
+Movement	KEYWORD1
+
+onCross	KEYWORD2
+moveTillPoint	KEYWORD2
+moveOffCross	KEYWORD2
+moveTicks	KEYWORD2
+tickError	KEYWORD2
+
+MOTOR_1_SIG_A	LITERAL1
+MOTOR_1_SIG_B 	LITERAL1
+MOTOR_2_SIG_A	LITERAL1
+MOTOR_2_SIG_B	LITERAL1
+
+#######################################
+# Path
+#######################################
+Path	KEYWORD1
+
+#length	KEYWORD2
+#path	KEYWORD2
+last	KEYWORD2
+pointInPath	KEYWORD2
+
+#######################################
+# Point
+#######################################
+Point	KEYWORD1
+
+#x	KEYWORD2
+#y	KEYWORD2
+#flags	KEYWORD2
+debug	KEYWORD2
+encodeCoordinates	KEYWORD2
+decodeCoordinates	KEYWORD2
+
+#######################################
+# Routing
+#######################################
+Routing	KEYWORD1
+
+generateRoute	KEYWORD2
+
+#######################################
+###### Routing::Node
+#######################################
+Node	KEYWORD1
+
+sum	KEYWORD2
+heuristic	KEYWORD2
+listType	KEYWORD2
+parent	KEYWORD2
+set	KEYWORD2
+calcCost	KEYWORD2
+
+#######################################
+###### Routing::NodeList
+#######################################
+NodeList	KEYWORD1
+
+xLength	KEYWORD2
+yLength	KEYWORD2
+resetList	KEYWORD2
+update	KEYWORD2
+findNodeWithLowestSum	KEYWORD2
+calcCost	KEYWORD2
+getParent	KEYWORD2
+getListType	KEYWORD2
+setParent	KEYWORD2
+
+NONE	LITERAL2
+CLOSED	LITERAL2
+OPEN	LITERAL2
+GOAL	LITERAL2
