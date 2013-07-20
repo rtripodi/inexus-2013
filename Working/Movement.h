@@ -13,6 +13,7 @@ class Movement
 		bool onCross();
 		void moveTillPoint(int speed);
 		void moveOffCross(int speed);
+		void moveTicks(int ticks, int speed);
 		int tickError();
 	private:
 		PololuWheelEncoders wheelEnc;
