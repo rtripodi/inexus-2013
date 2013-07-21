@@ -11,9 +11,9 @@ class Movement
 	public:
 		Movement(Motor * inMotors, LineSensors * inSensors);
 		bool onCross();
-		void moveTillPoint(int speed);
-		void moveOffCross(int speed);
-		void moveTicks(int ticks, int speed);
+		void moveTillPoint(int speed = DEFAULT_SPEED);
+		void moveOffCross(int speed = DEFAULT_SPEED);
+		void moveTicks(int ticks, int speed = DEFAULT_SPEED);
 		int tickError();
 	private:
 		PololuWheelEncoders wheelEnc;

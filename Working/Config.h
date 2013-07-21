@@ -118,3 +118,5 @@
 #define MOTOR_1_SIG_B 9
 #define MOTOR_2_SIG_A 11
 #define MOTOR_2_SIG_B 10
+
+#define DEFAULT_SPEED 45
