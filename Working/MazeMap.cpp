@@ -10,34 +10,6 @@ MazeMap::MazeMap()
 
 void MazeMap::updateMap(Direction inDirection)
 {
-    maze[index] = inDirection;
-    index++;
-}
-
-MazeMap::Direction MazeMap::getNext()
-{
-    Direction temp = maze[index];
-	index += mazeDirection;
-    return temp;
-}
-        
-unsigned char MazeMap::simplify()
-{
-}
-
-void MazeMap::resetToStart()
-{
-    mazeDirection = 1;
-	index = 0;
-}
-void MazeMap::resetToEnd()
-{
-    mazeDirection = -1;
-	index = mazeLength;
-}
-
-void MazeMap::updateMapProgressively(Direction inDirection)
-{
     if(needSimplify)
 	{
 		//TODO: I don't think the case of consecutive reversals is possible. Only put here as a safetynet for now
@@ -48,7 +20,7 @@ void MazeMap::updateMapProgressively(Direction inDirection)
 			needSimplify = false;
 		}	
 		else
-			simplifyProgressively(inDirection);
+			simplify(inDirection);
 	}
 	else
 		maze[index] = inDirection;
@@ -58,7 +30,7 @@ void MazeMap::updateMapProgressively(Direction inDirection)
 	mazeLength++;
 }
 
-void MazeMap::simplifyProgressively(Direction inDirection)
+void MazeMap::simplify(Direction inDirection)
 {
 	index -= 2;
 	mazeLength -= 2;
@@ -85,4 +57,22 @@ void MazeMap::simplifyProgressively(Direction inDirection)
 		maze[index] = reverse;
 		needSimplify = true;
 	}
+}
+
+MazeMap::Direction MazeMap::getNext()
+{
+    Direction temp = maze[index];
+	index += mazeDirection;
+    return temp;
+}
+
+void MazeMap::resetToStart()
+{
+    mazeDirection = 1;
+	index = 0;
+}
+void MazeMap::resetToEnd()
+{
+    mazeDirection = -1;
+	index = mazeLength;
 }
