@@ -54,7 +54,7 @@ void Movement::moveTicks(int ticks, int speed)
     if(error > 0) { leftSpeed -= 1; }
     else if(error < 0) { rightSpeed -= 1; }
     else { leftSpeed = speed; rightSpeed = speed; }
-    
+    leftSpeed = speed; rightSpeed = speed;
     //send message to motors to adjust speed
     motors->left(leftSpeed);
     motors->right(rightSpeed);
@@ -65,6 +65,9 @@ void Movement::moveTicks(int ticks, int speed)
     rightTicks = abs(wheelEnc.getCountsM2());
   }
 }
+
+
+
 
 int Movement::tickError()
 {
@@ -87,11 +90,12 @@ void Movement::moveLength(int length, int speed)
   
 }
 
-//clockwise turning is positive angle, anti-clockwise turning is negative angle.
+//clockwise turning is positive angle, anti-clockwise turning is negative angle.Speed is positive.
 //This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
 //WARNING, ERROR, TODO: This is untested
   void Movement::rotateAngle(int angle, int speed)
 {
+  Serial.println(256);
 angle=constrain(angle,-180,180);
 
 //reset encoders (both wheels now have 0 ticks)
@@ -109,21 +113,19 @@ angle=constrain(angle,-180,180);
   //convert the angle to ticks
   //Simplified formulae: (Wheel Base Diameter * 48 [number of ticks in one revolution]) / (Wheel Diameter * 360) * Angle
   ticks = round((abs(angle) * 96)/215);
-  leftTicks = ticks;
-  rightTicks = ticks;
  
    //adjust speed and angle if turning anti-clockwise
-  if(angle < 0) { leftspeed = - speed; rightspeed = speed; }
+  if(angle < 0) { leftSpeed = - speed; rightSpeed = speed; }
    //adjust speed and angle if turning clockwise
-  if(angle > 0) { leftspeed = speed; rightspeed = - speed; }
+  if(angle > 0) { leftSpeed = speed; rightSpeed = - speed; }
   
   while((abs(leftTicks) < abs(ticks) )|| (abs(rightTicks) < abs(ticks)))
   {
-    //adjust motor speed to compensate for error
-    int error = tickError();
-    if(error > 0) { leftSpeed -= 1; }
-    else if(error < 0) { rightSpeed -= 1; }
-    else { leftSpeed = speed; rightSpeed = speed; }
+//    //adjust motor speed to compensate for error
+//    int error = tickError();
+//    if(error > 0) { leftSpeed -= 1; }
+//    else if(error < 0) { rightSpeed -= 1; }
+//    else { leftSpeed = speed; rightSpeed = speed; }
     
     //send message to motors to adjust speed
     motors->left(leftSpeed);

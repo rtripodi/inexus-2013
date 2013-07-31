@@ -8,81 +8,33 @@
 //#include "Colour.h"
 #include <Servo.h>
 #include "Movement.h"
+#include "Motor.h"
 #include "MazeImports.h"
 #include "GridMap.h"
 #include "Routing.h"
 
-GridMap gm;
-Routing router(&gm);
-Path path;
-
-
-#define debugStream Serial
-void printPathAsListOfPoints(Path * inPath, Point start)
-{
-  //Print "(x,y)" (where x = start.x, y = start.y)
-  debugStream.print("(");
-  debugStream.print(start.x);
-  debugStream.print(",");
-  debugStream.print(start.y);
-  debugStream.print(")");
-  
-  const int CNTR_START_OFFSET = 5,//Number of chars in "(n,n)" could be "(nn,nn)" though! @TODO
-            CNTR_INC = 9,//Number of chars in " -> (n,n)" could be " -> (nn,nn)" though! @TODO
-            MAX_LINE_WIDTH = 57;//Currently only an approx line width due to the 2 consts above being incorrect.
-  int counter = CNTR_START_OFFSET;
-  
-  for(int ii = 0; ii < inPath->length; ii++)
-  {
-    counter += CNTR_INC;
-    if(counter > MAX_LINE_WIDTH)
-    {
-      debugStream.println();
-      counter = 0;
-    }
-    
-    //print " -> (x,y)" (where x = inPath->path[ii].x and y = inPath->path[ii].y) = the coords of the next point in the path
-    debugStream.print(" -> ");
-    debugStream.print("(");
-    debugStream.print(inPath->path[ii].x);
-    debugStream.print(",");
-    debugStream.print(inPath->path[ii].y);
-    debugStream.print(")");
-  }
-}
-
-#define PUSHPIN 3
+Motor motor;
+LineSensors ls;
+Movement mover(&motor, &ls); 
 
 void setup()
-{  
+{
   Serial.begin(9600);
-  Point start(1,1);
-  Point goal(4,7);
-  Direction startDir = NORTH;
-//  //Uncomment for example of obstacle avoidance
-//  gm.setFlag(Point(1,2), OCCUPIED);
-//  gm.setFlag(Point(2,1), OCCUPIED);
-//  gm.setFlag(Point(2,0), OCCUPIED);
-//  gm.setFlag(Point(0,7), OCCUPIED);
-  Serial.println();
-  Serial.println("Facing North:");
-  router.generateRoute(start, goal, startDir, &path);
-  printPathAsListOfPoints(&path, start);
-  Serial.println();
-  Serial.println("Facing East:");
-  router.generateRoute(start, goal, EAST, &path);
-  printPathAsListOfPoints(&path, start);
-  Serial.println();
-  Serial.println("Facing South:");
-  router.generateRoute(start, goal, SOUTH, &path);
-  printPathAsListOfPoints(&path, start);
-  Serial.println();
-  Serial.println("Facing West:");
-  router.generateRoute(start, goal, WEST, &path);
-  printPathAsListOfPoints(&path, start);
+  motor.setup(); 
 }
 
 void loop()
 {
 
+motor.stop();
+mover.moveLength(270,80);
+motor.stop();
+
+delay(500);
+
+motor.stop();
+mover.rotateAngle(90,80);
+motor.stop();
+
+delay(500);
 }
