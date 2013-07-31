@@ -15,7 +15,9 @@ class Movement
 		void moveOffCross(int speed = DEFAULT_SPEED);
 		void moveTicks(int ticks, int speed = DEFAULT_SPEED);
 		int tickError();
-	private:
+                void moveLength(int length, int speed = DEFAULT_SPEED);
+                void rotateAngle(int angle, int speed = DEFAULT_SPEED);
+             	private:
 		PololuWheelEncoders wheelEnc;
 		LineSensors * ls;
 		Motor * motors;

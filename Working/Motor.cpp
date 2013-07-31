@@ -73,6 +73,12 @@ void Motor::right(int motorSpeed)
 //Stops both motors
 void Motor::stop() { both(0,0); }
 
+
+// *************Do we really need this?*********************
+// Couldn't we just use the constrain comman
+// Example: angle=constrain(angle,-180,180);
+//**********************************************************
+
 //Returns val if it is between 0 and 127.
 //If less than 0, it returns 0.
 //If greater than 127, it returns 127.
