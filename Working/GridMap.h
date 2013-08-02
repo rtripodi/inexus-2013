@@ -72,6 +72,9 @@ class GridMap : public Maze
 		//Returns true if point is not occupied
 		bool isPassable(Point point);
 		
+		//DEBUG: Returns flags for give point
+		unsigned char getFlags(Point point);
+		
 	private:
 		unsigned char status[GRID_MAX_X + 1][GRID_MAX_Y + 1];
 };

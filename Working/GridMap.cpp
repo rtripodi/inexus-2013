@@ -48,3 +48,9 @@ bool GridMap::isPassable(Point point)
 {
 	return !(isFlagSet(point, OCCUPIED));
 }
+
+//DEBUG: Returns flags for give point
+unsigned char GridMap::getFlags(Point point)
+{
+	return status[point.x][point.y];
+}
