@@ -6,7 +6,7 @@ GridMap::GridMap()
 	{
 		for (unsigned char y = 0; y <= GRID_MAX_Y; ++y)
 		{
-			grid[x][y] = 0x00;
+			status[x][y] = 0x00;
 		}
 	}
 }
@@ -14,19 +14,19 @@ GridMap::GridMap()
 //Change desired flag(s) to 1 for passed point
 void GridMap::setFlag(Point pt, unsigned char inFlag)
 {
-	grid[pt.x][pt.y] |= inFlag;
+	status[pt.x][pt.y] |= inFlag;
 }
 
 //Change desired flag(s) to 0 for passed point 
 void GridMap::removeFlag(Point pt, unsigned char inFlag)
 {
-	grid[pt.x][pt.y] &= ~inFlag;
+	status[pt.x][pt.y] &= ~inFlag;
 }
 
 //Returns true if the passed flag(s) is/are set
 bool GridMap::isFlagSet(Point pt, unsigned char inFlag)
 {
-	return grid[pt.x][pt.y] & inFlag;
+	return status[pt.x][pt.y] & inFlag;
 }
 
 //Returns true if point is in grid

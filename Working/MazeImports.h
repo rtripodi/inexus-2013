@@ -5,7 +5,6 @@ struct Point
 {
   int x;
   int y;
-  unsigned char flags;
 
   Point(){}
   
@@ -101,7 +100,8 @@ struct Path
   }
 };
 
-enum Direction {NORTH, NEAST, EAST, SEAST, SOUTH, SWEST, WEST, NWEST};
+//TODO: Diagonals values should be between cardinal values, need to rewrite turn finding function for this
+enum Direction {NORTH = 1 , EAST = 2, SOUTH = 3, WEST = 4, NEAST = 5 , SEAST = 6, SWEST = 7, NWEST = 8};
 
 class Maze
 {

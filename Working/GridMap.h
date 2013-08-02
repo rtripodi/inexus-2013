@@ -20,23 +20,12 @@
 #include "MazeImports.h"
 
 //Grid dimensions
-#define GRID_MAX_X (7)
+#define GRID_MAX_X (3)
 #define GRID_MAX_Y (7)
 
 //Known locations
-#define STARTING_X (GRID_MAX_X)
-#define STARTING_Y (0)
-#define ENTRANCE_X (0)
+#define ENTRANCE_X (GRID_MAX_X)
 #define ENTRANCE_Y (0)
-#define DROPZONE_X (GRID_MAX_X)
-#define DROPZONE_Y (GRID_MAX_Y)
-
-//struct Point
-//{
-//	unsigned char x;
-//	unsigned char y;
-//	unsigned char flags;
-//};
 
 //The status of point on the grid is bitmapped to 1 byte and contains the following flags:
 //	Seen - The point has been seen
@@ -56,7 +45,7 @@
 
 //Least significant nibble mask bits
 #define OCCUPIED	(0x08)
-#define RED		(0x04)
+#define RED			(0x04)
 #define GREEN		(0x02)
 #define BLUE		(0x01)
 
@@ -84,7 +73,7 @@ class GridMap : public Maze
 		bool isPassable(Point point);
 		
 	private:
-		unsigned char grid[GRID_MAX_X + 1][GRID_MAX_Y + 1];
+		unsigned char status[GRID_MAX_X + 1][GRID_MAX_Y + 1];
 };
 
 #endif

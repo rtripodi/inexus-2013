@@ -66,8 +66,8 @@
 #define CLAW_OPEN_RIGHT (100)
 
 //Values for each servo to allow claw to be in closed state
-#define CLAW_CLOSE_LEFT (CLAW_OPEN_LEFT + 60)
-#define CLAW_CLOSE_RIGHT (CLAW_OPEN_RIGHT - 60)
+#define CLAW_CLOSE_LEFT (CLAW_OPEN_LEFT + 60 -20)
+#define CLAW_CLOSE_RIGHT (CLAW_OPEN_RIGHT - 60 + 20)
 
 //Values for each servo to allow claw to be in shut state
 #define CLAW_SHUT_LEFT (CLAW_OPEN_LEFT + 82)
@@ -77,10 +77,10 @@
  *  IR Sensors                              *
  ********************************************/
 //Pins used for communication with IR sensors
-#define IR_SHORT1_PIN (1)
-#define IR_MEDIUM_PIN (-1)
-#define IR_LONG1_PIN (-1)
-#define IR_LONG2_PIN (-1)
+#define IR_SHORT_PIN (1)
+#define IR_MEDIUML_PIN (4)
+#define IR_MEDIUMR_PIN (2)
+#define IR_MEDIUMB_PIN (0)
 
 //Amount of IR reads to determine mean value
 #define IR_ITERATIONS (10)
@@ -119,4 +119,4 @@
 #define MOTOR_2_SIG_A 11
 #define MOTOR_2_SIG_B 10
 
-#define DEFAULT_SPEED 45
+#define DEFAULT_SPEED 65

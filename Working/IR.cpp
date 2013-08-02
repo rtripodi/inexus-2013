@@ -30,25 +30,29 @@ int IR::getDist()
 	return distInMillis;
 }
 
-//Reads multiple raw values from IR sensor and returns an accurate mean
+//Reads multiple raw values from IR sensor and returns a mean that disregards outliers
 int IR::read()
 {
-/*	int rawReadings[IR_ITERATIONS];
+	int rawReadings[IR_ITERATIONS];
 	
 	for (int ii = 0; ii < IR_ITERATIONS; ++ii)
 	{
 		rawReadings[ii] = analogRead(pin);
 	}
 	
-	return calcMeanNoOutliers(rawReadings, IR_ITERATIONS);*/
+	return calcMeanNoOutliers(rawReadings, IR_ITERATIONS);
+}
 
-        int dataSum = 0;
+//Reads multiple raw values from IR sensor and returns a pure mean that includes outliers
+int IR::readPureMean()
+{
+	int dataSum = 0;
 	for (int ii = 0; ii < IR_ITERATIONS; ++ii)
 	{
 		dataSum += analogRead(pin);
 	}
 
-  return (int) ( (float) dataSum / (float) IR_ITERATIONS + 0.5);
+	return (int) ( (float) dataSum / (float) IR_ITERATIONS + 0.5);
 }
 
 //Converts reading to distance in mm for 4-30cm sensor
@@ -74,7 +78,21 @@ int IR::shortScan(int reading)
 //UNIMPLEMENTED
 //Converts reading to distance in mm for 10-80cm sensor
 //Returns -1 on error
-int IR::mediumScan(int reading) { return -1; }
+int IR::mediumScan(int reading)
+{
+	if (reading > 575)
+		return -1;
+	else if (reading < 182)
+		return 380;
+	else
+	{
+		float result;
+		result = 240052.0*pow( (float)reading, -1.243);
+		reading = (int) result + 0.5;
+		
+		return reading;
+	}
+}
 
 //UNIMPLEMENTED
 //Converts reading to distance in mm for 20-150cm sensor

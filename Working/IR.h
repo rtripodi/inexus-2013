@@ -27,8 +27,11 @@ class IR
 		int pin; //Analog pin IR sensor is attached to
 		Range type; //Type of sensor for determining function to use to convert readings to mm
 		
-		//Reads multiple raw values from IR sensor and returns an accurate mean
+		//Reads multiple raw values from IR sensor and returns a mean that disregards outliers
 		int read();
+		
+		//Reads multiple raw values from IR sensor and returns a pure mean that includes outliers
+		int readPureMean();
 		
 		//Converts reading to distance in mm for 4-30cm sensor
 		//Returns -1 on error
