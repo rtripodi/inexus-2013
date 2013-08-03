@@ -24,8 +24,8 @@
 //Left IR senses 275-300mm for block
 //Right IR senses 250-275mm for block
 
-#define TURN_RIGHT (90 - 10) //Tweaking given speed of 80
-#define TURN_LEFT (-90 + 10)
+#define TURN_RIGHT (90 - 20) //Tweaking given speed of 80
+#define TURN_LEFT (-90 + 20)
 #define TURN_FRONT 0
 #define TURN_BACK 180
 
@@ -286,7 +286,7 @@ bool obtainBlock(unsigned char relDir)
 	else
 		moveToFrontPoint();
 	irInMm.frnt = frontIr.getDist();
-	if (irInMm.frnt <= BLOCK_STOP + 20)
+	if (irInMm.frnt <= BLOCK_STOP + 40)
 	{
 //		Serial.print("Picked up block from: (");//DEBUG
 //		Serial.print(currPoint.x);//DEBUG
@@ -299,6 +299,7 @@ bool obtainBlock(unsigned char relDir)
 	}
 	else
 	{
+		claw.shut();
 		mover.rotateAngle(TURN_BACK, DEFAULT_SPEED);
 		facing = findNewFacing(REL_BACK);
 		moveToFrontPoint();
@@ -355,20 +356,8 @@ void turnInDir(unsigned char newDir)
 void moveToPoint(Point pt)
 {
 	unsigned char newDir = dirOfPoint(pt);
-	
-//	Serial.print("Direction: "); //DEBUG
-//	printDirection(newDir);//DEBUG
-		
 	turnInDir(newDir);
-	
-//	Serial.print("\tTurn: ");//DEBUG
-//	printRelDirection(turn);//DEBUG
-	
 	facing = newDir;
-	
-//	Serial.print("\tNow Facing: ");//DEBUG
-//	printDirection(newDir);//DEBUG
-	
 	moveToFrontPoint();
 }
 
@@ -416,11 +405,6 @@ void scanAdjacent()
 		scanRightIr();
 	if(scanDir.lft)
 		scanLeftIr();
-	Serial.print(irInMm.lft);//DEBUG
-	Serial.print("\t");//DEBUG
-	Serial.print(irInMm.frnt);//DEBUG
-	Serial.print("\t");//DEBUG
-	Serial.println(irInMm.rght);//DEBUG
 }
 
 //Base case for traversal
@@ -578,6 +562,7 @@ void initTraverseAlt()
 	
 	do
 	{
+		grabSuccess = true; //reset
 		scanFrontIr();
 	
 		//irInMm.rght = 250;//DEBUG
@@ -590,7 +575,6 @@ void initTraverseAlt()
 			moveToFrontPoint();
 		}
 	} while(!grabSuccess);
-	grabSuccess = true; //reset
 }
 
 void traverseLongAlt(unsigned char faceDir)
@@ -603,6 +587,7 @@ void traverseLongAlt(unsigned char faceDir)
 	{
 		do
 		{
+			grabSuccess = true; //reset
 			scanFrontIr();
 		
 			//irInMm.lft = 250;//DEBUG
@@ -611,7 +596,6 @@ void traverseLongAlt(unsigned char faceDir)
 			else
 				moveToFrontPoint();
 		} while(!grabSuccess);
-		grabSuccess = true; //reset
 	}
 	else
 	{
@@ -651,13 +635,14 @@ void traverseShortAlt()
 	
 	do
 	{
+		grabSuccess = true; //reset
 		scanFrontIr();
 	
 		if (scanDir.frnt && isBlock(REL_FRONT) )
 			haveBlock = obtainBlock(REL_FRONT);
 		else
 		{
-			if (currPoint.x == 2 || currPoint.x == 4)
+			if (currPoint.x == 2 || currPoint.x == 0)
 			{
 				mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
 				facing = findNewFacing(REL_LEFT);
@@ -925,52 +910,6 @@ void testSensors()
 	Serial.print(irInMm.frnt);
 	Serial.print("\t");
 	Serial.println(irInMm.rght);
-	/*
-	while (blockDir != REL_FRONT && blockDir != REL_LEFT && blockDir != REL_RIGHT)
-	{
-		if (irInMm.frnt > BLOCK_DIST - BLOCK_TOLERANCE)
-			blockDir = REL_FRONT;
-		else if (irInMm.lft > BLOCK_DIST - BLOCK_TOLERANCE)
-			blockDir = REL_LEFT;
-		else if (irInMm.rght > BLOCK_DIST - BLOCK_TOLERANCE)
-			blockDir = REL_RIGHT;
-		else
-		{
-			irInMm.frnt = frontIr.getDist();
-			irInMm.lft = leftIr.getDist();
-			irInMm.rght = rightIr.getDist();
-			Serial.print(irInMm.lft);
-			Serial.print("\t");
-			Serial.print(irInMm.frnt);
-			Serial.print("\t");
-			Serial.println(irInMm.rght);
-		}
-	}
-	switch (blockDir)
-	{
-		case REL_LEFT:
-			mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
-			break;
-		case REL_RIGHT:
-			mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
-			break;
-	}
-	claw.open();
-	irInMm.frnt = frontIr.getDist();
-	while (irInMm.frnt > BLOCK_STOP)
-	{
-		mover.moveForward(DEFAULT_SPEED);
-		irInMm.frnt = frontIr.getDist();
-	}
-	motors.stop();
-	claw.close();
-	mover.moveTillPoint(DEFAULT_SPEED);
-	mover.moveOffCross(DEFAULT_SPEED);
-	motors.stop();
-	
-	claw.open();
-
-	delay(100000);*/
 }
 
 ////////////////////////////////// END TEST FUNCTIONS //////////////////////////////////
@@ -1078,10 +1017,6 @@ void lineFollowDemo()
 {
 	LineSensor_ColourValues leftSlightWhite[8] = {NUL,NUL,WHT,NUL,NUL,NUL,NUL,NUL};
 	LineSensor_ColourValues rightSlightWhite[8] = {NUL,NUL,NUL,NUL,NUL,WHT,NUL,NUL};
-/*	LineSensor_ColourValues leftWhite[8] = {NUL,WHT,NUL,NUL,NUL,NUL,NUL,NUL};
-	LineSensor_ColourValues rightWhite[8] = {NUL,NUL,NUL,NUL,NUL,NUL,WHT,NUL};
-	LineSensor_ColourValues leftEdgeWhite[8] = {WHT,NUL,NUL,NUL,NUL,NUL,NUL,NUL};
-	LineSensor_ColourValues rightEdgeWhite[8] = {NUL,NUL,NUL,NUL,NUL,NUL,NUL,WHT};*/
 	LineSensor_ColourValues allBlack[8] = {BLK,BLK,BLK,BLK,BLK,BLK,BLK,BLK};
 	ls.readCalibrated();
 	if(ls.see(leftSlightWhite))
@@ -1094,26 +1029,6 @@ void lineFollowDemo()
 		motors.right(127);
 		motors.left(0);
 	}
-/*	if(ls.see(leftWhite))
-	{
-		motors.left(127*5/4);
-		motors.right(0);
-	}
-	if(ls.see(rightWhite))
-	{
-		motors.right(127*5/4);
-		motors.left(0);
-	}
-	if(ls.see(leftWhite))
-	{
-		motors.left(127*3/2);
-		motors.right(0);
-	}
-	if(ls.see(rightWhite))
-	{
-		motors.right(127*3/2);
-		motors.left(0);
-	}*/
 	if(ls.see(allBlack))
 		motors.stop();
 }
