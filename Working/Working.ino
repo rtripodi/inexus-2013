@@ -80,6 +80,73 @@ bool haveBlock = false;
 unsigned char facing = DIR_WEST;
 int turn = TURN_RIGHT;
 
+/////////////////////// DEBUG PRINTING FUNCTIONS ///////////////////////
+void printDirection(unsigned char dir)
+{
+	switch(dir)
+	{
+		case DIR_NORTH:
+			Serial.print("North");
+			break;
+		case DIR_SOUTH:
+			Serial.print("South");
+			break;
+		case DIR_EAST:
+			Serial.print("East");
+			break;
+		case DIR_WEST:
+			Serial.print("West");
+			break;
+	}
+}
+
+void printRelDirection(unsigned char dir)
+{
+	switch(dir)
+	{
+		case REL_FRONT:
+			Serial.print("Front");
+			break;
+		case REL_BACK:
+			Serial.print("Back");
+			break;
+		case REL_RIGHT:
+			Serial.print("Right");
+			break;
+		case REL_LEFT:
+			Serial.print("Left");
+			break;
+	}
+}
+
+void printGrid()
+{
+	Serial.println();
+	char buffer[50];
+	for(int x = 0; x < 4; ++x)
+	{
+		for(int y = 0; y < 8; ++y)
+		{
+			tempPoint.x = x;
+			tempPoint.y = y;
+			sprintf(buffer, "[%x]", gridMap.getFlags(tempPoint) );
+			Serial.print(buffer);
+		}
+		Serial.println();
+	}
+	Serial.println();
+	Serial.print("Current: (");
+	Serial.print(currPoint.x);
+	Serial.print(", ");
+	Serial.print(currPoint.y);
+	Serial.print(")\tFacing: ");
+	printDirection(facing);
+	Serial.println();
+	Serial.println();
+}
+/////////////////////// END DEBUG PRINTING FUNCTIONS ///////////////////////
+
+
 unsigned char findNewFacing(unsigned char relativeTurn)
 {
 	if( (facing == DIR_NORTH && relativeTurn == REL_FRONT) || (facing == DIR_EAST && relativeTurn == REL_LEFT) || (facing == DIR_SOUTH && relativeTurn == REL_BACK) || (facing == DIR_WEST && relativeTurn == REL_RIGHT) )
@@ -120,21 +187,24 @@ bool obtainFrontBlock()
 	moveToFrontPoint();
 //VIRTUAL	irInMm.frnt = frontIr.getDist();
 //	if (irInMm.frnt <= BLOCK_STOP) DEBUG: assume true for now
+//	{
+		gridMap.removeFlag(currPoint, OCCUPIED);
 		return true;
+//	}
 //	else
 //		return false;
 }
 
 unsigned char dirOfPoint(Point pt)
 {
-	if (pt.y == currPoint.y + 1)
-		DIR_NORTH;
-	else if (pt.y == currPoint.y - 1)
-		DIR_SOUTH;
-	else if (pt.y == currPoint.x + 1)
-		DIR_EAST;
-	else if (pt.y == currPoint.x - 1)
-		DIR_WEST;
+	if (pt.y == currPoint.y + 1 && pt.x == currPoint.x)
+		return DIR_NORTH;
+	else if (pt.y == currPoint.y - 1 && pt.x == currPoint.x)
+		return DIR_SOUTH;
+	else if (pt.y == currPoint.y && pt.x == currPoint.x + 1)
+		return DIR_EAST;
+	else if (pt.y == currPoint.y && pt.x == currPoint.x - 1)
+		return DIR_WEST;
 	//TODO: Add NWEST etc.
 }
 
@@ -147,10 +217,18 @@ void moveToFrontPoint()
 
 void turnInDir(unsigned char newDir)
 {
-	signed char delta = newDir - facing;
+/*	signed char delta = newDir - facing; DEBUG: May be broken, using below if statement instead
 	if (delta < 0)
 		delta += 4;
-	turn = delta;
+	turn = delta;*/
+	if (facing == newDir)
+		turn = REL_FRONT;
+	else if ( (facing == DIR_NORTH && newDir == DIR_SOUTH) || (facing == DIR_EAST && newDir == DIR_WEST) || (facing == DIR_SOUTH && newDir == DIR_NORTH) || (facing == DIR_WEST && newDir == DIR_EAST) )
+		turn = REL_BACK;
+	else if ( (facing == DIR_NORTH && newDir == DIR_WEST) || (facing == DIR_EAST && newDir == DIR_NORTH) || (facing == DIR_SOUTH && newDir == DIR_EAST) || (facing == DIR_WEST && newDir == DIR_SOUTH) )
+		turn = REL_LEFT;
+	else if ( (facing == DIR_NORTH && newDir == DIR_EAST) || (facing == DIR_EAST && newDir == DIR_SOUTH) || (facing == DIR_SOUTH && newDir == DIR_WEST) || (facing == DIR_WEST && newDir == DIR_NORTH) )
+		turn = REL_RIGHT;
 /*VIRTUAL	switch (turn)
 	{
 		case REL_FRONT:
@@ -171,16 +249,28 @@ void turnInDir(unsigned char newDir)
 void moveToPoint(Point pt)
 {
 	unsigned char newDir = dirOfPoint(pt);
+	
+	Serial.print("Direction: "); //DEBUG
+	printDirection(newDir);//DEBUG
+		
 	turnInDir(newDir);
+	
+	Serial.print("\tTurn: ");//DEBUG
+	printRelDirection(turn);//DEBUG
+	
 	facing = newDir;
+	
+	Serial.print("\tNow Facing: ");//DEBUG
+	printDirection(newDir);//DEBUG
+	
 	moveToFrontPoint();
 }
 
 void dropOff()
 {
 	Path path;
-	Point startPoint(GRID_MAX_X, 0);
-	router.generateRoute(currPoint, startPoint, (Direction)facing, &path);
+	Point entrPoint(GRID_MAX_X, 0);
+	router.generateRoute(currPoint, entrPoint, (Direction)facing, &path);
 	for (int ii = 0; ii < path.length; ++ii)
 	{
 		moveToPoint(path.path[ii]);
@@ -438,39 +528,20 @@ void findBlock()
 	delay(100000);
 }
 
-void printGrid()
+void avoidBlocks()
 {
-	Serial.print("Facing: ");
-	switch(facing)
+	Path path;
+	Point startPoint(GRID_MAX_X, 0);
+	currPoint = startPoint;
+	Point goalPoint(0, GRID_MAX_Y);
+	facing = DIR_WEST;
+	router.generateRoute(startPoint, goalPoint, (Direction)facing, &path);
+	for (int ii = 0; ii < path.length; ++ii)
 	{
-		case DIR_NORTH:
-			Serial.println("North");
-			break;
-		case DIR_SOUTH:
-			Serial.println("South");
-			break;
-		case DIR_EAST:
-			Serial.println("East");
-			break;
-		case DIR_WEST:
-			Serial.println("West");
-			break;
-	}
-	Serial.println();
-	char buffer[10];
-	for(int x = 0; x < 4; ++x)
-	{
-		for(int y = 0; y < 8; ++y)
-		{
-			tempPoint.x = x;
-			tempPoint.y = y;
-			sprintf(buffer, "[%x]", gridMap.getFlags(tempPoint) );
-			Serial.print(buffer);
-		}
-		Serial.println();
-	}
-	Serial.println();
-	Serial.println();
+		moveToPoint(path.path[ii]);
+		gridMap.setFlag(currPoint, VISITED);
+		printGrid();
+	}	
 }
 
 void virtualfindBlock()
@@ -500,7 +571,44 @@ void virtualfindBlock()
 	delay(100000);
 }
 
-/*
+void virtualPointTest()
+{
+	Point pt[5];
+	pt[0] = currPoint;
+	pt[1].x = currPoint.x - 1;
+	pt[1].y = currPoint.y;
+	pt[2].x = currPoint.x - 1;
+	pt[2].y = currPoint.y + 1;
+	pt[3].x = currPoint.x - 2;
+	pt[3].y = currPoint.y + 1;
+	pt[4].x = currPoint.x - 2;
+	pt[4].y = currPoint.y + 2;
+	gridMap.setFlag(currPoint, VISITED);
+	printGrid();
+	for (int ii = 1; ii < 5; ++ii)
+	{
+		moveToPoint(pt[ii]);
+		gridMap.setFlag(currPoint, VISITED);
+		printGrid();
+	}
+}
+
+void virtualRouting()
+{
+	Path path;
+	Point startPoint(GRID_MAX_X, 0);
+	currPoint = startPoint;
+	Point goalPoint(0, GRID_MAX_Y);
+	facing = DIR_WEST;
+	router.generateRoute(startPoint, goalPoint, (Direction)facing, &path);
+	for (int ii = 0; ii < path.length; ++ii)
+	{
+		moveToPoint(path.path[ii]);
+		gridMap.setFlag(currPoint, VISITED);
+		printGrid();
+	}
+}
+
 void testSensors()
 {	
 	unsigned char blockDir = 99;
@@ -558,7 +666,7 @@ void testSensors()
 	claw.open();
 
 	delay(100000);
-}*/
+}
 
 void lineFollowDemoSetup()
 {
@@ -567,24 +675,8 @@ void lineFollowDemoSetup()
 	ls.calibrate();
 }
 
-void setup()
-{  
-	Serial.begin(9600);	
-/*	pinMode(LED_PIN, OUTPUT);
-	claw.setup();
-	motors.setup();
-	digitalWrite(LED_PIN,HIGH);
-	pinMode(PUSH_PIN, INPUT);
-	digitalWrite(PUSH_PIN, HIGH);
-	while(digitalRead(PUSH_PIN) == HIGH)
-	{
-		delay(500); 
-	}
-	digitalWrite(LED_PIN, LOW);
-	
-	claw.shut();
-	lineFollowDemoSetup();
-	
+void delayTillButton()
+{
 	pinMode(LED_PIN, OUTPUT);
 	digitalWrite(LED_PIN,HIGH);
 	pinMode(PUSH_PIN, INPUT);
@@ -593,12 +685,41 @@ void setup()
 	{
 		delay(500); 
 	}
-	digitalWrite(LED_PIN, LOW);*/
+	digitalWrite(LED_PIN, LOW);
+}
+
+void setup()
+{  
+	Serial.begin(9600);	
+/*	claw.setup();
+	motors.setup();
+	
+	delayTillButton();
+	
+	claw.shut();
+	lineFollowDemoSetup();
+	
+	delayTillButton();*/
 }
 
 void loop()
 {
-	virtualfindBlock();
+	virtualPointTest();
+	delay(10000);
+
+	irInMm.frnt = 500;
+	irInMm.bck = 500;
+	irInMm.rght = 500;
+	irInMm.lft = 500;
+	currPoint.x = GRID_MAX_X;
+	currPoint.y = 0;
+	tempPoint.x = 0;
+	tempPoint.y = 0;
+
+	haveBlock = false;
+
+	facing = DIR_WEST;
+	turn = TURN_RIGHT;
 }
 
 //Note, this is NOT the best way to do it.  Just a quick example of how to use the class.

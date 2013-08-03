@@ -38,9 +38,8 @@ bool GridMap::contains(Point point)
 //Returns true if there is a connection between pt1 and pt2, and are both inMaze()
 bool GridMap::joined(Point pt1, Point pt2)
 {
-	unsigned char xDel = abs(pt1.x - pt2.x);
-	unsigned char yDel = abs(pt1.y - pt2.y);
-	return contains(pt1) && contains(pt2) && ((xDel == 1 || yDel == 1) && (xDel != yDel));
+	unsigned char del = abs(pt1.x - pt2.x) + abs(pt1.y - pt2.y);
+	return (contains(pt1) && contains(pt2) && del == 1);
 }
 
 //Returns true if point is not occupied
