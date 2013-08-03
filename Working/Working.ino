@@ -12,8 +12,12 @@
 #include "Routing.h"
 
 #define CENTRE_DIST (300)
-#define BLOCK_DIST (250)
-#define BLOCK_TOLERANCE (15)
+#define BLOCK_ACT_DIST (250)
+#define BLOCK_DIST_F (300)
+#define BLOCK_DIST_L (281)
+#define BLOCK_DIST_R (277)
+
+#define BLOCK_TOLERANCE (50)
 #define BLOCK_STOP (60)
 
 //Front IR senses 275-300mm for block
@@ -51,11 +55,11 @@ IR rightIr(IR_MEDIUMR_PIN, IR::mediumRange);
 
 Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
 
-Routing router;
+GridMap gridMap;
+
+Routing router(&gridMap);
 
 Path path;
-
-GridMap gridMap;
 
 struct irValues
 {
@@ -79,6 +83,16 @@ bool haveBlock = false;
 //TODO: Change type back to Direction
 unsigned char facing = DIR_WEST;
 int turn = TURN_RIGHT;
+
+struct irDir
+{
+	int frnt;
+	int bck;
+	int lft;
+	int rght;
+};
+
+irDir scanDir = {1, 0, 0, 1};
 
 /////////////////////// DEBUG PRINTING FUNCTIONS ///////////////////////
 void printDirection(unsigned char dir)
@@ -146,6 +160,30 @@ void printGrid()
 }
 /////////////////////// END DEBUG PRINTING FUNCTIONS ///////////////////////
 
+void dirToCheck()
+{
+	if ( (facing == DIR_NORTH && currPoint.x == GRID_MAX_X) || (facing == DIR_WEST && currPoint.y == GRID_MAX_Y) || (facing == DIR_SOUTH && currPoint.x == 0) || (facing == DIR_EAST && currPoint.y == 0) )
+	{//front and left
+		scanDir.frnt = 1;
+		scanDir.bck = 0;
+		scanDir.lft = 1;
+		scanDir.rght = 0;
+	}
+	else if ( (facing == DIR_NORTH && currPoint.x == 0) || (facing == DIR_WEST && currPoint.y == 0) || (facing == DIR_SOUTH && currPoint.x == GRID_MAX_X) || (facing == DIR_EAST && currPoint.y == GRID_MAX_Y) )
+	{//front and right
+		scanDir.frnt = 1;
+		scanDir.bck = 0;
+		scanDir.lft = 0;
+		scanDir.rght = 1;
+	}
+	else
+	{//front, left, right
+		scanDir.frnt = 1;
+		scanDir.bck = 0;
+		scanDir.lft = 1;
+		scanDir.rght = 1;
+	}
+}
 
 unsigned char findNewFacing(unsigned char relativeTurn)
 {
@@ -186,11 +224,11 @@ Point adjacentPoint(Point pt, unsigned char relativeTurn)
 bool isBlock(unsigned char dir)
 {
 	if (dir == REL_FRONT)
-		return (abs(BLOCK_DIST - irInMm.frnt) < BLOCK_TOLERANCE);
+		return (irInMm.frnt < BLOCK_DIST_F);
 	else if (dir == REL_LEFT)
-		return (abs(BLOCK_DIST - irInMm.lft) < BLOCK_TOLERANCE);
+		return (abs(BLOCK_DIST_L - irInMm.lft) < BLOCK_TOLERANCE);
 	else if (dir == REL_RIGHT)
-		return (abs(BLOCK_DIST - irInMm.rght) < BLOCK_TOLERANCE);
+		return (abs(BLOCK_DIST_R - irInMm.rght) < BLOCK_TOLERANCE);
 	else
 		return false;
 }
@@ -217,7 +255,7 @@ bool obtainBlock(unsigned char relDir)
 	facing = findNewFacing(relDir);
 	claw.open();
 	irInMm.frnt = frontIr.getDist();
-	while (irInMm.frnt > BLOCK_STOP)
+	while (irInMm.frnt > BLOCK_STOP && !mover.onCross() )
 	{
 		mover.moveForward(DEFAULT_SPEED);
 		irInMm.frnt = frontIr.getDist();
@@ -226,8 +264,8 @@ bool obtainBlock(unsigned char relDir)
 	claw.close();
 	moveToFrontPoint();
 	irInMm.frnt = frontIr.getDist();
-//	if (irInMm.frnt <= BLOCK_STOP) DEBUG: assume true for now
-//	{
+	if (irInMm.frnt <= BLOCK_STOP + 20) //DEBUG: assume true for now
+	{
 //		Serial.print("Picked up block from: (");//DEBUG
 //		Serial.print(currPoint.x);//DEBUG
 //		Serial.print(", ");//DEBUG
@@ -235,9 +273,9 @@ bool obtainBlock(unsigned char relDir)
 		
 		gridMap.removeFlag(currPoint, OCCUPIED);
 		return true;
-//	}
-//	else
-//		return false;
+	}
+	else
+		return false;
 }
 
 unsigned char dirOfPoint(Point pt)
@@ -319,13 +357,14 @@ void dropOff()
 	{
 		moveToPoint(path.path[ii]);
 	}
+	motors.stop();
 	claw.open();
 }
 
 //scan front point and set seen flag
 void scanFrontIr()
 {
-	irInMm.frnt = 500;//frontIr.getDist(); DEBUG
+	irInMm.frnt = frontIr.getDist();
 	tempPoint = adjacentPoint(currPoint, REL_FRONT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
@@ -333,7 +372,7 @@ void scanFrontIr()
 //scan right point and set seen flag
 void scanRightIr()
 {
-	irInMm.rght = 500;//rightIr.getDist(); DEBUG
+	irInMm.rght = rightIr.getDist();
 	tempPoint = adjacentPoint(currPoint, REL_RIGHT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
@@ -341,9 +380,19 @@ void scanRightIr()
 //scan left point and set seen flag
 void scanLeftIr()
 {
-	irInMm.lft = 500;//leftIr.getDist(); DEBUG
+	irInMm.lft = leftIr.getDist();
 	tempPoint = adjacentPoint(currPoint, REL_LEFT);
 	gridMap.setFlag(tempPoint, SEEN);
+}
+
+void scanAdjacent()
+{
+	if(scanDir.frnt)
+		scanFrontIr();
+	if(scanDir.rght)
+		scanRightIr();
+	if(scanDir.lft)
+		scanLeftIr();
 }
 
 //Base case for traversal
@@ -436,7 +485,7 @@ void traverseLong()
 		scanRightIr();
 		scanLeftIr();
 		
-		irInMm.rght = 250;//DEBUG
+		//irInMm.rght = 250;//DEBUG
 		
 		if (isBlock(REL_RIGHT) )
 		{
@@ -499,9 +548,6 @@ void findBlock()
 		}
 	}
 	dropOff();
-	motors.stop();
-	claw.open();
-	delay(100000);
 }
 
 void avoidBlocks()
@@ -666,7 +712,7 @@ void delayTillButton()
 void setup()
 {  
 	Serial.begin(9600);	
-	claw.setup();
+/*	claw.setup();
 	motors.setup();
 	
 	delayTillButton();
@@ -674,13 +720,14 @@ void setup()
 	claw.shut();
 	lineFollowDemoSetup();
 	
-	delayTillButton();
+	delayTillButton();*/
 }
 
 void loop()
 {
-	findBlock();
-	delay(10000);
+	testSensors();
+/*	findBlock();
+	delayTillButton();
 
 	irInMm.frnt = 500;
 	irInMm.bck = 500;
@@ -694,7 +741,7 @@ void loop()
 	haveBlock = false;
 
 	facing = DIR_WEST;
-	turn = TURN_RIGHT;
+	turn = TURN_RIGHT;*/
 }
 
 //Note, this is NOT the best way to do it.  Just a quick example of how to use the class.

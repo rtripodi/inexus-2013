@@ -33,7 +33,7 @@ void Movement::moveOffCross(int speed)
 void Movement::moveForward(int speed)
 {
 	moveOffCross(speed);
-	motors->both(speed, tickError());
+	motors->both(speed, ls->error());
 }
 
 //This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
@@ -79,7 +79,7 @@ int Movement::tickError()
 {
 	int motorOne = abs(wheelEnc.getCountsM1());
 	int motorTwo = abs(wheelEnc.getCountsM2());
-	return constrain((motorOne - motorTwo), -5, 5);
+	return 3*constrain((motorOne - motorTwo), -5, 5)/4;
 }
 
 //Length is in mm, rounded to whole number.
