@@ -24,8 +24,8 @@
 //Left IR senses 275-300mm for block
 //Right IR senses 250-275mm for block
 
-#define TURN_RIGHT (90 - 5) //Tweaking given speed of 80
-#define TURN_LEFT (-90 + 5)
+#define TURN_RIGHT (90 - 10) //Tweaking given speed of 80
+#define TURN_LEFT (-90 + 10)
 #define TURN_FRONT 0
 #define TURN_BACK 180
 
@@ -571,6 +571,125 @@ void findBlock()
 	dropOff();
 }
 
+void initTraverseAlt()
+{
+	motors.stop();
+	gridMap.setFlag(currPoint, VISITED);
+	
+	do
+	{
+		scanFrontIr();
+	
+		//irInMm.rght = 250;//DEBUG
+		if (scanDir.frnt && isBlock(REL_FRONT) )
+			haveBlock = obtainBlock(REL_FRONT);
+		else
+		{
+			mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
+			facing = findNewFacing(REL_RIGHT);
+			moveToFrontPoint();
+		}
+	} while(!grabSuccess);
+	grabSuccess = true; //reset
+}
+
+void traverseLongAlt(unsigned char faceDir)
+{
+	motors.stop();
+	gridMap.setFlag(currPoint, VISITED);
+	
+	tempPoint = adjacentPoint(currPoint, REL_FRONT);
+	if (gridMap.contains(tempPoint) )
+	{
+		do
+		{
+			scanFrontIr();
+		
+			//irInMm.lft = 250;//DEBUG
+			if (scanDir.frnt && isBlock(REL_FRONT) )
+				haveBlock = obtainBlock(REL_FRONT);
+			else
+				moveToFrontPoint();
+		} while(!grabSuccess);
+		grabSuccess = true; //reset
+	}
+	else
+	{
+		do
+		{
+			scanFrontIr();
+			
+			//irInMm.rght = 250;//DEBUG
+			
+			if (scanDir.frnt && isBlock(REL_FRONT) )
+				haveBlock = obtainBlock(REL_FRONT);
+			else
+			{
+				if (faceDir == NORTH)
+				{
+					//turn left
+					mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
+					facing = findNewFacing(REL_LEFT);
+				}
+				else
+				{
+					//turn right
+					mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
+					facing = findNewFacing(REL_RIGHT);
+				}
+				moveToFrontPoint();
+			}
+		} while(!grabSuccess);
+		grabSuccess = true; //reset
+	}
+}
+
+void traverseShortAlt()
+{
+	motors.stop();
+	gridMap.setFlag(currPoint, VISITED);
+	
+	do
+	{
+		scanFrontIr();
+	
+		if (scanDir.frnt && isBlock(REL_FRONT) )
+			haveBlock = obtainBlock(REL_FRONT);
+		else
+		{
+			if (currPoint.x == 2 || currPoint.x == 4)
+			{
+				mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
+				facing = findNewFacing(REL_LEFT);
+			}
+			else
+			{
+				mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
+				facing = findNewFacing(REL_RIGHT);
+			}			
+			moveToFrontPoint();
+		}
+	} while(!grabSuccess);
+	grabSuccess = true; //reset
+}
+
+void findBlockAlt()
+{
+	//start facing west
+	facing = DIR_WEST;
+	turn = TURN_RIGHT;
+
+	initTraverseAlt();
+	while (!haveBlock)
+	{
+		if (facing == DIR_NORTH || facing == DIR_SOUTH) // Travel till end
+			traverseLongAlt(facing);
+		else
+			traverseShortAlt();
+	}
+	dropOff();
+}
+
 bool traverseAvoiding(Point nextPoint)
 {
 	motors.stop();
@@ -626,6 +745,69 @@ void avoidBlocks()
 		for (int ii = 0; ii < path.length; ++ii)
 		{
 			if (traverseAvoiding(path.path[ii]) )
+				break;
+		}
+	}
+	motors.stop();
+}
+
+bool traverseAvoidingAlt(Point nextPoint)
+{
+	motors.stop();
+	gridMap.setFlag(currPoint, VISITED);
+	
+	scanFrontIr();
+	if (scanDir.frnt && isBlock(REL_FRONT) )
+	{
+		tempPoint = adjacentPoint(currPoint, REL_FRONT);
+		gridMap.setFlag(tempPoint, OCCUPIED);
+	}
+	if (gridMap.isFlagSet(nextPoint, OCCUPIED) )
+		return true;
+	else
+	{
+		unsigned char newDir = dirOfPoint(nextPoint);
+		turnInDir(newDir);
+		facing = newDir;
+		scanFrontIr();
+		if (scanDir.frnt && isBlock(REL_FRONT) )
+		{
+			tempPoint = adjacentPoint(currPoint, REL_FRONT);
+			gridMap.setFlag(tempPoint, OCCUPIED);
+			return true;
+		}
+		else
+		{
+			moveToFrontPoint();
+			gridMap.setFlag(currPoint, VISITED);
+			return false;
+		}
+	}
+}
+
+void avoidBlocksAlt()
+{
+	Path path;
+	Point startPoint(GRID_MAX_X, 0);
+	currPoint = startPoint;
+	Point goalPoint(0, GRID_MAX_Y);
+	facing = DIR_WEST;
+	while (currPoint != goalPoint)
+	{
+		router.generateRoute(currPoint, goalPoint, (Direction)facing, &path);
+		for (int ii = 0; ii < path.length; ++ii)
+		{
+			if (traverseAvoidingAlt(path.path[ii]) )
+				break;
+		}
+	}
+	motors.stop();
+	while (currPoint != startPoint)
+	{
+		router.generateRoute(currPoint, startPoint, (Direction)facing, &path);
+		for (int ii = 0; ii < path.length; ++ii)
+		{
+			if (traverseAvoidingAlt(path.path[ii]) )
 				break;
 		}
 	}
@@ -851,13 +1033,27 @@ void setup()
 void loop()
 {
 //	testSensors();
-	pinMode(OPENDAY_MODE_SWITCH, INPUT);
-	digitalWrite(OPENDAY_MODE_SWITCH, HIGH);
-	if (digitalRead(OPENDAY_MODE_SWITCH))
-		findBlock();
-		//lineSenseCheck();
+	pinMode(OPENDAY_ALT_SWITCH, INPUT);
+	digitalWrite(OPENDAY_ALT_SWITCH, HIGH);
+	if (digitalRead(OPENDAY_ALT_SWITCH))
+	{
+		pinMode(OPENDAY_MODE_SWITCH, INPUT);
+		digitalWrite(OPENDAY_MODE_SWITCH, HIGH);
+		if (digitalRead(OPENDAY_MODE_SWITCH))
+			findBlock();
+		else
+			avoidBlocks();
+	}
 	else
-		avoidBlocks();
+	{
+		pinMode(OPENDAY_MODE_SWITCH, INPUT);
+		digitalWrite(OPENDAY_MODE_SWITCH, HIGH);
+		if (digitalRead(OPENDAY_MODE_SWITCH))
+			findBlockAlt();
+		else
+			avoidBlocksAlt();
+	}
+	
 	delayTillButton();
 
 	irInMm.frnt = 500;

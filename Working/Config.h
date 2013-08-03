@@ -19,7 +19,7 @@
  //when a purpose has been assigned to them
 #define OPENDAY_MODE_SWITCH 52 //Closest switch to the edge of the shield
 #define OPENDAY_IR_SWITCH 50
-#define UNASSIGNED_SWITCH_3 48
+#define OPENDAY_ALT_SWITCH 48
 #define UNASSIGNED_SWITCH_4 46
 #define UNASSIGNED_SWITCH_5 44
 #define UNASSIGNED_SWITCH_6 42
