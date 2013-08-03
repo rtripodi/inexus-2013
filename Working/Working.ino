@@ -123,9 +123,9 @@ void printGrid()
 {
 	Serial.println();
 	char buffer[50];
-	for(int x = 0; x < 4; ++x)
+	for(int x = 0; x < GRID_MAX_X + 1 ; ++x)
 	{
-		for(int y = 0; y < 8; ++y)
+		for(int y = 0; y < GRID_MAX_Y + 1; ++y)
 		{
 			tempPoint.x = x;
 			tempPoint.y = y;
@@ -161,6 +161,28 @@ unsigned char findNewFacing(unsigned char relativeTurn)
 		return DIR_NORTH; //Explode
 }
 
+Point adjacentPoint(Point pt, unsigned char relativeTurn)
+{
+	unsigned char dir = findNewFacing(relativeTurn);
+		
+	switch(dir)
+	{
+		case DIR_NORTH:
+			pt.y += 1;
+			break;
+		case DIR_SOUTH:
+			pt.y -= 1;
+			break;
+		case DIR_EAST:
+			pt.x += 1;
+			break;
+		case DIR_WEST:
+			pt.x -= 1;
+			break;
+	}
+	return pt;
+}
+
 bool isBlock(unsigned char dir)
 {
 	if (dir == REL_FRONT)
@@ -173,9 +195,27 @@ bool isBlock(unsigned char dir)
 		return false;
 }
 
-bool obtainFrontBlock()
+bool obtainBlock(unsigned char relDir)
 {
-/*VIRTUAL	claw.open();
+	tempPoint = adjacentPoint(currPoint, relDir);
+	gridMap.setFlag(tempPoint, OCCUPIED);
+	switch (relDir)
+	{
+		case REL_FRONT:
+			mover.rotateAngle(TURN_FRONT, DEFAULT_SPEED);
+			break;
+		case REL_BACK:
+			mover.rotateAngle(TURN_BACK, DEFAULT_SPEED);
+			break;
+		case REL_LEFT:
+			mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
+			break;
+		case REL_RIGHT:
+			mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
+			break;
+	}
+	facing = findNewFacing(relDir);
+	claw.open();
 	irInMm.frnt = frontIr.getDist();
 	while (irInMm.frnt > BLOCK_STOP)
 	{
@@ -183,11 +223,16 @@ bool obtainFrontBlock()
 		irInMm.frnt = frontIr.getDist();
 	}
 	motors.stop();
-	claw.close();*/
+	claw.close();
 	moveToFrontPoint();
-//VIRTUAL	irInMm.frnt = frontIr.getDist();
+	irInMm.frnt = frontIr.getDist();
 //	if (irInMm.frnt <= BLOCK_STOP) DEBUG: assume true for now
 //	{
+//		Serial.print("Picked up block from: (");//DEBUG
+//		Serial.print(currPoint.x);//DEBUG
+//		Serial.print(", ");//DEBUG
+//		Serial.println(currPoint.y);//DEBUG
+		
 		gridMap.removeFlag(currPoint, OCCUPIED);
 		return true;
 //	}
@@ -210,14 +255,14 @@ unsigned char dirOfPoint(Point pt)
 
 void moveToFrontPoint()
 {
-/*VIRTUAL	mover.moveTillPoint(DEFAULT_SPEED);
-	mover.moveOffCross(DEFAULT_SPEED);*/
+	mover.moveTillPoint(DEFAULT_SPEED);
+	mover.moveOffCross(DEFAULT_SPEED);
 	currPoint = adjacentPoint(currPoint, REL_FRONT);
 }
 
 void turnInDir(unsigned char newDir)
 {
-/*	signed char delta = newDir - facing; DEBUG: May be broken, using below if statement instead
+/*	signed char delta = newDir - facing; DEBUG: Haven't tested, using below if statement instead
 	if (delta < 0)
 		delta += 4;
 	turn = delta;*/
@@ -229,7 +274,7 @@ void turnInDir(unsigned char newDir)
 		turn = REL_LEFT;
 	else if ( (facing == DIR_NORTH && newDir == DIR_EAST) || (facing == DIR_EAST && newDir == DIR_SOUTH) || (facing == DIR_SOUTH && newDir == DIR_WEST) || (facing == DIR_WEST && newDir == DIR_NORTH) )
 		turn = REL_RIGHT;
-/*VIRTUAL	switch (turn)
+	switch (turn)
 	{
 		case REL_FRONT:
 			mover.rotateAngle(TURN_FRONT, DEFAULT_SPEED);
@@ -243,7 +288,7 @@ void turnInDir(unsigned char newDir)
 		case REL_RIGHT:
 			mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
 			break;
-	}*/
+	}
 }
 
 void moveToPoint(Point pt)
@@ -268,7 +313,6 @@ void moveToPoint(Point pt)
 
 void dropOff()
 {
-	Path path;
 	Point entrPoint(GRID_MAX_X, 0);
 	router.generateRoute(currPoint, entrPoint, (Direction)facing, &path);
 	for (int ii = 0; ii < path.length; ++ii)
@@ -276,28 +320,6 @@ void dropOff()
 		moveToPoint(path.path[ii]);
 	}
 	claw.open();
-}
-
-Point adjacentPoint(Point pt, unsigned char relativeTurn)
-{
-	unsigned char dir = findNewFacing(relativeTurn);
-		
-	switch(dir)
-	{
-		case DIR_NORTH:
-			pt.y += 1;
-			break;
-		case DIR_SOUTH:
-			pt.y -= 1;
-			break;
-		case DIR_EAST:
-			pt.x += 1;
-			break;
-		case DIR_WEST:
-			pt.x -= 1;
-			break;
-	}
-	return pt;
 }
 
 //scan front point and set seen flag
@@ -335,23 +357,15 @@ void initTraverse()
 	scanFrontIr();
 	scanRightIr();
 	
-	//irInMm.frnt = 250;//DEBUG
+	//irInMm.rght = 250;//DEBUG
 	
 	if (isBlock(REL_FRONT) )
 	{
-		tempPoint = adjacentPoint(currPoint, REL_FRONT);
-		gridMap.setFlag(tempPoint, OCCUPIED);
-		haveBlock = obtainFrontBlock();
+		haveBlock = obtainBlock(REL_FRONT);
 	}
 	else if (isBlock(REL_RIGHT) )
 	{
-		tempPoint = adjacentPoint(currPoint, REL_RIGHT);
-		gridMap.setFlag(tempPoint, OCCUPIED);
-		//turn right
-//VIRTUAL		mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
-		facing = findNewFacing(REL_RIGHT);
-		//now facing block
-		haveBlock = obtainFrontBlock();
+		haveBlock = obtainBlock(REL_RIGHT);
 	}
 	else
 	{
@@ -367,26 +381,20 @@ void secondTraverse()
 	scanFrontIr();
 	scanRightIr();
 	
+	//irInMm.rght = 250;//DEBUG
+	
 	if (isBlock(REL_FRONT) )
 	{
-		tempPoint = adjacentPoint(currPoint, REL_FRONT);
-		gridMap.setFlag(tempPoint, OCCUPIED);
-		haveBlock = obtainFrontBlock();
+		haveBlock = obtainBlock(REL_FRONT);
 	}
 	else if (isBlock(REL_RIGHT) )
 	{
-		tempPoint = adjacentPoint(currPoint, REL_RIGHT);
-		gridMap.setFlag(tempPoint, OCCUPIED);
-		//turn right
-//VIRTUAL		mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
-		facing = findNewFacing(REL_RIGHT);
-		//now facing block
-		haveBlock = obtainFrontBlock();
+		haveBlock = obtainBlock(REL_RIGHT);
 	}
 	else
 	{
 		//move to right point
-//VIRTUAL		mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
+		mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
 		facing = findNewFacing(REL_RIGHT);
 		moveToFrontPoint();
 	}
@@ -404,31 +412,19 @@ void traverseLong()
 		scanRightIr();
 		scanLeftIr();
 		
+		//irInMm.lft = 250;//DEBUG
+		
 		if (isBlock(REL_FRONT) )
 		{
-			tempPoint = adjacentPoint(currPoint, REL_FRONT);
-			gridMap.setFlag(tempPoint, OCCUPIED);
-			haveBlock = obtainFrontBlock();
+			haveBlock = obtainBlock(REL_FRONT);
 		}
 		else if (isBlock(REL_RIGHT) )
 		{
-			tempPoint = adjacentPoint(currPoint, REL_RIGHT);
-			gridMap.setFlag(tempPoint, OCCUPIED);
-			//turn right
-//VIRTUAL			mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
-			facing = findNewFacing(REL_RIGHT);
-			//now facing block
-			haveBlock = obtainFrontBlock();
+			haveBlock = obtainBlock(REL_RIGHT);
 		}
 		else if (isBlock(REL_LEFT) )
 		{
-			tempPoint = adjacentPoint(currPoint, REL_LEFT);
-			gridMap.setFlag(tempPoint, OCCUPIED);
-			//turn left
-//VIRTUAL			mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
-			facing = findNewFacing(REL_LEFT);
-			//now facing block
-			haveBlock = obtainFrontBlock();
+			haveBlock = obtainBlock(REL_LEFT);
 		}	
 		else
 		{
@@ -440,32 +436,21 @@ void traverseLong()
 		scanRightIr();
 		scanLeftIr();
 		
+		irInMm.rght = 250;//DEBUG
+		
 		if (isBlock(REL_RIGHT) )
 		{
-			tempPoint = adjacentPoint(currPoint, REL_RIGHT);
-			gridMap.setFlag(tempPoint, OCCUPIED);
-			//turn right
-//VIRTUAL			mover.rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
-			facing = findNewFacing(REL_RIGHT);
-			//now facing block
-			haveBlock = obtainFrontBlock();
+			haveBlock = obtainBlock(REL_RIGHT);
 		}
 		else if (isBlock(REL_LEFT) )
 		{
-			tempPoint = adjacentPoint(currPoint, REL_LEFT);
-			gridMap.setFlag(tempPoint, OCCUPIED);
-			//turn left
-//VIRTUAL			mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
-			facing = findNewFacing(REL_LEFT);
-			//now facing block
-			haveBlock = obtainFrontBlock();
+			haveBlock = obtainBlock(REL_LEFT);
 		}
 		else
 		{
 			//turn left
-//VIRTUAL			mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
+			mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
 			facing = findNewFacing(REL_LEFT);
-			//move to (GRID_MAX_X - 1, 1)
 			moveToFrontPoint();
 		}	
 	}
@@ -481,25 +466,16 @@ void traverseShort()
 	
 	if (isBlock(REL_FRONT) )
 	{
-		tempPoint = adjacentPoint(currPoint, REL_FRONT);
-		gridMap.setFlag(tempPoint, OCCUPIED);
-		haveBlock = obtainFrontBlock();
+		haveBlock = obtainBlock(REL_FRONT);
 	}
 	else if (isBlock(REL_LEFT) )
 	{
-		tempPoint = adjacentPoint(currPoint, REL_LEFT);
-		gridMap.setFlag(tempPoint, OCCUPIED);
-		//turn left
-//VIRTUAL		mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
-		facing = findNewFacing(REL_LEFT);
-		//now facing block
-		haveBlock = obtainFrontBlock();
+		haveBlock = obtainBlock(REL_LEFT);
 	}	
 	else
 	{
-//VIRTUAL		mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
+		mover.rotateAngle(TURN_LEFT, DEFAULT_SPEED);
 		facing = findNewFacing(REL_LEFT);
-		//move to (GRID_MAX_X - 1, 1)
 		moveToFrontPoint();
 	}
 }
@@ -523,8 +499,8 @@ void findBlock()
 		}
 	}
 	dropOff();
-//VIRTUAL	motors.stop();
-//VIRTUAL	claw.open();
+	motors.stop();
+	claw.open();
 	delay(100000);
 }
 
@@ -565,9 +541,8 @@ void virtualfindBlock()
 			printGrid();
 		}
 	}
-	dropOff();
-	motors.stop();
-	claw.open();
+	printGrid();
+//	dropOff();
 	delay(100000);
 }
 
@@ -612,7 +587,6 @@ void virtualRouting()
 void testSensors()
 {	
 	unsigned char blockDir = 99;
-	claw.shut();	
 	irInMm.frnt = frontIr.getDist();
 	irInMm.lft = leftIr.getDist();
 	irInMm.rght = rightIr.getDist();
@@ -621,6 +595,7 @@ void testSensors()
 	Serial.print(irInMm.frnt);
 	Serial.print("\t");
 	Serial.println(irInMm.rght);
+	/*
 	while (blockDir != REL_FRONT && blockDir != REL_LEFT && blockDir != REL_RIGHT)
 	{
 		if (irInMm.frnt > BLOCK_DIST - BLOCK_TOLERANCE)
@@ -665,7 +640,7 @@ void testSensors()
 	
 	claw.open();
 
-	delay(100000);
+	delay(100000);*/
 }
 
 void lineFollowDemoSetup()
@@ -691,7 +666,7 @@ void delayTillButton()
 void setup()
 {  
 	Serial.begin(9600);	
-/*	claw.setup();
+	claw.setup();
 	motors.setup();
 	
 	delayTillButton();
@@ -699,12 +674,12 @@ void setup()
 	claw.shut();
 	lineFollowDemoSetup();
 	
-	delayTillButton();*/
+	delayTillButton();
 }
 
 void loop()
 {
-	virtualPointTest();
+	findBlock();
 	delay(10000);
 
 	irInMm.frnt = 500;
