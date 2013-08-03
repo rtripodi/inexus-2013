@@ -79,7 +79,7 @@ int Movement::tickError()
 {
 	int motorOne = abs(wheelEnc.getCountsM1());
 	int motorTwo = abs(wheelEnc.getCountsM2());
-	return 3*constrain((motorOne - motorTwo), -5, 5)/4;
+	return constrain((motorOne - motorTwo), -5, 5);
 }
 
 //Length is in mm, rounded to whole number.

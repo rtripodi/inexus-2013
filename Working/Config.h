@@ -17,8 +17,8 @@
  ********************************************/
  //Those buttons labeled UNASSIGNED_SWITCH_n should be renamed
  //when a purpose has been assigned to them
-#define UNASSIGNED_SWITCH_1 52 //Closest switch to the edge of the shield
-#define UNASSIGNED_SWITCH_2 50
+#define OPENDAY_MODE_SWITCH 52 //Closest switch to the edge of the shield
+#define OPENDAY_IR_SWITCH 50
 #define UNASSIGNED_SWITCH_3 48
 #define UNASSIGNED_SWITCH_4 46
 #define UNASSIGNED_SWITCH_5 44
@@ -119,4 +119,4 @@
 #define MOTOR_2_SIG_A 11
 #define MOTOR_2_SIG_B 10
 
-#define DEFAULT_SPEED 70
+#define DEFAULT_SPEED 80
