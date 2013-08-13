@@ -974,33 +974,31 @@ void setup()
 	
 	delayTillButton();
 }
+int err=0;
+unsigned long Timer=millis();
 void loop()
 {
-//  LineSensor_ColourValues allWhite[8] = {WHT,WHT,WHT,WHT,WHT,WHT,WHT,WHT};
-//  int crosscounter=0;
-//  while(crosscounter<numCross)
-//  {
-//    while(!ls.see(allWhite))
-//    {
-//      followLineTest();
-//      delay(60);
-//    }
-//    motors.both(80);
-//    while(ls.see(allWhite))
-//    {
-//      motors.both(80);
-//    }
-//    crosscounter+=1;
-//  }
-//   numCross++;
-//   if (numCross>2)
-//   {
-//     numCross=1;
-//   }
-//   crosscounter=0;
-//   mover.rotateAngle(70,80);
-//   motors.both(80);
-//   delay(30);
+  LineSensor_ColourValues allWhite[8] = {WHT,WHT,WHT,WHT,WHT,WHT,WHT,WHT};
+  int crosscounter=0;
+  
+  while(crosscounter<1)
+  {
+    while(!ls.see(allWhite))
+    {
+      followLineTest();
+      delay(60);
+    }
+    motors.both(80);
+    while(ls.see(allWhite))
+    {
+      motors.both(80);
+    }
+    crosscounter+=1;
+  }
+   crosscounter=0;
+   mover.rotateAngle(70,80);
+   motors.both(80);
+   delay(30);
   
 ////	testSensors();
 //	pinMode(OPENDAY_ALT_SWITCH, INPUT);
@@ -1064,13 +1062,13 @@ void lineFollowDemo()
 		motors.stop();
 }
 
-/*
+
     int linePos = 0;
     int lastLinePos = 0;
     int difference=0;
     float leftspeed=0.0;
     float rightspeed=0.0;
-    const int edgeSensitivity = 1000;
+    int edgeSensitivity = 1000;
     int qtrTotal;
     boolean seenBlack=0;
 void followLineTest()
@@ -1084,7 +1082,7 @@ void followLineTest()
     qtrTotal = ls.reading[0]+ls.reading[1]+ls.reading[2]+ls.reading[3]+ls.reading[4]+ls.reading[5]+ls.reading[6]+ls.reading[7];
     if (qtrTotal<7000)
     {
-    if (seenBlack)
+    if (seenBlack==1)
     {
        linePos = ls.readLine(ls.reading, QTR_EMITTERS_ON, 1);
        while ((abs(linePos-3500))>500)
@@ -1113,7 +1111,7 @@ void followLineTest()
          motors.left(80);
          motors.right(20);
        }
-       seenBlack=false;
+       seenBlack=0;
        
        
     }
@@ -1157,12 +1155,8 @@ void followLineTest()
       motors.left(80);
     }
     }
-    else 
-    {
-      motors.right(-35);
-      motors.left(-35);
-      seenBlack=true;
+    else {motors.right(-35);motors.left(-35);seenBlack=1;}
     }
-    }
+
+
 }
-*/

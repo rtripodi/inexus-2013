@@ -13,105 +13,13 @@ bool Movement::onCross()
 	return ls->see(CROSS);
 }
 
-
-    int lastLinePos = 0;
-    int linePos = 0;
-    int difference=0; //Positive means the line is moving to the right
-    
-void Movement::reversing(int speed)
-{
-  linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
-  while ((abs(linePos-3500))>500)
-  {
-    motors->left(-speed);
-    motors->right(-speed);
-    linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
-  }
-  delay(200);
-  linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
-  motors->left(speed);
-  motors->right(speed);
-  delay(QTR_READ_DELAY);
-  lastLinePos=linePos;
-  linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
-  difference = linePos-lastLinePos;
-  while(difference>0)
-  {
-    motors->right(speed/2);
-    motors->left(speed);
-  }
-  while(difference<0)
-  {
-    motors->right(speed);
-    motors->left(speed/2);
-  }
-}
-
-void Movement::lineCorrection(int speed)
-{
-  int qtrTotal;
-  
-  lastLinePos = linePos;
-  qtrTotal = ls->reading[0]+ls->reading[1]+ls->reading[2]+ls->reading[3]+ls->reading[4]+ls->reading[5]+ls->reading[6]+ls->reading[7];
-  if (qtrTotal<7000)
-  {
-    
-    linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
-    difference = linePos-lastLinePos;
-    //If the line is within a margin of EDGE_SENSITIVITY
-    if (abs(linePos-3500)<EDGE_SENSITIVITY)
-    {
-      if (difference<-30)
-      {
-         motors->left(speed);
-         motors->right(speed-speed/4);
-      }
-      if (difference>30)
-      {
-         motors->right(speed);
-         motors->left(speed-speed/4);
-      }
-      if (abs(difference)<30)
-      {
-         motors->both(speed);
-      }
-    }
-    //Otherwise, if it's right on the edge of the sensors
-    else if (linePos>6000)
-    {
-      motors->left(speed/4);
-      motors->right(speed);
-    }
-    else if (linePos<1000)
-    {
-      motors->left(speed);
-      motors->right(speed/4);
-    }
-    //Else if it's off center but not too bad
-    else if (linePos-3500>EDGE_SENSITIVITY)
-    {
-      motors->right(speed);
-      motors->left(speed/2);
-    }
-    else if (linePos-3500<-EDGE_SENSITIVITY)
-    {
-      motors->right(speed/2);
-      motors->left(speed);
-    }
-  }
-  else 
-  {
-    Movement::reversing();
-  }
-}
-
 void Movement::moveTillPoint(int speed)
 {
-  moveOffCross(speed);	
-  while(!onCross())
-  {
-    Movement::lineCorrection(speed);
-  }
+	moveOffCross(speed);	
+	while(!onCross())
+	{
+		motors->both(speed, ls->error());
+	}
 }
 
 void Movement::moveOffCross(int speed)
