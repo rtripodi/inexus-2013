@@ -18,6 +18,8 @@ class Movement
 		int tickError();
                 void moveLength(int length, int speed = DEFAULT_SPEED);
                 void rotateAngle(int angle, int speed = DEFAULT_SPEED);
+                void reversing(int speed = DEFAULT_SPEED);
+                void lineCorrection(int speed = DEFAULT_SPEED);
              	private:
 		PololuWheelEncoders wheelEnc;
 		LineSensors * ls;

@@ -122,3 +122,7 @@
 #define MOTOR_2_SIG_B 10
 
 #define DEFAULT_SPEED 80
+
+//For line following.
+#define EDGE_SENSITIVITY 1000
+#define QTR_READ_DELAY 75
