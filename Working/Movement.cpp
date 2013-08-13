@@ -39,11 +39,19 @@ void Movement::reversing(int speed)
   {
     motors->right(speed/2);
     motors->left(speed);
+    delay(QTR_MOVEMENT_DELAY/2);
+    lastLinePos=linePos;
+    linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
+    difference = linePos-lastLinePos;
   }
   while(difference<0)
   {
     motors->right(speed);
     motors->left(speed/2);
+    delay(QTR_MOVEMENT_DELAY/2);
+    lastLinePos=linePos;
+    linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
+    difference = linePos-lastLinePos;
   }
 }
 
