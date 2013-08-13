@@ -45,6 +45,7 @@ Motor motors;
 LineSensors ls;
 void lineFollowDemoSetup();
 void lineFollowDemo();
+void followLineTest();
 
 Movement mover(&motors, &ls);
 
@@ -939,77 +940,105 @@ void setup()
 	Serial.begin(9600);	
 	claw.setup();
 	motors.setup();
-	
-	delayTillButton();
-	
-	pinMode(OPENDAY_IR_SWITCH, INPUT);
-	digitalWrite(OPENDAY_IR_SWITCH, HIGH);
-	if (digitalRead(OPENDAY_IR_SWITCH))
-	{
-		calibratedBlockR = BLOCK_DIST_R;
-		calibratedBlockL = BLOCK_DIST_L;
-		Serial.println("PRE");
-	}
-	else
-	{
-		//scan a few IRs before reading calibrated
-		Serial.println("CAL");
-		for (int ii = 0; ii < 10; ++ii)
-		{
-			Serial.print(leftIr.getDist());
-			Serial.print("\t");
-			Serial.println(rightIr.getDist());
-		}
-		calibratedBlockR = rightIr.getDist();
-		calibratedBlockL = leftIr.getDist();
-	}
+//	
+//	delayTillButton();
+//	
+//	pinMode(OPENDAY_IR_SWITCH, INPUT);
+//	digitalWrite(OPENDAY_IR_SWITCH, HIGH);
+//	if (digitalRead(OPENDAY_IR_SWITCH))
+//	{
+//		calibratedBlockR = BLOCK_DIST_R;
+//		calibratedBlockL = BLOCK_DIST_L;
+//		Serial.println("PRE");
+//	}
+//	else
+//	{
+//		//scan a few IRs before reading calibrated
+//		Serial.println("CAL");
+//		for (int ii = 0; ii < 10; ++ii)
+//		{
+//			Serial.print(leftIr.getDist());
+//			Serial.print("\t");
+//			Serial.println(rightIr.getDist());
+//		}
+//		calibratedBlockR = rightIr.getDist();
+//		calibratedBlockL = leftIr.getDist();
+//	}
 	claw.shut();
-	lineFollowDemoSetup();
+	delayTillButton();
+
+        for(int i=0; i<300; i++)
+        {
+          ls.calibrate();
+        }
 	
 	delayTillButton();
 }
-
+int err=0;
+unsigned long Timer=millis();
 void loop()
 {
-//	testSensors();
-	pinMode(OPENDAY_ALT_SWITCH, INPUT);
-	digitalWrite(OPENDAY_ALT_SWITCH, HIGH);
-	if (digitalRead(OPENDAY_ALT_SWITCH))
-	{
-		pinMode(OPENDAY_MODE_SWITCH, INPUT);
-		digitalWrite(OPENDAY_MODE_SWITCH, HIGH);
-		if (digitalRead(OPENDAY_MODE_SWITCH))
-			findBlock();
-		else
-			avoidBlocks();
-	}
-	else
-	{
-		pinMode(OPENDAY_MODE_SWITCH, INPUT);
-		digitalWrite(OPENDAY_MODE_SWITCH, HIGH);
-		if (digitalRead(OPENDAY_MODE_SWITCH))
-			findBlockAlt();
-		else
-			avoidBlocksAlt();
-	}
-	
-	delayTillButton();
-
-	irInMm.frnt = 500;
-	irInMm.bck = 500;
-	irInMm.rght = 500;
-	irInMm.lft = 500;
-	currPoint.x = GRID_MAX_X;
-	currPoint.y = 0;
-	tempPoint.x = 0;
-	tempPoint.y = 0;
-
-	haveBlock = false;
-
-	facing = DIR_WEST;
-	turn = TURN_RIGHT;
-	claw.shut();
-	delay(100);
+  LineSensor_ColourValues allWhite[8] = {WHT,WHT,WHT,WHT,WHT,WHT,WHT,WHT};
+  int crosscounter=0;
+  
+  while(crosscounter<1)
+  {
+    while(!ls.see(allWhite))
+    {
+      followLineTest();
+      delay(60);
+    }
+    motors.both(80);
+    while(ls.see(allWhite))
+    {
+      motors.both(80);
+    }
+    crosscounter+=1;
+  }
+   crosscounter=0;
+   mover.rotateAngle(70,80);
+   motors.both(80);
+   delay(30);
+  
+////	testSensors();
+//	pinMode(OPENDAY_ALT_SWITCH, INPUT);
+//	digitalWrite(OPENDAY_ALT_SWITCH, HIGH);
+//	if (digitalRead(OPENDAY_ALT_SWITCH))
+//	{
+//		pinMode(OPENDAY_MODE_SWITCH, INPUT);
+//		digitalWrite(OPENDAY_MODE_SWITCH, HIGH);
+//		if (digitalRead(OPENDAY_MODE_SWITCH))
+//			findBlock();
+//		else
+//			avoidBlocks();
+//	}
+//	else
+//	{
+//		pinMode(OPENDAY_MODE_SWITCH, INPUT);
+//		digitalWrite(OPENDAY_MODE_SWITCH, HIGH);
+//		if (digitalRead(OPENDAY_MODE_SWITCH))
+//			findBlockAlt();
+//		else
+//			avoidBlocksAlt();
+//	}
+//	
+//	delayTillButton();
+//
+//	irInMm.frnt = 500;
+//	irInMm.bck = 500;
+//	irInMm.rght = 500;
+//	irInMm.lft = 500;
+//	currPoint.x = GRID_MAX_X;
+//	currPoint.y = 0;
+//	tempPoint.x = 0;
+//	tempPoint.y = 0;
+//
+//	haveBlock = false;
+//
+//	facing = DIR_WEST;
+//	turn = TURN_RIGHT;
+//	claw.shut();
+//	delay(100);
 }
 
 //Note, this is NOT the best way to do it.  Just a quick example of how to use the class.
@@ -1031,4 +1060,103 @@ void lineFollowDemo()
 	}
 	if(ls.see(allBlack))
 		motors.stop();
+}
+
+
+    int linePos = 0;
+    int lastLinePos = 0;
+    int difference=0;
+    float leftspeed=0.0;
+    float rightspeed=0.0;
+    int edgeSensitivity = 1000;
+    int qtrTotal;
+    boolean seenBlack=0;
+void followLineTest()
+{
+  //motors.left(leftspeed);
+  //motors.right(rightspeed);
+
+    if (1)//(!ls.see(allWhite))
+    {
+    lastLinePos = linePos;
+    qtrTotal = ls.reading[0]+ls.reading[1]+ls.reading[2]+ls.reading[3]+ls.reading[4]+ls.reading[5]+ls.reading[6]+ls.reading[7];
+    if (qtrTotal<7000)
+    {
+    if (seenBlack==1)
+    {
+       linePos = ls.readLine(ls.reading, QTR_EMITTERS_ON, 1);
+       while ((abs(linePos-3500))>500)
+       {
+         motors.left(-60);
+         motors.right(-60);
+         linePos = ls.readLine(ls.reading, QTR_EMITTERS_ON, 1);
+       }
+         delay(100);
+         linePos = ls.readLine(ls.reading, QTR_EMITTERS_ON, 1);
+//       while ((abs(linePos-3500))>3000)
+//       {
+//         motors.left(-60);
+//         motors.right(-60);
+//         linePos = ls.readLine(ls.reading, QTR_EMITTERS_ON, 1);
+//       }
+//       
+       if (linePos>3500)
+       {
+         motors.left(20);
+         motors.right(80);
+         delay(30);
+       }
+       else
+       {
+         motors.left(80);
+         motors.right(20);
+       }
+       seenBlack=0;
+       
+       
+    }
+    linePos = ls.readLine(ls.reading, QTR_EMITTERS_ON, 1);
+    difference = linePos-lastLinePos;
+    if (abs(linePos-3500)<edgeSensitivity)
+    {
+      if (difference<-30)
+      {
+         motors.left(80);
+         motors.right(80-20);
+      }
+      if (difference>30)
+      {
+         motors.right(80);
+         motors.left(80-20);
+      }
+      if (abs(difference)<30)
+      {
+        motors.both(80);
+      }
+    }
+    else if (linePos>6000)
+    {
+      motors.left(20);
+      motors.right(80);
+    }
+    else if (linePos<1000)
+    {
+      motors.left(80);
+      motors.right(20);
+    }
+    else if (linePos-3500>edgeSensitivity)
+    {
+      motors.right(80);
+      motors.left(50);
+    }
+    else if (linePos-3500<-edgeSensitivity)
+    {
+      motors.right(50);
+      motors.left(80);
+    }
+    }
+    else {motors.right(-35);motors.left(-35);seenBlack=1;}
+    }
+
+
 }

@@ -23,6 +23,7 @@ bool LineSensors::see(const LineSensor_ColourValues vals[QTR_NUM_PINS])
 	return true;
 }
 
+
 int LineSensors::error()
 {
 	const bool WHITE_LINES = true;
@@ -39,3 +40,11 @@ int LineSensors::error()
 	}
         return error;
 }
+
+//Will return the position of the line in mm, based on the distance between sensors 0 and QTR_NUM_PINS.
+int LineSensors::getLineDistance()
+{
+	const bool WHITE_LINES = true;
+        return ((readLine(reading, QTR_EMITTERS_ON, WHITE_LINES)/(QTR_NUM_PINS*1000))*QTR_WIDTH);
+}
+

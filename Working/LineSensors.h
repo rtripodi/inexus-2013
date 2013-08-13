@@ -26,6 +26,7 @@ class LineSensors : public PololuQTRSensorsRC
 		bool see(const LineSensor_ColourValues vals[8]);
 		
 		int error();
+                int getLineDistance();
 };
 
 #endif

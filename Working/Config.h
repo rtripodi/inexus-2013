@@ -54,6 +54,8 @@
 //Anything above or equal to MIN_BLACK is black, anything below MIN_BLACK is white
 #define MIN_BLACK (250)
 
+//Distance between sensor 0 and sensor 7 in mm, used to find out the lines position.
+#define QTR_WIDTH (80)
 /********************************************
  *  Servos / Claw                           *
  ********************************************/
