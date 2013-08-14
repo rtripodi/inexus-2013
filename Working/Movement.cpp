@@ -27,8 +27,14 @@ void Movement::reversing(int speed)
     motors->right(-speed);
     linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
   }
-  delay(200);
-  linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
+  motors->left(speed);
+  motors->right(speed);
+  linePos = 7000;
+  while(abs(linePos-3500))
+  {
+    linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
+  }
+  int lineFirstSighted=linePos;
   motors->left(speed);
   motors->right(speed);
   delay(QTR_READ_DELAY);
@@ -39,7 +45,7 @@ void Movement::reversing(int speed)
   {
     motors->right(speed/2);
     motors->left(speed);
-    delay(QTR_MOVEMENT_DELAY/2);
+    delay(QTR_READ_DELAY/2);
     lastLinePos=linePos;
     linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
     difference = linePos-lastLinePos;
@@ -48,7 +54,7 @@ void Movement::reversing(int speed)
   {
     motors->right(speed);
     motors->left(speed/2);
-    delay(QTR_MOVEMENT_DELAY/2);
+    delay(QTR_READ_DELAY/2);
     lastLinePos=linePos;
     linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
     difference = linePos-lastLinePos;
@@ -63,7 +69,6 @@ void Movement::lineCorrection(int speed)
   qtrTotal = ls->reading[0]+ls->reading[1]+ls->reading[2]+ls->reading[3]+ls->reading[4]+ls->reading[5]+ls->reading[6]+ls->reading[7];
   if (qtrTotal<7000)
   {
-    
     linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
     difference = linePos-lastLinePos;
     //If the line is within a margin of EDGE_SENSITIVITY
@@ -119,6 +124,7 @@ void Movement::moveTillPoint(int speed)
   while(!onCross())
   {
     Movement::lineCorrection(speed);
+    delay(75);
   }
 }
 

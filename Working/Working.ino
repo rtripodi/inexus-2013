@@ -976,6 +976,8 @@ void setup()
 }
 void loop()
 {
+  Serial.println(backIr.getDist());
+  delay(100);
 //  LineSensor_ColourValues allWhite[8] = {WHT,WHT,WHT,WHT,WHT,WHT,WHT,WHT};
 //  int crosscounter=0;
 //  while(crosscounter<numCross)
