@@ -20,7 +20,7 @@
 #include "MazeImports.h"
 
 //Grid dimensions
-#define GRID_MAX_X (3)
+#define GRID_MAX_X (7)
 #define GRID_MAX_Y (7)
 
 //Known locations
