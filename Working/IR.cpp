@@ -114,9 +114,9 @@ int IR::calcMeanNoOutliers(int data[], int length)
 	float devSum = 0.0;
 	for (int ii = 0; ii < length; ++ii) 
 	{
-		devSum += ((float) data[ii] - mean) * ((float) data[ii] - mean);
+		devSum += pow((float) data[ii] - mean, 2);
 	}
-	float stdDev = pow(devSum, 0.5) / (float) length;
+	float stdDev = pow(devSum / (float) length, 0.5);
 
 	//Sum all values inclusive of the standard deviation
 	dataSum = 0;
