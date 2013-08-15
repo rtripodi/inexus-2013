@@ -241,10 +241,11 @@ int GridNav::findPathProfit(unsigned char relDir)
 	int totalProfit = 0;
 	if (facing == relDir)
 		totalProfit += 5;
-	Point tempPoint;
-	tempPoint = adjacentPoint(currPoint, relDir);
+	Point tempPoint = adjacentPoint(currPoint, relDir);
+	Point rightPoint, leftPoint;
 	while ( gridMap.contains(tempPoint))
 	{
+		//Profit of visited
 		if (gridMap.isFlagSet(tempPoint, OCCUPIED))
 			totalProfit += 0;
 		else if(gridMap.isFlagSet(tempPoint, VISITED))
@@ -253,7 +254,33 @@ int GridNav::findPathProfit(unsigned char relDir)
 			totalProfit += 10;
 		else
 			totalProfit += 15;
-		tempPoint = adjacentPoint(tempPoint, relDir);
+		
+		//Profit of seen left and right points
+		rightPoint = adjacentPoint(currPoint, REL_RIGHT);
+		leftPoint = adjacentPoint(currPoint, REL_LEFT);
+		if ( gridMap.contains( adjacentPoint(tempPoint, REL_RIGHT)))
+		{
+			if (gridMap.isFlagSet(tempPoint, OCCUPIED))
+			totalProfit += 0;
+			else if(gridMap.isFlagSet(tempPoint, VISITED))
+				totalProfit += 5;
+			else if(gridMap.isFlagSet(tempPoint, SEEN))
+				totalProfit += 10;
+			else
+				totalProfit += 15;
+		}
+		if ( gridMap.contains( adjacentPoint(tempPoint, REL_LEFT)))
+		{
+			if (gridMap.isFlagSet(tempPoint, OCCUPIED))
+			totalProfit += 0;
+			else if(gridMap.isFlagSet(tempPoint, VISITED))
+				totalProfit += 5;
+			else if(gridMap.isFlagSet(tempPoint, SEEN))
+				totalProfit += 10;
+			else
+				totalProfit += 15;
+		}
+		tempPoint = adjacentPoint(tempPoint, REL_FRONT);
 	}
 	return totalProfit;
 }
