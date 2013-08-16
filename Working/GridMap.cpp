@@ -53,3 +53,15 @@ unsigned char GridMap::getFlags(Point point)
 {
 	return status[point.x][point.y];
 }
+
+char GridMap::getFlagsAsChar(Point point)
+{
+	if (isFlagSet(point, OCCUPIED))
+		return 'O';
+	else if (isFlagSet(point, VISITED))
+		return 'V';
+	else if (isFlagSet(point, SEEN))
+		return 'S';
+	else
+		return ' ';
+}

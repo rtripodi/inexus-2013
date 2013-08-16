@@ -306,6 +306,9 @@ int GridNav::findPathProfit(unsigned char relDir)
 	return totalProfit;
 }
 
+//TODO:	If path doesn't contain unknown, find closest unknown and use routing until gridmap
+//		is filled with SEEN at minimum
+//		Needs visited and seen counts
 void GridNav::chooseNextPath()
 {
 	Point pastFront = adjacentPoint( adjacentPoint(currPoint, facing, REL_FRONT), facing, REL_FRONT);
@@ -334,7 +337,7 @@ void GridNav::chooseNextPath()
 //Checks for blocks on adjacent points
 void GridNav::checkForBlocks()
 {
-	gridMap.setFlag(currPoint, OCCUPIED);
+	gridMap.setFlag(currPoint, VISITED);
 	
 	//Shouldn't need to reset irValues, if not on map should disregard
 	if(gridMap.contains( adjacentPoint(currPoint, facing, REL_FRONT)))
@@ -358,7 +361,7 @@ void GridNav::checkForBlocks()
 
 void GridNav::initCheckForBlocks()
 {
-	gridMap.setFlag(currPoint, OCCUPIED);
+	gridMap.setFlag(currPoint, VISITED);
 	
 	//Shouldn't need to reset irValues, if not on map should disregard
 	if(gridMap.contains( adjacentPoint(currPoint, facing, REL_FRONT)))
@@ -464,7 +467,7 @@ void GridNav::printGrid()
 		{
 			tempPoint.x = x;
 			tempPoint.y = y;
-			sprintf(buffer, "[%x]", gridMap.getFlags(tempPoint) );
+			sprintf(buffer, "[%c]", gridMap.getFlagsAsChar(tempPoint) );
 			Serial.print(buffer);
 		}
 		Serial.println();
