@@ -46,9 +46,6 @@ class GridNav
 		IR **irs;
 		Claw *claw;
 
-                Point currPoint;
-                unsigned char facing;
-		
 		GridNav(Motor *inMotor, Movement *inMovement, IR *irs[4], Claw *inClaw);
 	
 		//Returns the value is degrees needed to excute a turn in the given relative direction
@@ -56,11 +53,11 @@ class GridNav
 		
 		//Returns the new facing cardinal direction given a turn in the relative direction
 		//Unexpected return for inputs other then: Front, Right, Back, Left
-		unsigned char findNewFacing(unsigned char relativeTurn);
+		unsigned char findNewFacing(unsigned char inFacing, unsigned char relativeTurn);
 		
 		//Returns the closest point in the inputted relative direction
 		//Unexpected return for a relative direction causing a point off the grid
-		Point adjacentPoint(Point pt, unsigned char relativeTurn);
+		Point adjacentPoint(Point pt, unsigned char inFacing, unsigned char relativeTurn);
 		
 		//Checks whether there is a block within a specified range of the inputted relative direction
 		//Returns false by default for a relative direction causing a point off the grid
@@ -116,6 +113,13 @@ class GridNav
 		GridMap gridMap;
 		Routing router;
 		Path path;
+
+		//Current point on grid
+		Point currPoint;
+		
+		//Current facing cardinal direction
+		unsigned char facing;
+
 		
 		struct irValues
 		{
