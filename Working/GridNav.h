@@ -114,7 +114,6 @@ class GridNav
 	private:
 		GridMap gridMap;
 		Routing router;
-		Path path;
 
 		//Current point on grid
 		Point currPoint;

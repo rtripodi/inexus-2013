@@ -1,11 +1,3 @@
-/*
-	Changes to be made:
-		- Consitently list cardinal directions in the order: North, East, South, West
-		- Consitently list relative directions  in the order: Front, Right, Back, Left
-		- Decide action for already seen points
-		- Move unrelated constants, variables and functions
-*/
-
 #include "GridNav.h"
 
 GridNav::GridNav(Motor *inMotor, Movement *inMovement, IR *inIrs[4], Claw *inClaw)
@@ -14,9 +6,8 @@ GridNav::GridNav(Motor *inMotor, Movement *inMovement, IR *inIrs[4], Claw *inCla
 	mover = inMovement;
 	irs = inIrs;
 	claw = inClaw;
-	GridMap gridMap;
-	Routing router(&gridMap);
-	Path path;
+	gridMap = GridMap();
+	router = Routing(&gridMap);
 }
 
 //Returns the value is degrees needed to excute a turn in the given relative direction
@@ -229,6 +220,7 @@ void GridNav::moveToPoint(Point pt)
 //Travels the current least expensive route to the entrance
 void GridNav::returnToEntrance()
 {
+	Path path;
 	Point entrPoint(GRID_MAX_X, 0);
 	router.generateRoute(currPoint, entrPoint, (Direction)facing, &path);
 	for (int ii = 0; ii < path.length; ++ii)
@@ -268,10 +260,10 @@ void GridNav::scanLeftIr()
 
 int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
 {
-	Serial.println();//DEBUG
+/*	Serial.println();//DEBUG
 	Serial.print("Path: ");//DEBUG
 	printRelDirection(relDir);//DEBUG
-	Serial.println();//DEBUG
+	Serial.println();//DEBUG*/
 	unsigned char tempFacing = findNewFacing(facing, relDir);
 	int totalProfit = 0;
 	if (facing == tempFacing)
@@ -280,11 +272,11 @@ int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
 	Point rightPoint, leftPoint;
 	while ( gridMap.contains(tempPoint) && !gridMap.isFlagSet(tempPoint, OCCUPIED))
 	{
-		Serial.print("F(");//DEBUG
+/*		Serial.print("F(");//DEBUG
 		Serial.print(tempPoint.x);//DEBUG
 		Serial.print(", ");//DEBUG
 		Serial.print(tempPoint.y);//DEBUG
-		Serial.print(")");//DEBUG
+		Serial.print(")");//DEBUG*/
 		//Profit of visited
 		if (gridMap.isFlagSet(tempPoint, VISITED))
 			totalProfit += 5;
@@ -301,11 +293,11 @@ int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
 		leftPoint = adjacentPoint(tempPoint, tempFacing, REL_LEFT);
 		if (gridMap.contains(rightPoint))
 		{
-			Serial.print(" R(");//DEBUG
+/*			Serial.print(" R(");//DEBUG
 			Serial.print(rightPoint.x);//DEBUG
 			Serial.print(", ");//DEBUG
 			Serial.print(rightPoint.y);//DEBUG
-			Serial.print(")");//DEBUG
+			Serial.print(")");//DEBUG*/
 			if (gridMap.isFlagSet(rightPoint, VISITED))
 				totalProfit += 5;
 			else if (gridMap.isFlagSet(rightPoint, SEEN))
@@ -318,11 +310,11 @@ int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
 		}
 		if (gridMap.contains(leftPoint))
 		{
-			Serial.print(" L(");//DEBUG
+/*			Serial.print(" L(");//DEBUG
 			Serial.print(leftPoint.x);//DEBUG
 			Serial.print(", ");//DEBUG
 			Serial.print(leftPoint.y);//DEBUG
-			Serial.print(")");//DEBUG
+			Serial.print(")");//DEBUG*/
 			if (gridMap.isFlagSet(leftPoint, VISITED))
 				totalProfit += 5;
 			else if (gridMap.isFlagSet(leftPoint, SEEN))
@@ -334,7 +326,6 @@ int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
 			}
 		}
 		tempPoint = adjacentPoint(tempPoint, tempFacing, REL_FRONT);
-		Serial.println();
 	}
 	return totalProfit;
 }
@@ -354,7 +345,8 @@ void GridNav::chooseNextPath()
 		if(numUnknown == 0)
 		{
 			//stop
-			Serial.print("REROUTE");//DEBUG
+			Serial.println("Find other unknowns");//DEBUG
+			haveBlock = true;//DEBUG: Allow end condition for testing
 		}
 		else
 		{
@@ -385,7 +377,8 @@ void GridNav::chooseNextPath()
 			if(numUnknown == 0)
 			{
 				//stop
-				Serial.print("REROUTE");//DEBUG
+				Serial.println("Find other unknowns");//DEBUG
+				haveBlock = true;//DEBUG: Allow end condition for testing
 			}
 			else
 			{
@@ -492,6 +485,7 @@ void GridNav::findBlock()
 		printGrid();
 	}
 	returnToEntrance();
+	Serial.println("Done.");
 }
 
 /////////////////////// DEBUG PRINTING FUNCTIONS ///////////////////////
