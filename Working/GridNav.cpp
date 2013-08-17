@@ -50,9 +50,9 @@ unsigned char GridNav::findNewFacing(unsigned char inFacing, unsigned char relat
 //Unexpected return for a relative direction causing a point off the grid
 Point GridNav::adjacentPoint(Point pt, unsigned char inFacing, unsigned char relativeTurn)
 {
-	unsigned char dir = findNewFacing(inFacing, relativeTurn);
+	unsigned char newCarDir = findNewFacing(inFacing, relativeTurn);
 		
-	switch(dir)
+	switch(newCarDir)
 	{
 		case DIR_NORTH:
 			pt.y += 1;
@@ -67,7 +67,37 @@ Point GridNav::adjacentPoint(Point pt, unsigned char inFacing, unsigned char rel
 			pt.x -= 1;
 			break;
 	}
-	if (gridMap.contains(pt) )
+//	if (gridMap.contains(pt) )
+		return pt;
+}
+
+//Returns the closest point in the inputted relative direction
+//Unexpected return for a relative direction causing a point off the grid
+Point GridNav::frontDiagPoint(Point pt, unsigned char inFacing, unsigned char relativeTurn)
+{
+	unsigned char newCarDir = findNewFacing(inFacing, relativeTurn);
+		
+	if (inFacing == DIR_NORTH && newCarDir == DIR_EAST)
+	{
+		pt.x += 1;
+		pt.y += 1;
+	}
+	else if (inFacing == DIR_NORTH && newCarDir == DIR_WEST)
+	{
+		pt.x -= 1;
+		pt.y += 1;
+	}
+	else if (inFacing == DIR_SOUTH && newCarDir == DIR_EAST)
+	{
+		pt.x += 1;
+		pt.y -= 1;
+	}
+	else if (inFacing == DIR_SOUTH && newCarDir == DIR_WEST)
+	{
+		pt.x -= 1;
+		pt.y -= 1;
+	}
+//	if (gridMap.contains(pt) )
 		return pt;
 }
 
@@ -236,7 +266,7 @@ void GridNav::scanLeftIr()
 	gridMap.setFlag(tempPoint, SEEN);
 }
 
-int GridNav::findPathProfit(unsigned char relDir)
+int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
 {
 	Serial.println();//DEBUG
 	Serial.print("Path: ");//DEBUG
@@ -248,7 +278,7 @@ int GridNav::findPathProfit(unsigned char relDir)
 		totalProfit += 5;
 	Point tempPoint = adjacentPoint(currPoint, facing, relDir);
 	Point rightPoint, leftPoint;
-	while ( gridMap.contains(tempPoint))
+	while ( gridMap.contains(tempPoint) && !gridMap.isFlagSet(tempPoint, OCCUPIED))
 	{
 		Serial.print("F(");//DEBUG
 		Serial.print(tempPoint.x);//DEBUG
@@ -256,14 +286,15 @@ int GridNav::findPathProfit(unsigned char relDir)
 		Serial.print(tempPoint.y);//DEBUG
 		Serial.print(")");//DEBUG
 		//Profit of visited
-		if (gridMap.isFlagSet(tempPoint, OCCUPIED))
-			totalProfit += 0;
-		else if(gridMap.isFlagSet(tempPoint, VISITED))
+		if (gridMap.isFlagSet(tempPoint, VISITED))
 			totalProfit += 5;
-		else if(gridMap.isFlagSet(tempPoint, SEEN))
+		else if (gridMap.isFlagSet(tempPoint, SEEN))
 			totalProfit += 10;
 		else
+		{
 			totalProfit += 15;
+			(*numUnknown)++;
+		}
 		
 		//Profit of seen left and right points
 		rightPoint = adjacentPoint(tempPoint, tempFacing, REL_RIGHT);
@@ -275,14 +306,15 @@ int GridNav::findPathProfit(unsigned char relDir)
 			Serial.print(", ");//DEBUG
 			Serial.print(rightPoint.y);//DEBUG
 			Serial.print(")");//DEBUG
-			if (gridMap.isFlagSet(rightPoint, OCCUPIED))
-			totalProfit += 0;
-			else if (gridMap.isFlagSet(rightPoint, VISITED))
+			if (gridMap.isFlagSet(rightPoint, VISITED))
 				totalProfit += 5;
 			else if (gridMap.isFlagSet(rightPoint, SEEN))
 				totalProfit += 10;
 			else
+			{
 				totalProfit += 15;
+				(*numUnknown)++;
+			}
 		}
 		if (gridMap.contains(leftPoint))
 		{
@@ -291,14 +323,15 @@ int GridNav::findPathProfit(unsigned char relDir)
 			Serial.print(", ");//DEBUG
 			Serial.print(leftPoint.y);//DEBUG
 			Serial.print(")");//DEBUG
-			if (gridMap.isFlagSet(leftPoint, OCCUPIED))
-				totalProfit += 0;
-			else if (gridMap.isFlagSet(leftPoint, VISITED))
+			if (gridMap.isFlagSet(leftPoint, VISITED))
 				totalProfit += 5;
 			else if (gridMap.isFlagSet(leftPoint, SEEN))
 				totalProfit += 10;
 			else
+			{
 				totalProfit += 15;
+				(*numUnknown)++;
+			}
 		}
 		tempPoint = adjacentPoint(tempPoint, tempFacing, REL_FRONT);
 		Serial.println();
@@ -312,23 +345,66 @@ int GridNav::findPathProfit(unsigned char relDir)
 void GridNav::chooseNextPath()
 {
 	Point pastFront = adjacentPoint( adjacentPoint(currPoint, facing, REL_FRONT), facing, REL_FRONT);
-	if (!gridMap.contains(pastFront) || gridMap.isFlagSet(pastFront, SEEN))
+
+	if(!gridMap.contains(adjacentPoint(currPoint, facing, REL_FRONT)))
 	{
-		//Choose new path based on maximum profit
-		int leftPathProfit = findPathProfit(REL_LEFT);
-		int rightPathProfit = findPathProfit(REL_RIGHT);
-		if (leftPathProfit > rightPathProfit)
+		unsigned char numUnknown = 0; // Sum of unknowns for paths
+		int leftPathProfit = findPathProfit(REL_LEFT, &numUnknown);
+		int rightPathProfit = findPathProfit(REL_RIGHT, &numUnknown);
+		if(numUnknown == 0)
 		{
-//VIRTUAL			mover->rotateAngle(TURN_LEFT, DEFAULT_SPEED);
-			facing = findNewFacing(facing, REL_LEFT);
-			moveToFrontPoint();
+			//stop
+			Serial.print("REROUTE");//DEBUG
 		}
 		else
 		{
-//VIRTUAL			mover->rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
-			facing = findNewFacing(facing, REL_RIGHT);
-			moveToFrontPoint();
+			if (leftPathProfit > rightPathProfit)
+			{
+	//VIRTUAL			mover->rotateAngle(TURN_LEFT, DEFAULT_SPEED);
+				facing = findNewFacing(facing, REL_LEFT);
+				moveToFrontPoint();
+			}
+			else
+			{
+	//VIRTUAL			mover->rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
+				facing = findNewFacing(facing, REL_RIGHT);
+				moveToFrontPoint();
+			}
 		}
+	}
+	else if (!gridMap.contains(pastFront) || gridMap.isFlagSet(pastFront, SEEN))
+	{
+		Point leftDiag = frontDiagPoint(currPoint, facing, REL_LEFT);
+		Point rightDiag = frontDiagPoint(currPoint, facing, REL_RIGHT);
+		
+		if ( !gridMap.contains(leftDiag) || !gridMap.contains(rightDiag) || (gridMap.isFlagSet(leftDiag, SEEN) && gridMap.isFlagSet(rightDiag, SEEN)))
+		{
+			unsigned char numUnknown = 0; // Sum of unknowns for paths
+			int leftPathProfit = findPathProfit(REL_LEFT, &numUnknown);
+			int rightPathProfit = findPathProfit(REL_RIGHT, &numUnknown);
+			if(numUnknown == 0)
+			{
+				//stop
+				Serial.print("REROUTE");//DEBUG
+			}
+			else
+			{
+				if (leftPathProfit > rightPathProfit)
+				{
+		//VIRTUAL			mover->rotateAngle(TURN_LEFT, DEFAULT_SPEED);
+					facing = findNewFacing(facing, REL_LEFT);
+					moveToFrontPoint();
+				}
+				else
+				{
+		//VIRTUAL			mover->rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
+					facing = findNewFacing(facing, REL_RIGHT);
+					moveToFrontPoint();
+				}
+			}
+		}
+		else
+			moveToFrontPoint();
 	}
 	else
 		moveToFrontPoint();
@@ -379,8 +455,9 @@ void GridNav::initCheckForBlocks()
 	else
 	{
 		//Choose new path based on maximum profit
-		int frontPathProfit = findPathProfit(REL_FRONT);
-		int rightPathProfit = findPathProfit(REL_RIGHT);
+		unsigned char numUnknown = 0; // Sum of unknowns for paths
+		int frontPathProfit = findPathProfit(REL_FRONT, &numUnknown);
+		int rightPathProfit = findPathProfit(REL_RIGHT, &numUnknown);
 		if (frontPathProfit > rightPathProfit)
 		{
 			moveToFrontPoint();
@@ -459,10 +536,19 @@ void GridNav::printRelDirection(unsigned char dir)
 void GridNav::printGrid()
 {
 	Point tempPoint(0, 0);
-        Serial.println();
+    Serial.println();
 	char buffer[50];
+	Serial.print(" ");
+	for(int y = 0; y < GRID_MAX_Y + 1; ++y)
+	{
+		sprintf(buffer, "  %d", y);
+		Serial.print(buffer);
+	}
+	Serial.println();
 	for(int x = 0; x < GRID_MAX_X + 1 ; ++x)
 	{
+		sprintf(buffer, "%i ", x);
+		Serial.print(buffer);
 		for(int y = 0; y < GRID_MAX_Y + 1; ++y)
 		{
 			tempPoint.x = x;
@@ -479,7 +565,6 @@ void GridNav::printGrid()
 	Serial.print(currPoint.y);
 	Serial.print(")\tFacing: ");
 	printDirection(facing);
-	Serial.println();
 	Serial.println();
 }
 /////////////////////// END DEBUG PRINTING FUNCTIONS ///////////////////////

@@ -59,6 +59,8 @@ class GridNav
 		//Unexpected return for a relative direction causing a point off the grid
 		Point adjacentPoint(Point pt, unsigned char inFacing, unsigned char relativeTurn);
 		
+		Point frontDiagPoint(Point pt, unsigned char inFacing, unsigned char relativeTurn);
+		
 		//Checks whether there is a block within a specified range of the inputted relative direction
 		//Returns false by default for a relative direction causing a point off the grid
 		bool isBlock(unsigned char dir);
@@ -92,7 +94,7 @@ class GridNav
 		//Scan left point and set seen flag
 		void scanLeftIr();
 		
-		int findPathProfit(unsigned char relDir);
+		int findPathProfit(unsigned char relDir, unsigned char *numUnknown);
 		
 		void chooseNextPath();
 		
