@@ -1,3 +1,12 @@
+#ifndef GridNav_h
+#define GridNav_h
+
+#if defined(ARDUINO) && ARDUINO >= 100
+	#include "Arduino.h"
+#else
+	#include "WProgram.h"
+#endif
+
 #include "Config.h"
 #include "Claw.h"
 #include "IR.h"
@@ -141,3 +150,5 @@ class GridNav
 		//TODO: Change type back to Direction
 		
 };
+
+#endif
