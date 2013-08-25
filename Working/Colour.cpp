@@ -12,13 +12,9 @@ void Colour::setup()
 {
 	Serial.begin(9600);
 	reset();
-	serOut.begin(COLOUR_BAUD);
-	pinMode(COLOUR_PIN, OUTPUT);
-	serOut.print("= (00 $ m) !");  // Command to read RGB colors, see datasheet
-	serOut.end();
-
-    serIn.begin(COLOUR_BAUD);
-	pinMode(COLOUR_PIN, INPUT);
+	ColourSensor.begin(COLOUR_BAUD);
+	ColourSensor.write("= (00 $ m) !");  // Command to read RGB colors, see datasheet
+	ColourSensor.end();
 }
 
 Colour::ColourType Colour::senseColour()
@@ -43,16 +39,16 @@ bool Colour::readData()
 {
 	char buffer[32];
 
-	if (serIn.available() > 0)
+	if (ColourSensor.available() > 0)
 	{
 		//Wait for a $ character, then read three 3 digit hex numbers
-		buffer[0] = serIn.read();
+		buffer[0] = ColourSensor.read();
 		if (buffer[0] == '$')
 		{
 			for(int ii = 0; ii < 9; ++ii)
 			{
-				while (serIn.available() == 0);  //Wait for next input character
-				buffer[ii] = serIn.read();
+				while (ColourSensor.available() == 0);  //Wait for next input character
+				buffer[ii] = ColourSensor.read();
 				if (buffer[ii] == '$')  //Return early if $ character encountered
 					return false;
 			}
@@ -98,13 +94,9 @@ void Colour::correctReading()
 void Colour::reset()
 {
 	delay(200);
-	pinMode(COLOUR_PIN, OUTPUT);
-	digitalWrite(COLOUR_PIN, LOW);
-	pinMode(COLOUR_PIN, INPUT);
-	while (digitalRead(COLOUR_PIN) != HIGH);
-	pinMode(COLOUR_PIN, OUTPUT);
-	digitalWrite(COLOUR_PIN, LOW);
+	ColourSensor.write(LOW);
+	while (ColourSensor.read() != HIGH);
+	ColourSensor.write(LOW);
 	delay(80);
-	pinMode(COLOUR_PIN, INPUT);
 	delay(COLOUR_DELAY);
 }

@@ -1,5 +1,4 @@
 #include "Config.h"
-#include <SoftwareSerial.h>
 #include <PololuWheelEncoders.h>
 #include <PololuQTRSensors.h>
 #include "Claw.h"

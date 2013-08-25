@@ -8,14 +8,14 @@
 #endif
 
 #include "Config.h"
-#include <SoftwareSerial.h>
+#include <Serial.h>
 
 class Colour
 {
 	public:
 		enum ColourType {red, grn, blu, undef};
 		
-		Colour() : serIn(COLOUR_PIN, COLOUR_UNUSED_PIN), serOut(COLOUR_UNUSED_PIN, COLOUR_PIN) {}
+		Colour();// : serIn(COLOUR_PIN, COLOUR_UNUSED_PIN), serOut(COLOUR_UNUSED_PIN, COLOUR_PIN) {}
 		
 		void setup();
 		
@@ -29,8 +29,8 @@ class Colour
 		
 	private:
 		//Set up two software serials on the same pin
-		SoftwareSerial serIn;
-		SoftwareSerial serOut;
+		//SoftwareSerial serIn;
+		//SoftwareSerial serOut;
 		
 		//Reading in format {red, blue, green}
 		//Change to struct later
