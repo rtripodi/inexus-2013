@@ -1,4 +1,5 @@
 #include "Config.h"
+#include <SoftwareSerial.h>
 #include <PololuWheelEncoders.h>
 #include <PololuQTRSensors.h>
 #include "Claw.h"
@@ -11,6 +12,7 @@
 #include "GridMap.h"
 #include "Routing.h"
 #include "GridNav.h"
+#include "Colour.h"
 
 Motor motors;
 LineSensors ls;
