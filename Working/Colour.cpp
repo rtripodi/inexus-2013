@@ -9,6 +9,8 @@
 
 #include "Colour.h"
 
+Colour::Colour() {}
+
 void Colour::setup()
 {
 	Serial.begin(9600);
@@ -26,11 +28,11 @@ Colour::ColourType Colour::senseColour()
 		success = readData();
 	}
 	correctReading();
-	if (reading.red > reading.green + reading.blue)
+	if (reading.red > reading.grn + reading.blu)
 		return red;
-	else if (reading.green > reading.red + reading.blue)
+	else if (reading.grn > reading.red + reading.blu)
 		return grn;
-	else if (reading.blue > reading.red + reading.green)
+	else if (reading.blu > reading.red + reading.grn)
 		return blu;
 	else
 		return undef;
@@ -53,7 +55,7 @@ bool Colour::readData()
 				if (buffer[ii] == '$')  //Return early if $ character encountered
 					return false;
 			}
-			sscanf (buffer, "%3d%3d%3d", &reading.red, &reading.green, &reading.blue);
+			sscanf (buffer, "%3d%3d%3d", &reading.red, &reading.grn, &reading.blu);
 			delay(10);
 			return true;
 		}
@@ -86,8 +88,8 @@ void Colour::calibrateWhite()
 void Colour::correctReading()
 {
 	reading.red = 255 * (int) ((float) (reading.red - blkRef.red) / (float) (whtRef.red - blkRef.red) + 0.5);
-	reading.green = 255 * (int) ((float) (reading.green - blkRef.green) / (float) (whtRef.green - blkRef.green) + 0.5);
-	reading.blue = 255 * (int) ((float) (reading.blue - blkRef.blue) / (float) (whtRef.blue - blkRef.blue) + 0.5);
+	reading.grn = 255 * (int) ((float) (reading.grn - blkRef.grn) / (float) (whtRef.grn - blkRef.grn) + 0.5);
+	reading.blu = 255 * (int) ((float) (reading.blu - blkRef.blu) / (float) (whtRef.blu - blkRef.blu) + 0.5);
 }
 
 // Reset ColorPAL; see ColorPAL documentation for sequence
