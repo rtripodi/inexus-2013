@@ -3,7 +3,8 @@
      Source: http://learn.parallax.com/colorpal-arduino-demo
      Author: Martin Heermance, with some assistance from Gordon McComb
 	 
-   ColorPAL Resources: http://www.parallax.com/tabid/768/ProductID/617/Default.aspx
+   ColorPAL Resources: http://classic.parallax.com/tabid/768/ProductID/617/Default.aspx
+		or http://www.parallax.com/product/28380
 */
 
 #include "Colour.h"
@@ -13,7 +14,7 @@ void Colour::setup()
 	Serial.begin(9600);
 	reset();
 	ColourSensor.begin(COLOUR_BAUD);
-	ColourSensor.write("= (00 $ m) !");  // Command to read RGB colors, see datasheet
+	ColourSensor.write("= (00 $ m) !");  // Command to read RGB colors, see product documentation
 	ColourSensor.end();
 }
 
@@ -25,11 +26,11 @@ Colour::ColourType Colour::senseColour()
 		success = readData();
 	}
 	correctReading();
-	if (reading[red] > reading[grn] + reading[blu])
+	if (reading.red > reading.green + reading.blue)
 		return red;
-	else if (reading[grn] > reading[red] + reading[blu])
+	else if (reading.green > reading.red + reading.blue)
 		return grn;
-	else if (reading[blu] > reading[red] + reading[grn])
+	else if (reading.blue > reading.red + reading.green)
 		return blu;
 	else
 		return undef;
@@ -52,7 +53,7 @@ bool Colour::readData()
 				if (buffer[ii] == '$')  //Return early if $ character encountered
 					return false;
 			}
-			sscanf (buffer, "%3d%3d%3d", &reading[red], &reading[grn], &reading[blu]);
+			sscanf (buffer, "%3d%3d%3d", &reading.red, &reading.green, &reading.blue);
 			delay(10);
 			return true;
 		}
@@ -67,8 +68,7 @@ void Colour::calibrateBlack()
 	{
 		success = readData();
 	}
-	for (int ii = 0; ii < 3; ++ii)
-		blkRef[ii] = reading[ii];
+	blkRef = reading;
 }
 
 void Colour::calibrateWhite()
@@ -78,16 +78,16 @@ void Colour::calibrateWhite()
 	{
 		success = readData();
 	}
-	for (int ii = 0; ii < 3; ++ii)
-		whtRef[ii] = reading[ii];
+	whtRef = reading;
 }
 
-//Follows following example formula stated in datasheet: Cr = 255 * (Ur – Kr) / (Wr – Kr)
+//Follows following example formula stated in product documentation: Cr = 255 * (Ur – Kr) / (Wr – Kr)
 //C: Corrected, U: Uncorrected, K: Black Reference, W: White Reference, r: Red
 void Colour::correctReading()
 {
-	for (int ii = 0; ii < 3; ++ii)
-    	reading[ii] = 255 * (int) ((float) (reading[ii] - blkRef[ii]) / (float) (whtRef[ii] - blkRef[ii]) + 0.5);
+	reading.red = 255 * (int) ((float) (reading.red - blkRef.red) / (float) (whtRef.red - blkRef.red) + 0.5);
+	reading.green = 255 * (int) ((float) (reading.green - blkRef.green) / (float) (whtRef.green - blkRef.green) + 0.5);
+	reading.blue = 255 * (int) ((float) (reading.blue - blkRef.blue) / (float) (whtRef.blue - blkRef.blue) + 0.5);
 }
 
 // Reset ColorPAL; see ColorPAL documentation for sequence

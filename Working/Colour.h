@@ -15,7 +15,7 @@ class Colour
 	public:
 		enum ColourType {red, grn, blu, undef};
 		
-		Colour();// : serIn(COLOUR_PIN, COLOUR_UNUSED_PIN), serOut(COLOUR_UNUSED_PIN, COLOUR_PIN) {}
+		Colour();
 		
 		void setup();
 		
@@ -34,9 +34,16 @@ class Colour
 		
 		//Reading in format {red, blue, green}
 		//Change to struct later
-		int reading[3];
-		int blkRef[3];
-		int whtRef[3];
+		struct rgbColour
+		{
+			unsigned char red;
+			unsigned char green;
+			unsigned char blue;
+		};
+		
+		rgbColour reading;
+		rgbColour blkRef;
+		rgbColour whtRef;
 		
 		void correctReading();
 		
