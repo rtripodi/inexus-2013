@@ -1,7 +1,7 @@
 #ifndef LineSensors_h
 #define LineSensors_h
 
-#include "config.h"
+#include "Config.h"
 #include "PololuQTRSensors.h"
 
 //BLK = black, WHT = white, NUL = null/disregard/"don't care".

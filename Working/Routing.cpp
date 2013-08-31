@@ -26,7 +26,7 @@ Routing::Routing(Maze *inMaze)
  //	 If it is GOAL we set atGoal to true
  //	 If it is CLOSED we've already considered it completely and so do nothing
  //Finish if there are no points left that cost less to get to than the goal
-void Routing::generateRoute(Point start, Point goal, Direction currDir, Path * path)
+void Routing::generateRoute(Point start, Point goal, CarDir currDir, Path * path)
 {
   generateRouteSetup(start, goal, currDir);
   bool atGoal = false;        //  atGoal is set to true if the goal point was considered while looping
@@ -52,7 +52,7 @@ void Routing::generateRoute(Point start, Point goal, Direction currDir, Path * p
   makePath(path, atGoal, goal, start);
 }
 
-void Routing::generateRouteSetup(Point start, Point goal, Direction currDir)
+void Routing::generateRouteSetup(Point start, Point goal, CarDir currDir)
 {
   Point pointBehindStart = pointBehind(start, currDir);
   if( ! maze->contains(pointBehindStart))
@@ -177,7 +177,7 @@ byte Routing::calcHeuristic(Point one, Point two)
   //return (byte) sqrt(((one.x - two.x)*(one.x - two.x) + (one.y - two.y)*(one.y - two.y)));//pythagoarean distance = admissible and consistent
 }
 
-Point Routing::pointBehind(Point pt, Direction dir)
+Point Routing::pointBehind(Point pt, CarDir dir)
 {
   switch(dir)
   {

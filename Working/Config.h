@@ -126,3 +126,8 @@
 //For line following.
 #define EDGE_SENSITIVITY 1000
 #define QTR_READ_DELAY 75
+
+#define TURN_FRONT 0
+#define TURN_RIGHT (90)
+#define TURN_BACK 180
+#define TURN_LEFT (-90)

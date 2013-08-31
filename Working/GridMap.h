@@ -17,7 +17,7 @@
 #endif
 
 #include "Config.h"
-#include "MazeImports.h"
+#include "GridImports.h"
 
 //Grid dimensions
 #define GRID_MAX_X (7)

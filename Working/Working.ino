@@ -7,7 +7,7 @@
 #include <Servo.h>
 #include "Movement.h"
 #include "Motor.h"
-#include "MazeImports.h"
+#include "GridImports.h"
 #include "GridMap.h"
 #include "Routing.h"
 #include "GridNav.h"

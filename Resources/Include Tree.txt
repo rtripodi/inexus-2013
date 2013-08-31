@@ -1,0 +1,40 @@
+Claw
+	Config
+
+GridMap
+	GridImports
+	Config
+
+GridNav
+	Claw
+	IR
+	Movement
+		LineSensors
+		Motor
+		Direction
+		Config
+	Routing
+		GridImports
+		Direction
+		GridMap
+	(-)Config
+
+IR
+	Config
+
+LineSensors
+	Config
+
+Motor
+	Config
+
+Movement
+	LineSensors
+	Motor
+	Direction
+	(-)Config
+
+Routing
+	GridImports
+	Direction
+	GridMap

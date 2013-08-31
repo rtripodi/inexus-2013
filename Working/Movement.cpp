@@ -178,9 +178,6 @@ void Movement::moveTicks(int ticks, int speed)
   }
 }
 
-
-
-
 int Movement::tickError()
 {
 	int motorOne = abs(wheelEnc.getCountsM1());
@@ -202,12 +199,32 @@ void Movement::moveLength(int length, int speed)
   
 }
 
+//Turns in given relative direction
+void Movement::rotateDirection(RelDir relDir, int speed)
+{
+	switch (relDir)
+	{
+		case FRONT:
+			rotateAngle(TURN_FRONT);
+			break;
+		case RIGHT:
+			rotateAngle(TURN_RIGHT);
+			break;
+		case BACK:
+			rotateAngle(TURN_BACK);
+			break;
+		case LEFT:
+			rotateAngle(TURN_LEFT);
+			break;
+	}
+}
+
 //clockwise turning is positive angle, anti-clockwise turning is negative angle.Speed is positive.
 //This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
 //WARNING, ERROR, TODO: This is untested
-  void Movement::rotateAngle(int angle, int speed)
+void Movement::rotateAngle(int angle, int speed)
 {
-	//don't do anything if a rotation of zero is inputted
+	//Don't do anything if a rotation of zero is inputted
 	if (angle != 0)
 	{
 		angle=constrain(angle,-180,180);

@@ -10,51 +10,38 @@ GridNav::GridNav(Motor *inMotor, Movement *inMovement, IR *inIrs[4], Claw *inCla
 	router = Routing(&gridMap);
 }
 
-//Returns the value is degrees needed to excute a turn in the given relative direction
-int GridNav::findAngle(unsigned char relDir)
-{
-	if (relDir == REL_FRONT)
-		return TURN_FRONT;
-	else if (relDir ==  REL_RIGHT)
-		return TURN_RIGHT;
-	else if (relDir ==  REL_BACK)
-		return TURN_BACK;
-	else if (relDir ==  REL_LEFT)
-		return TURN_LEFT;
-}
-
 //Returns the new facing cardinal direction given a turn in the relative direction
 //Unexpected return for inputs other then: Front, Right, Back, Left
-unsigned char GridNav::findNewFacing(unsigned char inFacing, unsigned char relativeTurn)
+CarDir GridNav::findNewFacing(CarDir inFacing, RelDir relativeTurn)
 {
-	if ((inFacing == DIR_NORTH && relativeTurn == REL_FRONT) || (inFacing == DIR_EAST && relativeTurn == REL_LEFT) || (inFacing == DIR_SOUTH && relativeTurn == REL_BACK) || (inFacing == DIR_WEST && relativeTurn == REL_RIGHT))
-		return DIR_NORTH;
-	else if ((inFacing == DIR_NORTH && relativeTurn == REL_RIGHT) || (inFacing == DIR_EAST && relativeTurn == REL_FRONT) || (inFacing == DIR_SOUTH && relativeTurn == REL_LEFT) || (inFacing == DIR_WEST && relativeTurn == REL_BACK))
-		return DIR_EAST;
-	else if ((inFacing == DIR_NORTH && relativeTurn == REL_BACK) || (inFacing == DIR_EAST && relativeTurn == REL_RIGHT) || (inFacing == DIR_SOUTH && relativeTurn == REL_FRONT) || (inFacing == DIR_WEST && relativeTurn == REL_LEFT))
-		return DIR_SOUTH;
-	else if ((inFacing == DIR_NORTH && relativeTurn == REL_LEFT) || (inFacing == DIR_EAST && relativeTurn == REL_BACK) || (inFacing == DIR_SOUTH && relativeTurn == REL_RIGHT) || (inFacing == DIR_WEST && relativeTurn == REL_FRONT))
-		return DIR_WEST;
+	if ((inFacing == NORTH && relativeTurn == FRONT) || (inFacing == EAST && relativeTurn == LEFT) || (inFacing == SOUTH && relativeTurn == BACK) || (inFacing == WEST && relativeTurn == RIGHT))
+		return NORTH;
+	else if ((inFacing == NORTH && relativeTurn == RIGHT) || (inFacing == EAST && relativeTurn == FRONT) || (inFacing == SOUTH && relativeTurn == LEFT) || (inFacing == WEST && relativeTurn == BACK))
+		return EAST;
+	else if ((inFacing == NORTH && relativeTurn == BACK) || (inFacing == EAST && relativeTurn == RIGHT) || (inFacing == SOUTH && relativeTurn == FRONT) || (inFacing == WEST && relativeTurn == LEFT))
+		return SOUTH;
+	else if ((inFacing == NORTH && relativeTurn == LEFT) || (inFacing == EAST && relativeTurn == BACK) || (inFacing == SOUTH && relativeTurn == RIGHT) || (inFacing == WEST && relativeTurn == FRONT))
+		return WEST;
 }
 
 //Returns the closest point in the inputted relative direction
 //Unexpected return for a relative direction causing a point off the grid
-Point GridNav::adjacentPoint(Point pt, unsigned char inFacing, unsigned char relativeTurn)
+Point GridNav::adjacentPoint(Point pt, CarDir inFacing, RelDir relativeTurn)
 {
-	unsigned char newCarDir = findNewFacing(inFacing, relativeTurn);
+	CarDir newCarDir = findNewFacing(inFacing, relativeTurn);
 		
 	switch(newCarDir)
 	{
-		case DIR_NORTH:
+		case NORTH:
 			pt.y += 1;
 			break;
-		case DIR_SOUTH:
+		case SOUTH:
 			pt.y -= 1;
 			break;
-		case DIR_EAST:
+		case EAST:
 			pt.x += 1;
 			break;
-		case DIR_WEST:
+		case WEST:
 			pt.x -= 1;
 			break;
 	}
@@ -64,26 +51,26 @@ Point GridNav::adjacentPoint(Point pt, unsigned char inFacing, unsigned char rel
 
 //Returns the closest point in the inputted relative direction
 //Unexpected return for a relative direction causing a point off the grid
-Point GridNav::frontDiagPoint(Point pt, unsigned char inFacing, unsigned char relativeTurn)
+Point GridNav::frontDiagPoint(Point pt, CarDir inFacing, RelDir relativeTurn)
 {
-	unsigned char newCarDir = findNewFacing(inFacing, relativeTurn);
+	CarDir newCarDir = findNewFacing(inFacing, relativeTurn);
 		
-	if (inFacing == DIR_NORTH && newCarDir == DIR_EAST)
+	if (inFacing == NORTH && newCarDir == EAST)
 	{
 		pt.x += 1;
 		pt.y += 1;
 	}
-	else if (inFacing == DIR_NORTH && newCarDir == DIR_WEST)
+	else if (inFacing == NORTH && newCarDir == WEST)
 	{
 		pt.x -= 1;
 		pt.y += 1;
 	}
-	else if (inFacing == DIR_SOUTH && newCarDir == DIR_EAST)
+	else if (inFacing == SOUTH && newCarDir == EAST)
 	{
 		pt.x += 1;
 		pt.y -= 1;
 	}
-	else if (inFacing == DIR_SOUTH && newCarDir == DIR_WEST)
+	else if (inFacing == SOUTH && newCarDir == WEST)
 	{
 		pt.x -= 1;
 		pt.y -= 1;
@@ -94,14 +81,14 @@ Point GridNav::frontDiagPoint(Point pt, unsigned char inFacing, unsigned char re
 
 //Checks whether there is a block within a specified range of the inputted relative direction
 //Returns false by default for a relative direction causing a point off the grid
-bool GridNav::isBlock(unsigned char dir)
+bool GridNav::isBlock(RelDir relDir)
 {
-	if (dir == REL_FRONT)
+	if (relDir == FRONT)
 		return (irInMm.frnt < BLOCK_DIST_F);
-	else if (dir == REL_LEFT)
+	else if (relDir == LEFT)
 		return (abs(BLOCK_DIST_L - irInMm.lft) < BLOCK_TOLERANCE);
 		//(abs(BLOCK_DIST_L - irInMm.lft) < BLOCK_TOLERANCE);
-	else if (dir == REL_RIGHT)
+	else if (relDir == RIGHT)
 		return (abs(BLOCK_DIST_R - irInMm.rght) < BLOCK_TOLERANCE);
 		//(abs(BLOCK_DIST_R - irInMm.rght) < BLOCK_TOLERANCE);
 	else
@@ -113,18 +100,18 @@ void GridNav::moveToFrontPoint()
 {
 /*VIRTUAL	mover->moveTillPoint(DEFAULT_SPEED);
 	mover->moveOffCross(DEFAULT_SPEED);*/
-	currPoint = adjacentPoint(currPoint, facing, REL_FRONT);
+	currPoint = adjacentPoint(currPoint, facing, FRONT);
 }
 
 //Sets the OCCUPIED flag for the point in the inputted relative direction and attempts to grab the block
 //If the grab is unsuccessful, the robot will return to the point at which it sensed it
-bool GridNav::obtainBlock(unsigned char relDir)
+bool GridNav::obtainBlock(RelDir relDir)
 {
-	unsigned char prevFacing = facing;
+	CarDir prevFacing = facing;
 	Point tempPoint;
 	tempPoint = adjacentPoint(currPoint, facing, relDir);
 	gridMap.setFlag(tempPoint, OCCUPIED);
-//VIRTUAL	mover->rotateAngle(findAngle(relDir), DEFAULT_SPEED);
+//VIRTUAL	mover->rotateDirection(relDir, DEFAULT_SPEED);
 	facing = findNewFacing(facing, relDir);
 	claw->open();
 	irInMm.frnt = irs[0]->getDist();
@@ -138,7 +125,7 @@ bool GridNav::obtainBlock(unsigned char relDir)
 /*VIRTUAL	if (mover->onCross() )
 	{
 		mover->moveOffCross();
-		currPoint = adjacentPoint(currPoint, facing, REL_FRONT);
+		currPoint = adjacentPoint(currPoint, facing, FRONT);
 	}
 	else
 		moveToFrontPoint();*/
@@ -157,27 +144,26 @@ bool GridNav::obtainBlock(unsigned char relDir)
 	else
 	{
 		claw->shut();
-//VIRTUAL		mover->rotateAngle(TURN_BACK, DEFAULT_SPEED);
-		facing = findNewFacing(facing, REL_BACK);
+//VIRTUAL		mover->rotateDirection(BACK, DEFAULT_SPEED);
+		facing = findNewFacing(facing, BACK);
 		moveToFrontPoint();
-//VIRTUAL		mover->rotateAngle( findAngle( dirCardToRel(prevFacing)), DEFAULT_SPEED);
+//VIRTUAL		mover->rotateDirection(dirCarToRel(prevFacing), DEFAULT_SPEED);
 		grabSuccess = false;
 		return false;
 	}
 }
 
 //Returns the cardinal direction of a point given the inputted relative direction
-//
-unsigned char GridNav::dirOfPoint(Point pt)
+CarDir GridNav::carDirOfPoint(Point pt)
 {
 	if ((pt.y == currPoint.y + 1) && (pt.x == currPoint.x))
-		return DIR_NORTH;
+		return NORTH;
 	else if ((pt.y == currPoint.y - 1) && (pt.x == currPoint.x))
-		return DIR_SOUTH;
+		return SOUTH;
 	else if ((pt.y == currPoint.y) && (pt.x == currPoint.x + 1))
-		return DIR_EAST;
+		return EAST;
 	else if ((pt.y == currPoint.y) && (pt.x == currPoint.x - 1))
-		return DIR_WEST;
+		return WEST;
 /*	else if ((pt.y == currPoint.y + 1) && (pt.x == currPoint.x + 1))
 		return DIR_NEAST;
 	else if ((pt.y == currPoint.y + 1) && (pt.x == currPoint.x - 1))
@@ -190,29 +176,23 @@ unsigned char GridNav::dirOfPoint(Point pt)
 
 //Turns the robot in the desired cardinal direction
 //Unexpected results for inputs other then: North, East, South, West
-unsigned char GridNav::dirCardToRel(unsigned char newCardDir)
+RelDir GridNav::dirCarToRel(CarDir newCardDir)
 {
-/*	DEBUG: Haven't tested, using below if statement instead
-	Assumes N=1, E=2, S=3, W=4, F=0, R=1, B=2, L=3
-	signed char delta = newCardDir - facing;
-	if (delta < 0)
-		delta += 4;
-	turn = delta;*/
 	if (facing == newCardDir)
-		return REL_FRONT;
-	else if ((facing == DIR_NORTH && newCardDir == DIR_SOUTH) || (facing == DIR_EAST && newCardDir == DIR_WEST) || (facing == DIR_SOUTH && newCardDir == DIR_NORTH) || (facing == DIR_WEST && newCardDir == DIR_EAST))
-		return REL_BACK;
-	else if ((facing == DIR_NORTH && newCardDir == DIR_WEST) || (facing == DIR_EAST && newCardDir == DIR_NORTH) || (facing == DIR_SOUTH && newCardDir == DIR_EAST) || (facing == DIR_WEST && newCardDir == DIR_SOUTH))
-		return REL_LEFT;
-	else if ((facing == DIR_NORTH && newCardDir == DIR_EAST) || (facing == DIR_EAST && newCardDir == DIR_SOUTH) || (facing == DIR_SOUTH && newCardDir == DIR_WEST) || (facing == DIR_WEST && newCardDir == DIR_NORTH))
-		return REL_RIGHT;
+		return FRONT;
+	else if ((facing == NORTH && newCardDir == SOUTH) || (facing == EAST && newCardDir == WEST) || (facing == SOUTH && newCardDir == NORTH) || (facing == WEST && newCardDir == EAST))
+		return BACK;
+	else if ((facing == NORTH && newCardDir == WEST) || (facing == EAST && newCardDir == NORTH) || (facing == SOUTH && newCardDir == EAST) || (facing == WEST && newCardDir == SOUTH))
+		return LEFT;
+	else if ((facing == NORTH && newCardDir == EAST) || (facing == EAST && newCardDir == SOUTH) || (facing == SOUTH && newCardDir == WEST) || (facing == WEST && newCardDir == NORTH))
+		return RIGHT;
 }
 
 //Moves to given point
 void GridNav::moveToPoint(Point pt)
 {
-	unsigned char newDir = dirOfPoint(pt);
-//VIRTUAL	mover->rotateAngle(findAngle( dirCardToRel(newDir)), DEFAULT_SPEED);
+	CarDir newDir = carDirOfPoint(pt);
+//VIRTUAL	mover->rotateDirection(dirCarToRel(newDir), DEFAULT_SPEED);
 	facing = newDir;
 	moveToFrontPoint();
 }
@@ -222,7 +202,7 @@ void GridNav::returnToEntrance()
 {
 	Path path;
 	Point entrPoint(GRID_MAX_X, 0);
-	router.generateRoute(currPoint, entrPoint, (Direction)facing, &path);
+	router.generateRoute(currPoint, entrPoint, facing, &path);
 	for (int ii = 0; ii < path.length; ++ii)
 	{
 		moveToPoint(path.path[ii]);
@@ -236,7 +216,7 @@ void GridNav::scanFrontIr()
 {
 	Point tempPoint;
 	irInMm.frnt = 1000;//VIRTUALirs[0]->getDist();
-	tempPoint = adjacentPoint(currPoint, facing, REL_FRONT);
+	tempPoint = adjacentPoint(currPoint, facing, FRONT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
 	
@@ -245,7 +225,7 @@ void GridNav::scanRightIr()
 {
 	Point tempPoint;
 	irInMm.rght = 1000;//VIRTUALirs[1]->getDist();
-	tempPoint = adjacentPoint(currPoint, facing, REL_RIGHT);
+	tempPoint = adjacentPoint(currPoint, facing, RIGHT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
 
@@ -254,17 +234,17 @@ void GridNav::scanLeftIr()
 {
 	Point tempPoint;
 	irInMm.lft = 1000;//VIRTUALirs[3]->getDist();
-	tempPoint = adjacentPoint(currPoint, facing, REL_LEFT);
+	tempPoint = adjacentPoint(currPoint, facing, LEFT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
 
-int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
+int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 {
 /*	Serial.println();//DEBUG
 	Serial.print("Path: ");//DEBUG
-	printRelDirection(relDir);//DEBUG
+	printRelDir(relDir);//DEBUG
 	Serial.println();//DEBUG*/
-	unsigned char tempFacing = findNewFacing(facing, relDir);
+	CarDir tempFacing = findNewFacing(facing, relDir);
 	int totalProfit = 0;
 	if (facing == tempFacing)
 		totalProfit += 5;
@@ -289,8 +269,8 @@ int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
 		}
 		
 		//Profit of seen left and right points
-		rightPoint = adjacentPoint(tempPoint, tempFacing, REL_RIGHT);
-		leftPoint = adjacentPoint(tempPoint, tempFacing, REL_LEFT);
+		rightPoint = adjacentPoint(tempPoint, tempFacing, RIGHT);
+		leftPoint = adjacentPoint(tempPoint, tempFacing, LEFT);
 		if (gridMap.contains(rightPoint))
 		{
 /*			Serial.print(" R(");//DEBUG
@@ -325,7 +305,7 @@ int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
 				(*numUnknown)++;
 			}
 		}
-		tempPoint = adjacentPoint(tempPoint, tempFacing, REL_FRONT);
+		tempPoint = adjacentPoint(tempPoint, tempFacing, FRONT);
 	}
 	return totalProfit;
 }
@@ -335,13 +315,13 @@ int GridNav::findPathProfit(unsigned char relDir, unsigned char *numUnknown)
 //		Needs visited and seen counts
 void GridNav::chooseNextPath()
 {
-	Point pastFront = adjacentPoint( adjacentPoint(currPoint, facing, REL_FRONT), facing, REL_FRONT);
+	Point pastFront = adjacentPoint( adjacentPoint(currPoint, facing, FRONT), facing, FRONT);
 
-	if(!gridMap.contains(adjacentPoint(currPoint, facing, REL_FRONT)))
+	if(!gridMap.contains(adjacentPoint(currPoint, facing, FRONT)))
 	{
 		unsigned char numUnknown = 0; // Sum of unknowns for paths
-		int leftPathProfit = findPathProfit(REL_LEFT, &numUnknown);
-		int rightPathProfit = findPathProfit(REL_RIGHT, &numUnknown);
+		int leftPathProfit = findPathProfit(LEFT, &numUnknown);
+		int rightPathProfit = findPathProfit(RIGHT, &numUnknown);
 		if(numUnknown == 0)
 		{
 			//stop
@@ -352,28 +332,28 @@ void GridNav::chooseNextPath()
 		{
 			if (leftPathProfit > rightPathProfit)
 			{
-	//VIRTUAL			mover->rotateAngle(TURN_LEFT, DEFAULT_SPEED);
-				facing = findNewFacing(facing, REL_LEFT);
+	//VIRTUAL			mover->rotateDirection(LEFT, DEFAULT_SPEED);
+				facing = findNewFacing(facing, LEFT);
 				moveToFrontPoint();
 			}
 			else
 			{
-	//VIRTUAL			mover->rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
-				facing = findNewFacing(facing, REL_RIGHT);
+	//VIRTUAL			mover->rotateDirection(RIGHT, DEFAULT_SPEED);
+				facing = findNewFacing(facing, RIGHT);
 				moveToFrontPoint();
 			}
 		}
 	}
 	else if (!gridMap.contains(pastFront) || gridMap.isFlagSet(pastFront, SEEN))
 	{
-		Point leftDiag = frontDiagPoint(currPoint, facing, REL_LEFT);
-		Point rightDiag = frontDiagPoint(currPoint, facing, REL_RIGHT);
+		Point leftDiag = frontDiagPoint(currPoint, facing, LEFT);
+		Point rightDiag = frontDiagPoint(currPoint, facing, RIGHT);
 		
 		if ( !gridMap.contains(leftDiag) || !gridMap.contains(rightDiag) || (gridMap.isFlagSet(leftDiag, SEEN) && gridMap.isFlagSet(rightDiag, SEEN)))
 		{
 			unsigned char numUnknown = 0; // Sum of unknowns for paths
-			int leftPathProfit = findPathProfit(REL_LEFT, &numUnknown);
-			int rightPathProfit = findPathProfit(REL_RIGHT, &numUnknown);
+			int leftPathProfit = findPathProfit(LEFT, &numUnknown);
+			int rightPathProfit = findPathProfit(RIGHT, &numUnknown);
 			if(numUnknown == 0)
 			{
 				//stop
@@ -384,14 +364,14 @@ void GridNav::chooseNextPath()
 			{
 				if (leftPathProfit > rightPathProfit)
 				{
-		//VIRTUAL			mover->rotateAngle(TURN_LEFT, DEFAULT_SPEED);
-					facing = findNewFacing(facing, REL_LEFT);
+		//VIRTUAL			mover->rotateDirection(LEFT, DEFAULT_SPEED);
+					facing = findNewFacing(facing, LEFT);
 					moveToFrontPoint();
 				}
 				else
 				{
-		//VIRTUAL			mover->rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
-					facing = findNewFacing(facing, REL_RIGHT);
+		//VIRTUAL			mover->rotateDirection(RIGHT, DEFAULT_SPEED);
+					facing = findNewFacing(facing, RIGHT);
 					moveToFrontPoint();
 				}
 			}
@@ -409,19 +389,19 @@ void GridNav::checkForBlocks()
 	gridMap.setFlag(currPoint, VISITED);
 	
 	//Shouldn't need to reset irValues, if not on map should disregard
-	if(gridMap.contains( adjacentPoint(currPoint, facing, REL_FRONT)))
+	if(gridMap.contains( adjacentPoint(currPoint, facing, FRONT)))
 		scanFrontIr();
-	if(gridMap.contains( adjacentPoint(currPoint, facing, REL_RIGHT)))
+	if(gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)))
 		scanRightIr();
-	if(gridMap.contains( adjacentPoint(currPoint, facing, REL_LEFT)))
+	if(gridMap.contains( adjacentPoint(currPoint, facing, LEFT)))
 		scanLeftIr();
 
-	if (gridMap.contains( adjacentPoint(currPoint, facing, REL_FRONT)) && isBlock(REL_FRONT) )
-		haveBlock = obtainBlock(REL_FRONT);
-	else if (gridMap.contains( adjacentPoint(currPoint, facing, REL_RIGHT)) && isBlock(REL_RIGHT) )
-		haveBlock = obtainBlock(REL_RIGHT);
-	else if (gridMap.contains( adjacentPoint(currPoint, facing, REL_LEFT)) && isBlock(REL_LEFT) )
-		haveBlock = obtainBlock(REL_LEFT);
+	if (gridMap.contains( adjacentPoint(currPoint, facing, FRONT)) && isBlock(FRONT) )
+		haveBlock = obtainBlock(FRONT);
+	else if (gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)) && isBlock(RIGHT) )
+		haveBlock = obtainBlock(RIGHT);
+	else if (gridMap.contains( adjacentPoint(currPoint, facing, LEFT)) && isBlock(LEFT) )
+		haveBlock = obtainBlock(LEFT);
 	else
 	{
 		chooseNextPath();
@@ -433,32 +413,32 @@ void GridNav::initCheckForBlocks()
 	gridMap.setFlag(currPoint, VISITED);
 	
 	//Shouldn't need to reset irValues, if not on map should disregard
-	if(gridMap.contains( adjacentPoint(currPoint, facing, REL_FRONT)))
+	if(gridMap.contains( adjacentPoint(currPoint, facing, FRONT)))
 		scanFrontIr();
-	if(gridMap.contains( adjacentPoint(currPoint, facing, REL_RIGHT)))
+	if(gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)))
 		scanRightIr();
-	if(gridMap.contains( adjacentPoint(currPoint, facing, REL_LEFT)))
+	if(gridMap.contains( adjacentPoint(currPoint, facing, LEFT)))
 		scanLeftIr();
-	if (gridMap.contains( adjacentPoint(currPoint, facing, REL_FRONT)) && isBlock(REL_FRONT) )
-		haveBlock = obtainBlock(REL_FRONT);
-	else if (gridMap.contains( adjacentPoint(currPoint, facing, REL_RIGHT)) && isBlock(REL_RIGHT) )
-		haveBlock = obtainBlock(REL_RIGHT);
-	else if (gridMap.contains( adjacentPoint(currPoint, facing, REL_LEFT)) && isBlock(REL_LEFT) )
-		haveBlock = obtainBlock(REL_LEFT);
+	if (gridMap.contains( adjacentPoint(currPoint, facing, FRONT)) && isBlock(FRONT) )
+		haveBlock = obtainBlock(FRONT);
+	else if (gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)) && isBlock(RIGHT) )
+		haveBlock = obtainBlock(RIGHT);
+	else if (gridMap.contains( adjacentPoint(currPoint, facing, LEFT)) && isBlock(LEFT) )
+		haveBlock = obtainBlock(LEFT);
 	else
 	{
 		//Choose new path based on maximum profit
 		unsigned char numUnknown = 0; // Sum of unknowns for paths
-		int frontPathProfit = findPathProfit(REL_FRONT, &numUnknown);
-		int rightPathProfit = findPathProfit(REL_RIGHT, &numUnknown);
+		int frontPathProfit = findPathProfit(FRONT, &numUnknown);
+		int rightPathProfit = findPathProfit(RIGHT, &numUnknown);
 		if (frontPathProfit > rightPathProfit)
 		{
 			moveToFrontPoint();
 		}
 		else
 		{
-//VIRTUAL			mover->rotateAngle(TURN_RIGHT, DEFAULT_SPEED);
-			facing = findNewFacing(facing, REL_RIGHT);
+//VIRTUAL			mover->rotateDirection(RIGHT, DEFAULT_SPEED);
+			facing = findNewFacing(facing, RIGHT);
 			moveToFrontPoint();
 		}
 	}
@@ -475,7 +455,7 @@ void GridNav::findBlock()
 
 	haveBlock = false;
 	grabSuccess = true;
-	facing = DIR_WEST;
+	facing = WEST;
 
 	initCheckForBlocks();
 	printGrid();
@@ -489,39 +469,39 @@ void GridNav::findBlock()
 }
 
 /////////////////////// DEBUG PRINTING FUNCTIONS ///////////////////////
-void GridNav::printDirection(unsigned char dir)
+void GridNav::printCarDir(CarDir carDir)
 {
-	switch(dir)
+	switch(carDir)
 	{
-		case DIR_NORTH:
+		case NORTH:
 			Serial.print("North");
 			break;
-		case DIR_SOUTH:
+		case SOUTH:
 			Serial.print("South");
 			break;
-		case DIR_EAST:
+		case EAST:
 			Serial.print("East");
 			break;
-		case DIR_WEST:
+		case WEST:
 			Serial.print("West");
 			break;
 	}
 }
 
-void GridNav::printRelDirection(unsigned char dir)
+void GridNav::printRelDir(RelDir relDir)
 {
-	switch(dir)
+	switch(relDir)
 	{
-		case REL_FRONT:
+		case FRONT:
 			Serial.print("Front");
 			break;
-		case REL_BACK:
+		case BACK:
 			Serial.print("Back");
 			break;
-		case REL_RIGHT:
+		case RIGHT:
 			Serial.print("Right");
 			break;
-		case REL_LEFT:
+		case LEFT:
 			Serial.print("Left");
 			break;
 	}
@@ -558,7 +538,7 @@ void GridNav::printGrid()
 	Serial.print(", ");
 	Serial.print(currPoint.y);
 	Serial.print(")\tFacing: ");
-	printDirection(facing);
+	printCarDir(facing);
 	Serial.println();
 }
 /////////////////////// END DEBUG PRINTING FUNCTIONS ///////////////////////

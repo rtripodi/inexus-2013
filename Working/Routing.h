@@ -17,7 +17,8 @@
   #include "WProgram.h"
 #endif
 
-#include "MazeImports.h"
+#include "GridImports.h"
+#include "Direction.h"
 #include "GridMap.h"
 
 //#define MINIMISE_MEMORY
@@ -146,18 +147,18 @@ class Routing
     Maze *maze;
     Routing();
     Routing(Maze *maze);
-    void generateRoute(Point start, Point goal, Direction currDir, Path * path);
+    void generateRoute(Point start, Point goal, CarDir currDir, Path * path);
 	
   private:
     NodeList nodeList;
     bool classifyPoint(Point adjacentPt, Point current, Point parentOfCurrent, Point goal);
-    void generateRouteSetup(Point start, Point goal, Direction currDir);
+    void generateRouteSetup(Point start, Point goal, CarDir currDir);
     void makePath(Path* path, bool atGoal, Point goal, Point start);
     int findPathLength(Point endPoint, Point start);
 
     int calcCost(Point from, Point thru, Point to);
     int turnCost(Point from, Point thru, Point to);
     byte calcHeuristic(Point one, Point two);
-    Point pointBehind(Point pt, Direction dir);
+    Point pointBehind(Point pt, CarDir dir);
 };
 #endif

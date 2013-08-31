@@ -1,5 +1,5 @@
-#ifndef MazeImports_h
-#define MazeImports_h
+#ifndef GridImports_h
+#define GridImports_h
 
 struct Point
 {
@@ -99,9 +99,6 @@ struct Path
   return false;
   }
 };
-
-//TODO: Diagonals values should be between cardinal values, need to rewrite turn finding function for this
-enum Direction {NORTH = 1 , EAST = 2, SOUTH = 3, WEST = 4, NEAST = 5 , SEAST = 6, SWEST = 7, NWEST = 8};
 
 class Maze
 {

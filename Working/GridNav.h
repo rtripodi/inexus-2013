@@ -10,11 +10,7 @@
 #include "Config.h"
 #include "Claw.h"
 #include "IR.h"
-#include "LineSensors.h"
 #include "Movement.h"
-#include "Motor.h"
-#include "MazeImports.h"
-#include "GridMap.h"
 #include "Routing.h"
 
 #define CENTRE_DIST (300)
@@ -30,23 +26,6 @@
 //Left IR senses 275-300mm for block
 //Right IR senses 250-275mm for block
 
-#define TURN_FRONT 0
-#define TURN_RIGHT (90 - 20) //Tweaking given speed of 80
-#define TURN_BACK 180
-#define TURN_LEFT (-90 + 20)
-
-//F=0, R=1, B=2, L=3
-//enum RelativeDir {RelFront, RelRight, RelBack, RelLeft};
-#define REL_FRONT 0
-#define REL_RIGHT 1
-#define REL_BACK 2
-#define REL_LEFT 3
-
-#define DIR_NORTH 1
-#define DIR_EAST 2
-#define DIR_SOUTH 3
-#define DIR_WEST 4
-
 class GridNav
 {
 	public:
@@ -56,37 +35,34 @@ class GridNav
 		Claw *claw;
 
 		GridNav(Motor *inMotor, Movement *inMovement, IR *irs[4], Claw *inClaw);
-	
-		//Returns the value is degrees needed to excute a turn in the given relative direction
-		int findAngle(unsigned char relDir);
 		
 		//Returns the new facing cardinal direction given a turn in the relative direction
 		//Unexpected return for inputs other then: Front, Right, Back, Left
-		unsigned char findNewFacing(unsigned char inFacing, unsigned char relativeTurn);
+		CarDir findNewFacing(CarDir inFacing, RelDir relativeTurn);
 		
 		//Returns the closest point in the inputted relative direction
 		//Unexpected return for a relative direction causing a point off the grid
-		Point adjacentPoint(Point pt, unsigned char inFacing, unsigned char relativeTurn);
+		Point adjacentPoint(Point pt, CarDir inFacing, RelDir relativeTurn);
 		
-		Point frontDiagPoint(Point pt, unsigned char inFacing, unsigned char relativeTurn);
+		Point frontDiagPoint(Point pt, CarDir inFacing, RelDir relativeTurn);
 		
 		//Checks whether there is a block within a specified range of the inputted relative direction
 		//Returns false by default for a relative direction causing a point off the grid
-		bool isBlock(unsigned char dir);
+		bool isBlock(RelDir relDir);
 		
 		//TODO: Return point moved to, then currPoint will be made equal to this 
 		void moveToFrontPoint();
 		
 		//Sets the OCCUPIED flag for the point in the inputted relative direction and attempts to grab the block
 		//If the grab is unsuccessful, the robot will return to the point at which it sensed it
-		bool obtainBlock(unsigned char relDir);
+		bool obtainBlock(RelDir relDir);
 		
 		//Returns the cardinal direction of a point given the inputted relative direction
-		unsigned char dirOfPoint(Point pt);
+		CarDir carDirOfPoint(Point pt);
 		
 		//Turns the robot in the desired cardinal direction
 		//Unexpected results for inputs other then: North, East, South, West
-		unsigned char dirCardToRel(unsigned char newCardDir);
+		RelDir dirCarToRel(CarDir newCardDir);
 		
 		//Moves to given point
 		void moveToPoint(Point pt);
@@ -103,7 +79,7 @@ class GridNav
 		//Scan left point and set seen flag
 		void scanLeftIr();
 		
-		int findPathProfit(unsigned char relDir, unsigned char *numUnknown);
+		int findPathProfit(RelDir relDir, unsigned char *numUnknown);
 		
 		void chooseNextPath();
 		
@@ -116,9 +92,9 @@ class GridNav
 		
 		void printGrid();
 		
-		void printDirection(unsigned char dir);
+		void printCarDir(CarDir carDir);
 		
-		void printRelDirection(unsigned char dir);
+		void printRelDir(RelDir relDir);
 		
 	private:
 		GridMap gridMap;
@@ -128,7 +104,7 @@ class GridNav
 		Point currPoint;
 		
 		//Current facing cardinal direction
-		unsigned char facing;
+		CarDir facing;
 
 		
 		struct irValues
