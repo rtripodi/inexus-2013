@@ -1,6 +1,7 @@
 #include "Config.h"
 #include <PololuWheelEncoders.h>
 #include <PololuQTRSensors.h>
+#include <OldSoftwareSerial.h>
 #include "Claw.h"
 #include "IR.h"
 #include "LineSensors.h"
@@ -12,8 +13,9 @@
 #include "Routing.h"
 #include "GridNav.h"
 #include "Colour.h"
+#include "ColourSoftware.h"
 
-Colour colour;
+ColourSoftware colour;
 
 void setup()
 {  
