@@ -8,60 +8,60 @@ MazeMap::MazeMap()
 	needSimplify = false;
 }
 
-void MazeMap::updateMap(Direction inDirection)
+void MazeMap::updateMap(RelDir inRelDir)
 {
     if(needSimplify)
 	{
 		//TODO: I don't think the case of consecutive reversals is possible. Only put here as a safetynet for now
-		if (inDirection == reverse)
+		if (inRelDir == BACK)
 		{
 			index -= 2;
 			mazeLength -= 2;
 			needSimplify = false;
 		}	
 		else
-			simplify(inDirection);
+			simplify(inRelDir);
 	}
 	else
-		maze[index] = inDirection;
-	if(maze[index] == reverse)
+		maze[index] = inRelDir;
+	if(maze[index] == BACK)
 		needSimplify = true;
     index++;
 	mazeLength++;
 }
 
-void MazeMap::simplify(Direction inDirection)
+void MazeMap::simplify(RelDir inRelDir)
 {
 	index -= 2;
 	mazeLength -= 2;
 
 	//Left, Right, Forward, Back(reverse)
 	//L = RBF = FBR, R = LBF = FBL, F = LBL = RBR, B = LBR = RBL = FBF
-	if ( (maze[index] == right &&  inDirection == forward) || (maze[index] == forward &&  inDirection == right) )
+	if ( (maze[index] == RIGHT &&  inRelDir == FRONT) || (maze[index] == FRONT &&  inRelDir == RIGHT) )
 	{
-		maze[index] = left;
+		maze[index] = LEFT;
 		needSimplify = false;
 	}
-	else if ( (maze[index] == left &&  inDirection == forward) || (maze[index] == forward &&  inDirection == left) )
+	else if ( (maze[index] == LEFT &&  inRelDir == FRONT) || (maze[index] == FRONT &&  inRelDir == LEFT) )
 	{
-		maze[index] = right;
+		maze[index] = RIGHT;
 		needSimplify = false;
 	}
-	else if ( (maze[index] == left &&  inDirection == left) || (maze[index] == right &&  inDirection == right) )
+	else if ( (maze[index] == LEFT &&  inRelDir == LEFT) || (maze[index] == RIGHT &&  inRelDir == RIGHT) )
 	{
-		maze[index] = forward;
+		maze[index] = FRONT;
 		needSimplify = false;
 	}
-	else if ( (maze[index] == left &&  inDirection == right) || (maze[index] == right &&  inDirection == left) || (maze[index] == forward &&  inDirection == forward) )
+	else if ( (maze[index] == LEFT &&  inRelDir == RIGHT) || (maze[index] == RIGHT &&  inRelDir == LEFT) || (maze[index] == FRONT &&  inRelDir == FRONT) )
 	{
-		maze[index] = reverse;
+		maze[index] = BACK;
 		needSimplify = true;
 	}
 }
 
-MazeMap::Direction MazeMap::getNext()
+RelDir MazeMap::getNext()
 {
-    Direction temp = maze[index];
+    RelDir temp = maze[index];
 	index += mazeDirection;
     return temp;
 }

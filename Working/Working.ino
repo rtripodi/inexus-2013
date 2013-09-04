@@ -11,6 +11,7 @@
 #include "GridMap.h"
 #include "Routing.h"
 #include "GridNav.h"
+#include "MazeNav.h"
 
 Motor motors;
 LineSensors ls;
@@ -28,11 +29,14 @@ Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
 
 GridNav gridNav(&motors, &mover, (IR**)&irs, &claw);
 
+MazeNav mazeNav(&motors, &mover, (IR**)&irs);
+
 void setup()
 {  
 	Serial.begin(9600);	
 	claw.setup();
 	motors.setup();
+	claw.shut();
 	gridNav.findBlock();
 }
 

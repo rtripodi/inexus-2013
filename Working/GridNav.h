@@ -36,6 +36,35 @@ class GridNav
 
 		GridNav(Motor *inMotor, Movement *inMovement, IR *irs[4], Claw *inClaw);
 		
+		void findBlock();
+
+		
+	private:
+		GridMap gridMap;
+		Routing router;
+
+		//Current point on grid
+		Point currPoint;
+		
+		//Current facing cardinal direction
+		CarDir facing;
+
+		
+		struct irValues
+		{
+			int frnt;
+			int rght;
+			int bck;
+			int lft;
+		};
+		
+		//Stores distance in mm read from each IR sensor
+		irValues irInMm;
+				
+		//Determines whether an error occured with grabbing/holding the block
+		bool haveBlock;
+		bool grabSuccess;
+
 		//Returns the new facing cardinal direction given a turn in the relative direction
 		//Unexpected return for inputs other then: Front, Right, Back, Left
 		CarDir findNewFacing(CarDir inFacing, RelDir relativeTurn);
@@ -65,10 +94,10 @@ class GridNav
 		RelDir dirCarToRel(CarDir newCardDir);
 		
 		//Moves to given point
-		void moveToPoint(Point pt);
+		void moveToAdjPoint(Point pt);
 		
-		//Travels the current least expensive route to the entrance
-		void returnToEntrance();
+		//Travels the current least expensive route to specified point
+		void moveToPoint(Point pt);
 		
 		//Scan front point and set seen flag
 		void scanFrontIr();
@@ -81,50 +110,20 @@ class GridNav
 		
 		int findPathProfit(RelDir relDir, unsigned char *numUnknown);
 		
+		Point closestUnknown();
+		
 		void chooseNextPath();
 		
 		//Checks for blocks on adjacent points
 		void checkForBlocks();
 		
-		void initCheckForBlocks();
-		
-		void findBlock();
+		void initCheckForBlocks();		
 		
 		void printGrid();
 		
 		void printCarDir(CarDir carDir);
 		
 		void printRelDir(RelDir relDir);
-		
-	private:
-		GridMap gridMap;
-		Routing router;
-
-		//Current point on grid
-		Point currPoint;
-		
-		//Current facing cardinal direction
-		CarDir facing;
-
-		
-		struct irValues
-		{
-			int frnt;
-			int rght;
-			int bck;
-			int lft;
-		};
-		
-		//Stores distance in mm read from each IR sensor
-		irValues irInMm;
-		
-		
-		//Determines whether an error occured with grabbing/holding the block
-		bool haveBlock;
-		bool grabSuccess;
-
-		//TODO: Change type back to Direction
-		
 };
 
 #endif

@@ -7,22 +7,22 @@
   #include "WProgram.h"
 #endif
 
+#include "Direction.h"
+
 #define MAZE_MAX 256
 
 class MazeMap
 {
 	public:
 		
-        enum Direction{left, right, forward, reverse};
-		
 		//Constructs empty mazeMap/'turn list'
         MazeMap();
 		
-		//Adds inputted direction to the turns list 
-		void updateMap(Direction inDirection);
+		//Adds inputted relative direction to the turns list 
+		void updateMap(RelDir inRelDir);
 		
-		//Returns the next direction to turn 
-        Direction getNext();
+		//Returns the next relative direction to turn 
+        RelDir getNext();
 		
 		//Resets the index to point to the last turn to traverse from exit to entrance
         void resetToStart();
@@ -32,7 +32,7 @@ class MazeMap
 		
 	private:
 		
-        Direction maze[MAZE_MAX];
+        RelDir maze[MAZE_MAX];
 		
 		//The shortest amount of turns taken to traverse the maze
         unsigned char mazeLength;
@@ -40,7 +40,7 @@ class MazeMap
 		//Points to next element to be added and then to read from MazeMap once created
         unsigned char index;
 		
-        //Represents the traversal direction
+        //Represents the relative traversal direction
 		//Forward is positive when going forward through the maze, negative on it's way back to the start
         unsigned char mazeDirection;
 		
@@ -48,7 +48,7 @@ class MazeMap
 		bool needSimplify;
 		
 		//Removes reverses from the maze map, simplifying 3 directions into 1
-		void simplify(Direction inDirection);
+		void simplify(RelDir inRelDir);
 };
 
 #endif

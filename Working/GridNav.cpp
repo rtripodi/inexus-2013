@@ -98,8 +98,8 @@ bool GridNav::isBlock(RelDir relDir)
 //TODO: Return point moved to, then currPoint will be made equal to this 
 void GridNav::moveToFrontPoint()
 {
-/*VIRTUAL	mover->moveTillPoint(DEFAULT_SPEED);
-	mover->moveOffCross(DEFAULT_SPEED);*/
+	mover->moveTillPoint(DEFAULT_SPEED);//VIRTUAL
+	mover->moveOffCross(DEFAULT_SPEED);
 	currPoint = adjacentPoint(currPoint, facing, FRONT);
 }
 
@@ -111,24 +111,24 @@ bool GridNav::obtainBlock(RelDir relDir)
 	Point tempPoint;
 	tempPoint = adjacentPoint(currPoint, facing, relDir);
 	gridMap.setFlag(tempPoint, OCCUPIED);
-//VIRTUAL	mover->rotateDirection(relDir, DEFAULT_SPEED);
+	mover->rotateDirection(relDir, DEFAULT_SPEED);//VIRTUAL
 	facing = findNewFacing(facing, relDir);
 	claw->open();
 	irInMm.frnt = irs[0]->getDist();
 	while (irInMm.frnt > BLOCK_STOP && !mover->onCross() )
 	{
-//VIRTUAL		mover->moveForward(DEFAULT_SPEED);
+		mover->moveForward(DEFAULT_SPEED);//VIRTUAL
 		irInMm.frnt = irs[0]->getDist();
 	}
-//VIRTUAL	motors->stop();
-//VIRTUAL	claw->close();
-/*VIRTUAL	if (mover->onCross() )
+	motors->stop();//VIRTUAL
+	claw->close();//VIRTUAL
+	if (mover->onCross() )//VIRTUAL
 	{
 		mover->moveOffCross();
 		currPoint = adjacentPoint(currPoint, facing, FRONT);
 	}
 	else
-		moveToFrontPoint();*/
+		moveToFrontPoint();
 	irInMm.frnt = irs[0]->getDist();
 	if (irInMm.frnt <= BLOCK_STOP + 40)
 	{
@@ -144,10 +144,10 @@ bool GridNav::obtainBlock(RelDir relDir)
 	else
 	{
 		claw->shut();
-//VIRTUAL		mover->rotateDirection(BACK, DEFAULT_SPEED);
+		mover->rotateDirection(BACK, DEFAULT_SPEED);//VIRTUAL
 		facing = findNewFacing(facing, BACK);
 		moveToFrontPoint();
-//VIRTUAL		mover->rotateDirection(dirCarToRel(prevFacing), DEFAULT_SPEED);
+		mover->rotateDirection(dirCarToRel(prevFacing), DEFAULT_SPEED);//VIRTUAL
 		grabSuccess = false;
 		return false;
 	}
@@ -188,34 +188,33 @@ RelDir GridNav::dirCarToRel(CarDir newCardDir)
 		return RIGHT;
 }
 
-//Moves to given point
-void GridNav::moveToPoint(Point pt)
+//Moves to adjacent point
+void GridNav::moveToAdjPoint(Point pt)
 {
 	CarDir newDir = carDirOfPoint(pt);
-//VIRTUAL	mover->rotateDirection(dirCarToRel(newDir), DEFAULT_SPEED);
+	mover->rotateDirection(dirCarToRel(newDir), DEFAULT_SPEED);//VIRTUAL
 	facing = newDir;
 	moveToFrontPoint();
 }
 
-//Travels the current least expensive route to the entrance
-void GridNav::returnToEntrance()
+//Travels the current least expensive route to specified point
+void GridNav::moveToPoint(Point pt)
 {
 	Path path;
-	Point entrPoint(GRID_MAX_X, 0);
-	router.generateRoute(currPoint, entrPoint, facing, &path);
+	router.generateRoute(currPoint, pt, facing, &path);
 	for (int ii = 0; ii < path.length; ++ii)
 	{
-		moveToPoint(path.path[ii]);
+		moveToAdjPoint(path.path[ii]);
 	}
-/*VIRTUAL	motors->stop();
-	claw->open();*/
+	motors->stop();//VIRTUAL
+	claw->open();
 }
 
 //Scan front point and set seen flag
 void GridNav::scanFrontIr()
 {
 	Point tempPoint;
-	irInMm.frnt = 1000;//VIRTUALirs[0]->getDist();
+	irInMm.frnt = irs[0]->getDist();//VIRTUAL
 	tempPoint = adjacentPoint(currPoint, facing, FRONT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
@@ -224,7 +223,7 @@ void GridNav::scanFrontIr()
 void GridNav::scanRightIr()
 {
 	Point tempPoint;
-	irInMm.rght = 1000;//VIRTUALirs[1]->getDist();
+	irInMm.rght = irs[1]->getDist();//VIRTUAL
 	tempPoint = adjacentPoint(currPoint, facing, RIGHT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
@@ -233,7 +232,7 @@ void GridNav::scanRightIr()
 void GridNav::scanLeftIr()
 {
 	Point tempPoint;
-	irInMm.lft = 1000;//VIRTUALirs[3]->getDist();
+	irInMm.lft = irs[3]->getDist();//VIRTUAL
 	tempPoint = adjacentPoint(currPoint, facing, LEFT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
@@ -310,6 +309,23 @@ int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 	return totalProfit;
 }
 
+Point GridNav::closestUnknown()
+{
+	Point tempPoint, closePoint;
+	int minDist = 100;
+	for (unsigned char x = 0; x <= GRID_MAX_X; ++x)
+	{
+		for (unsigned char y = 0; y <= GRID_MAX_Y; ++y)
+		{
+			tempPoint.x = currPoint.x;
+			tempPoint.y = currPoint.y;
+			if (!gridMap.isFlagSet(tempPoint, SEEN) && (abs(tempPoint.y - currPoint.y) + abs(tempPoint.x - currPoint.x)) < minDist);
+				closePoint = tempPoint;
+		}
+	}
+	return closePoint;
+}
+
 //TODO:	If path doesn't contain unknown, find closest unknown and use routing until gridmap
 //		is filled with SEEN at minimum
 //		Needs visited and seen counts
@@ -324,21 +340,19 @@ void GridNav::chooseNextPath()
 		int rightPathProfit = findPathProfit(RIGHT, &numUnknown);
 		if(numUnknown == 0)
 		{
-			//stop
-			Serial.println("Find other unknowns");//DEBUG
-			haveBlock = true;//DEBUG: Allow end condition for testing
+			moveToPoint(closestUnknown() );
 		}
 		else
 		{
 			if (leftPathProfit > rightPathProfit)
 			{
-	//VIRTUAL			mover->rotateDirection(LEFT, DEFAULT_SPEED);
+				mover->rotateDirection(LEFT, DEFAULT_SPEED);//VIRTUAL
 				facing = findNewFacing(facing, LEFT);
 				moveToFrontPoint();
 			}
 			else
 			{
-	//VIRTUAL			mover->rotateDirection(RIGHT, DEFAULT_SPEED);
+				mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL
 				facing = findNewFacing(facing, RIGHT);
 				moveToFrontPoint();
 			}
@@ -364,13 +378,13 @@ void GridNav::chooseNextPath()
 			{
 				if (leftPathProfit > rightPathProfit)
 				{
-		//VIRTUAL			mover->rotateDirection(LEFT, DEFAULT_SPEED);
+					mover->rotateDirection(LEFT, DEFAULT_SPEED);//VIRTUAL
 					facing = findNewFacing(facing, LEFT);
 					moveToFrontPoint();
 				}
 				else
 				{
-		//VIRTUAL			mover->rotateDirection(RIGHT, DEFAULT_SPEED);
+					mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL
 					facing = findNewFacing(facing, RIGHT);
 					moveToFrontPoint();
 				}
@@ -437,7 +451,7 @@ void GridNav::initCheckForBlocks()
 		}
 		else
 		{
-//VIRTUAL			mover->rotateDirection(RIGHT, DEFAULT_SPEED);
+			mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL
 			facing = findNewFacing(facing, RIGHT);
 			moveToFrontPoint();
 		}
@@ -452,6 +466,7 @@ void GridNav::findBlock()
 	irInMm.lft = 1000;
 
 	currPoint = Point(GRID_MAX_X, 0);
+	Point entrPoint = currPoint;
 
 	haveBlock = false;
 	grabSuccess = true;
@@ -464,7 +479,7 @@ void GridNav::findBlock()
 		checkForBlocks();
 		printGrid();
 	}
-	returnToEntrance();
+	moveToPoint(entrPoint);
 	Serial.println("Done.");
 }
 
