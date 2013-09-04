@@ -13,11 +13,9 @@ Colour::Colour() {}
 
 void Colour::setup()
 {
-	Serial.begin(9600);
 	reset();
 	ColourSensor.begin(COLOUR_BAUD);
-	ColourSensor.write("= (00 $ m) !");  // Command to read RGB colors, see product documentation
-	ColourSensor.end();
+	ColourSensor.write("= (00 $ m) !");  // Command to read RGB colours, see product documentation
 }
 
 Colour::ColourType Colour::senseColour()
@@ -28,6 +26,14 @@ Colour::ColourType Colour::senseColour()
 		success = readData();
 	}
 	correctReading();
+	senseColour();
+	Serial.print("R: ");//DEBUG
+	Serial.print(reading.red);//DEBUG
+	Serial.print("\tG: ");//DEBUG
+	Serial.print(reading.grn);//DEBUG
+	Serial.print("\tB: ");//DEBUG
+	Serial.print(reading.blu);//DEBUG
+	Serial.println();//DEBUG
 	if (reading.red > reading.grn + reading.blu)
 		return red;
 	else if (reading.grn > reading.red + reading.blu)
@@ -41,7 +47,7 @@ Colour::ColourType Colour::senseColour()
 bool Colour::readData()
 {
 	char buffer[32];
-
+	
 	if (ColourSensor.available() > 0)
 	{
 		//Wait for a $ character, then read three 3 digit hex numbers
@@ -55,7 +61,7 @@ bool Colour::readData()
 				if (buffer[ii] == '$')  //Return early if $ character encountered
 					return false;
 			}
-			sscanf (buffer, "%3d%3d%3d", &reading.red, &reading.grn, &reading.blu);
+			sscanf (buffer, "%3x%3x%3x", &reading.red, &reading.grn, &reading.blu);
 			delay(10);
 			return true;
 		}
@@ -95,10 +101,14 @@ void Colour::correctReading()
 // Reset ColorPAL; see ColorPAL documentation for sequence
 void Colour::reset()
 {
-	delay(200);
-	ColourSensor.write(LOW);
-	while (ColourSensor.read() != HIGH);
-	ColourSensor.write(LOW);
+	delay(COLOUR_DELAY);
+	pinMode(ColourSensor, OUTPUT);
+	digitalWrite(ColourSensor, LOW);
+	pinMode(ColourSensor, INPUT);
+	while (digitalRead(ColourSensor) != HIGH) Serial.println("Waiting for low");;
+	pinMode(ColourSensor, OUTPUT);
+	digitalWrite(ColourSensor, LOW);
 	delay(80);
+	pinMode(ColourSensor, INPUT);
 	delay(COLOUR_DELAY);
 }

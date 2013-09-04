@@ -36,9 +36,9 @@ class Colour
 		//Change to struct later
 		struct rgbColour
 		{
-			unsigned char red;
-			unsigned char grn;
-			unsigned char blu;
+			int red;
+			int grn;
+			int blu;
 		};
 		
 		rgbColour reading;
