@@ -21,6 +21,16 @@ void setup()
 {  
 	Serial.begin(9600);	
 	colour.setup();
+	Serial.println("Calibrating black in 2 secs.");
+	delay(2000);
+	colour.calibrateBlack();
+	Serial.println("Calibrating white in 2 secs.");
+	delay(2000);
+	colour.calibrateWhite();
+	Serial.println("D");
 }
 
-void loop() {}
+void loop()
+{
+	colour.senseColour();
+}

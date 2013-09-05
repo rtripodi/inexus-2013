@@ -12,6 +12,7 @@
 
 #define COLOUR_INPUT_PIN 2
 #define COLOUR_OUTPUT_PIN 3
+#define COLOUR_DELAY2 100
 
 class ColourSoftware
 {

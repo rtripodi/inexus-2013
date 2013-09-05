@@ -9,11 +9,8 @@ void ColourSoftware::setup()
 
 ColourSoftware::ColourType ColourSoftware::senseColour()
 {
-	bool success = readData();
-    while (!success)
-	{
-		success = readData();
-	}
+	while (!readData())
+		delay(COLOUR_DELAY2);
 	correctReading();
 	senseColour();
 	Serial.print("R: ");//DEBUG
@@ -48,6 +45,16 @@ bool ColourSoftware::readData()
 				return false;
 		}
 		sscanf (buffer, "%3x%3x%3x", &reading.red, &reading.grn, &reading.blu);
+		Serial.print("R: ");//DEBUG
+		for (int ii = 0; ii < 3; ++ii)//DEBUG
+			Serial.print(buffer[ii]);//DEBUG
+		Serial.print("\tG: ");//DEBUG
+		for (int ii = 3; ii < 6; ++ii)//DEBUG
+			Serial.print(buffer[ii]);//DEBUG
+		Serial.print("\tB: ");//DEBUG
+		for (int ii = 6; ii < 9; ++ii)//DEBUG
+			Serial.print(buffer[ii]);//DEBUG
+		Serial.println();//DEBUG
 		return true;
 	}
 	return false;
@@ -55,21 +62,15 @@ bool ColourSoftware::readData()
 
 void ColourSoftware::calibrateBlack()
 {
-	bool success = readData();
-    while (!success)
-	{
-		success = readData();
-	}
+    while (!readData())
+		delay(COLOUR_DELAY2);
 	blkRef = reading;
 }
 
 void ColourSoftware::calibrateWhite()
 {
-	bool success = readData();
-    while (!success)
-	{
-		success = readData();
-	}
+	while (!readData())
+		delay(COLOUR_DELAY2);
 	whtRef = reading;
 }
 
