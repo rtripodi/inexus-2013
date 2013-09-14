@@ -20,20 +20,16 @@ void Colour::setup()
 
 Colour::ColourType Colour::senseColour()
 {
-	bool success = readData();
-    while (!success)
-	{
-		success = readData();
-	}
-	correctReading();
-	senseColour();
-	Serial.print("R: ");//DEBUG
+	while (!readData())
+		delay(COLOUR_LOOP_DELAY);
+//	correctReading();
+/*	Serial.print("R: ");//DEBUG
 	Serial.print(reading.red);//DEBUG
 	Serial.print("\tG: ");//DEBUG
 	Serial.print(reading.grn);//DEBUG
 	Serial.print("\tB: ");//DEBUG
 	Serial.print(reading.blu);//DEBUG
-	Serial.println();//DEBUG
+	Serial.println();//DEBUG*/
 	if (reading.red > reading.grn + reading.blu)
 		return red;
 	else if (reading.grn > reading.red + reading.blu)
@@ -47,7 +43,6 @@ Colour::ColourType Colour::senseColour()
 bool Colour::readData()
 {
 	char buffer[32];
-	
 	if (ColourSensor.available() > 0)
 	{
 		//Wait for a $ character, then read three 3 digit hex numbers
@@ -62,7 +57,16 @@ bool Colour::readData()
 					return false;
 			}
 			sscanf (buffer, "%3x%3x%3x", &reading.red, &reading.grn, &reading.blu);
-			delay(10);
+			Serial.print("R: ");//DEBUG
+			for (int ii = 0; ii < 3; ++ii)//DEBUG
+				Serial.print(buffer[ii]);//DEBUG
+			Serial.print("\tG: ");//DEBUG
+			for (int ii = 3; ii < 6; ++ii)//DEBUG
+				Serial.print(buffer[ii]);//DEBUG
+			Serial.print("\tB: ");//DEBUG
+			for (int ii = 6; ii < 9; ++ii)//DEBUG
+				Serial.print(buffer[ii]);//DEBUG
+			Serial.println();//DEBUG			
 			return true;
 		}
 	}
@@ -71,21 +75,15 @@ bool Colour::readData()
 
 void Colour::calibrateBlack()
 {
-	bool success = readData();
-    while (!success)
-	{
-		success = readData();
-	}
+	while (!readData())
+		delay(COLOUR_LOOP_DELAY);
 	blkRef = reading;
 }
 
 void Colour::calibrateWhite()
 {
-	bool success = readData();
-    while (!success)
-	{
-		success = readData();
-	}
+	while (!readData())
+		delay(COLOUR_LOOP_DELAY);
 	whtRef = reading;
 }
 
@@ -105,7 +103,7 @@ void Colour::reset()
 	pinMode(ColourSensor, OUTPUT);
 	digitalWrite(ColourSensor, LOW);
 	pinMode(ColourSensor, INPUT);
-	while (digitalRead(ColourSensor) != HIGH) Serial.println("Waiting for low");;
+	while (digitalRead(ColourSensor) != HIGH);
 	pinMode(ColourSensor, OUTPUT);
 	digitalWrite(ColourSensor, LOW);
 	delay(80);

@@ -5,6 +5,8 @@ void ColourSoftware::setup()
 {
 	reset();
 	colSer.begin(4800);
+	colSer.print("= (00 $ m) !");
+	pinMode(COLOUR_OUTPUT_PIN, INPUT);
 }
 
 ColourSoftware::ColourType ColourSoftware::senseColour()
@@ -12,14 +14,13 @@ ColourSoftware::ColourType ColourSoftware::senseColour()
 	while (!readData())
 		delay(COLOUR_LOOP_DELAY);
 	correctReading();
-	senseColour();
-	Serial.print("R: ");//DEBUG
+/*	Serial.print("R: ");//DEBUG
 	Serial.print(reading.red);//DEBUG
 	Serial.print("\tG: ");//DEBUG
 	Serial.print(reading.grn);//DEBUG
 	Serial.print("\tB: ");//DEBUG
 	Serial.print(reading.blu);//DEBUG
-	Serial.println();//DEBUG
+	Serial.println();//DEBUG*/
 	if (reading.red > reading.grn + reading.blu)
 		return red;
 	else if (reading.grn > reading.red + reading.blu)
@@ -32,8 +33,6 @@ ColourSoftware::ColourType ColourSoftware::senseColour()
 
 bool ColourSoftware::readData()
 {
-	colSer.print("= (00 $ m) !");
-	pinMode(COLOUR_OUTPUT_PIN, INPUT);
 	char buffer[9];
 	buffer[0] = colSer.read();
 	if (buffer[0] == '$')
@@ -45,7 +44,7 @@ bool ColourSoftware::readData()
 				return false;
 		}
 		sscanf (buffer, "%3x%3x%3x", &reading.red, &reading.grn, &reading.blu);
-		Serial.print("R: ");//DEBUG
+/*		Serial.print("R: ");//DEBUG
 		for (int ii = 0; ii < 3; ++ii)//DEBUG
 			Serial.print(buffer[ii]);//DEBUG
 		Serial.print("\tG: ");//DEBUG
@@ -54,7 +53,7 @@ bool ColourSoftware::readData()
 		Serial.print("\tB: ");//DEBUG
 		for (int ii = 6; ii < 9; ++ii)//DEBUG
 			Serial.print(buffer[ii]);//DEBUG
-		Serial.println();//DEBUG
+		Serial.println();//DEBUG*/
 		return true;
 	}
 	return false;
@@ -106,5 +105,5 @@ void ColourSoftware::reset()
 
 	pinMode(COLOUR_INPUT_PIN, INPUT);
 	pinMode(COLOUR_OUTPUT_PIN, OUTPUT);
-	delay(100);
+	delay(COLOUR_DELAY);
 } 
