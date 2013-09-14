@@ -79,10 +79,10 @@
  *  IR Sensors                              *
  ********************************************/
 //Pins used for communication with IR sensors
-#define IR_SHORT_PIN (1)
-#define IR_MEDIUML_PIN (4)
-#define IR_MEDIUMR_PIN (2)
-#define IR_MEDIUMB_PIN (0)
+#define IR_FRONT_PIN (1)
+#define IR_RIGHT_PIN (2)
+#define IR_BACK_PIN (0)
+#define IR_LEFT_PIN (4)
 
 //Amount of IR reads to determine mean value
 #define IR_ITERATIONS (10)

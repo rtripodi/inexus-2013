@@ -1,6 +1,6 @@
 #include "MazeNav.h"
 
-MazeNav::MazeNav(Motor *inMotor, Movement *inMovement, IR *inIrs[4])
+MazeNav::MazeNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs)
 {
 	motors = inMotor;
 	mover = inMovement;
@@ -39,10 +39,10 @@ bool MazeNav::isWall(RelDir relDir)
 //Updates the IR values
 void MazeNav::scanWalls()
 {
-	irInMm.frnt = irs[0]->getDist();
-	irInMm.rght = irs[1]->getDist();
-	irInMm.bck = irs[2]->getDist();
-	irInMm.lft = irs[3]->getDist();
+	irInMm.frnt = ((*irs).frnt)->getDist();
+	irInMm.rght = ((*irs).rght)->getDist();
+	irInMm.bck = ((*irs).bck)->getDist();
+	irInMm.lft = ((*irs).lft)->getDist();
 }
 
 //From starting point, search for entrance

@@ -10,6 +10,7 @@
 #include "MazeMap.h"
 #include "IR.h"
 #include "Movement.h"
+#include "Navigation.h"
 
 //Min wall width = 350mm
 //From centre = 175mm
@@ -23,25 +24,17 @@ class MazeNav
 	public:
 		Motor *motors;
 		Movement *mover;
-		IR **irs;
+		IrSensors *irs;
 		
-		MazeNav(Motor *inMotor, Movement *inMovement, IR *irs[4]);
+		MazeNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs);
 		
 		void firstNavigate();
 	
 	private:
 		MazeMap mazeMap;
 		
-		struct irValues
-		{
-			int frnt;
-			int rght;
-			int bck;
-			int lft;
-		};
-		
 		//Stores distance in mm read from each IR sensor
-		irValues irInMm;
+		IrValues irInMm;
 		
 		bool isWall(RelDir relDir);
 		

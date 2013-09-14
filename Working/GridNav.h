@@ -12,14 +12,15 @@
 #include "IR.h"
 #include "Movement.h"
 #include "Routing.h"
+#include "Navigation.h"
 
 #define CENTRE_DIST (300)
 #define BLOCK_ACT_DIST (250)
-#define BLOCK_DIST_F (300)
+#define BLOCK_DIST_F (270)
 #define BLOCK_DIST_L (250)
 #define BLOCK_DIST_R (250)
 
-#define BLOCK_TOLERANCE (100)
+#define BLOCK_TOLERANCE (10)
 #define BLOCK_STOP (60)
 
 //Front IR senses 275-300mm for block
@@ -31,10 +32,10 @@ class GridNav
 	public:
 		Motor *motors;
 		Movement *mover;
-		IR **irs;
+		IrSensors *irs;
 		Claw *claw;
 
-		GridNav(Motor *inMotor, Movement *inMovement, IR *irs[4], Claw *inClaw);
+		GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw);
 		
 		void findBlock();
 
@@ -49,19 +50,10 @@ class GridNav
 		//Current facing cardinal direction
 		CarDir facing;
 
-		
-		struct irValues
-		{
-			int frnt;
-			int rght;
-			int bck;
-			int lft;
-		};
-		
 		//Stores distance in mm read from each IR sensor
-		irValues irInMm;
+		IrValues irInMm;
 				
-		//Determines whether an error occured with grabbing/holding the block
+		//Determines whether an error occurred with grabbing/holding the block
 		bool haveBlock;
 		bool grabSuccess;
 

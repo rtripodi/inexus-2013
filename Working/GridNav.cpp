@@ -1,6 +1,6 @@
 #include "GridNav.h"
 
-GridNav::GridNav(Motor *inMotor, Movement *inMovement, IR *inIrs[4], Claw *inClaw)
+GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw)
 {
 	motors = inMotor;
 	mover = inMovement;
@@ -114,11 +114,11 @@ bool GridNav::obtainBlock(RelDir relDir)
 	mover->rotateDirection(relDir, DEFAULT_SPEED);//VIRTUAL
 	facing = findNewFacing(facing, relDir);
 	claw->open();
-	irInMm.frnt = irs[0]->getDist();
+	irInMm.frnt = ((*irs).frnt)->getDist();
 	while (irInMm.frnt > BLOCK_STOP && !mover->onCross() )
 	{
 		mover->moveForward(DEFAULT_SPEED);//VIRTUAL
-		irInMm.frnt = irs[0]->getDist();
+		irInMm.frnt = ((*irs).frnt)->getDist();
 	}
 	motors->stop();//VIRTUAL
 	claw->close();//VIRTUAL
@@ -129,7 +129,7 @@ bool GridNav::obtainBlock(RelDir relDir)
 	}
 	else
 		moveToFrontPoint();
-	irInMm.frnt = irs[0]->getDist();
+	irInMm.frnt = ((*irs).frnt)->getDist();
 	if (irInMm.frnt <= BLOCK_STOP + 40)
 	{
 //		Serial.print("Picked up block from: (");//DEBUG
@@ -214,7 +214,7 @@ void GridNav::moveToPoint(Point pt)
 void GridNav::scanFrontIr()
 {
 	Point tempPoint;
-	irInMm.frnt = irs[0]->getDist();//VIRTUAL
+	irInMm.frnt = ((*irs).frnt)->getDist();//VIRTUAL
 	tempPoint = adjacentPoint(currPoint, facing, FRONT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
@@ -223,7 +223,7 @@ void GridNav::scanFrontIr()
 void GridNav::scanRightIr()
 {
 	Point tempPoint;
-	irInMm.rght = irs[1]->getDist();//VIRTUAL
+	irInMm.rght = ((*irs).rght)->getDist();//VIRTUAL
 	tempPoint = adjacentPoint(currPoint, facing, RIGHT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
@@ -232,7 +232,7 @@ void GridNav::scanRightIr()
 void GridNav::scanLeftIr()
 {
 	Point tempPoint;
-	irInMm.lft = irs[3]->getDist();//VIRTUAL
+	irInMm.lft = ((*irs).lft)->getDist();//VIRTUAL
 	tempPoint = adjacentPoint(currPoint, facing, LEFT);
 	gridMap.setFlag(tempPoint, SEEN);
 }
