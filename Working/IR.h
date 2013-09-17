@@ -40,7 +40,9 @@ class IR
 		//UNIMPLEMENTED
 		//Converts reading to distance in mm for 10-80cm sensor
 		//Returns -1 on error
-		int mediumScan(int reading);
+		int mediumScanB(int reading);
+		int mediumScanR(int reading);
+		int mediumScanL(int reading);
 		
 		//UNIMPLEMENTED
 		//Converts reading to distance in mm for 20-150cm sensor

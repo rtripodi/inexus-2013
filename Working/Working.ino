@@ -33,10 +33,10 @@ typedef struct {
 
 IrValues irInMm;
 
-IR frntIr = IR(IR_FRONT_PIN, IR::shortRange);
-IR rghtIr = IR(IR_RIGHT_PIN, IR::mediumRange);
-IR bckIr = IR(IR_BACK_PIN, IR::mediumRange);
-IR lftIr = IR(IR_LEFT_PIN, IR::mediumRange);
+IR frntIr = IR(IR_FRONT_PIN, IR::front);
+IR rghtIr = IR(IR_RIGHT_PIN, IR::left);
+IR bckIr = IR(IR_BACK_PIN, IR::back);
+IR lftIr = IR(IR_LEFT_PIN, IR::left);
 /*
 IrSensors irs = {
 	&IR(IR_FRONT_PIN, IR::shortRange),
@@ -66,13 +66,83 @@ void setup()
 	claw.setup();
 	motors.setup();
 	claw.shut();
+        delayTillButton();
 }
 
 void loop()
 {
-	delayTillButton();
-	firstNavigate();
+//	scanWalls();
+  /*Serial.print(irInMm.frnt);
+  Serial.print("\t");
+  Serial.print(irInMm.rght);
+  Serial.print("\t");
+  Serial.print(irInMm.bck);
+  Serial.print("\t");
+  Serial.println(irInMm.lft);*/
+//  Serial.print(analogRead(IR_FRONT_PIN));
+//  Serial.print("\t");
+//  Serial.print(analogRead(IR_RIGHT_PIN));
+//  Serial.print("\t");
+//  Serial.print(analogRead(IR_BACK_PIN));
+//  Serial.print("\t");
+//  Serial.println(analogRead(IR_LEFT_PIN));
+	wallsAreScary();
+
 }
+float diffs=0;
+float prevPos = 0;
+void wallsAreScary()
+{
+/*
+get left and right IR readings
+if it's too close to the left wall and it's not already moving in the direction of the right
+slow the right motor
+
+if it's too close to the right wall and it's not already moving in the direction of the left
+slow the left motor
+*/
+int leftDist = lftIr.getDist();
+int rightDist = rghtIr.getDist();
+float posBetweenWalls = (float)leftDist/(float)(leftDist+rightDist);//value between 0 and 1, 0 being the left wall 1 being the right
+diffs = posBetweenWalls - prevPos; //+ve value means moving towards right, it's actually in mm/readingtime
+prevPos = posBetweenWalls;
+if ((posBetweenWalls>0.5)&&(diffs>0))
+  {
+  motors.left(40);
+  motors.right(80);
+  }
+if ((posBetweenWalls<0.5)&&(diffs<0))
+  {
+  motors.left(80);
+  motors.right(40);
+  }
+if ((posBetweenWalls>0.5)&&(diffs<0))
+  {
+  motors.left(60);
+  motors.right(80);
+  }
+if ((posBetweenWalls<0.5)&&(diffs>0))
+  {
+  motors.left(80);
+  motors.right(60);
+  }
+if (diffs>0.2||diffs<-0.2)
+{
+  motors.left(80);
+  motors.right(80);
+}
+if (posBetweenWalls<0.4)
+  {
+  motors.left(40);
+  motors.right(0);
+  }
+if (posBetweenWalls>0.6)
+  {
+  motors.left(0);
+  motors.right(40);
+  }
+}
+
 
 //Navigate and map maze from starting point
 void firstNavigate()

@@ -17,14 +17,17 @@ int IR::getDist()
 	int distInMillis = -1;
 	switch (type)
 	{
-		case shortRange:
+		case front:
 			distInMillis = shortScan(reading);
 			break;
-		case mediumRange:
-			distInMillis = mediumScan(reading);
+		case right:
+			distInMillis = mediumScanR(reading);
 			break;
-		case longRange:
-			distInMillis = longScan(reading);
+		case back:
+			distInMillis = mediumScanB(reading);
+			break;
+		case left:
+			distInMillis = mediumScanL(reading);
 			break;
 	}
 	return distInMillis;
@@ -78,9 +81,41 @@ int IR::shortScan(int reading)
 //UNIMPLEMENTED
 //Converts reading to distance in mm for 10-80cm sensor
 //Returns -1 on error
-int IR::mediumScan(int reading)
+int IR::mediumScanR(int reading)
 {
-	if (reading > 575)
+	if (reading > 627)
+		return -1;
+	else if (reading < 140)
+		return 400;
+	else
+	{
+		float result;
+		result = 23170*pow( (float)reading, -0.844);
+		reading = (int) (result + 0.5);
+		
+		return reading;
+	}
+}
+
+int IR::mediumScanL(int reading)
+{
+	if (reading > 627)
+		return -1;
+	else if (reading < 150)
+		return 400;
+	else
+	{
+		float result;
+		result = 24574*pow( (float)reading, -0.861);
+		reading = (int) (result + 0.5);
+		
+		return reading;
+	}
+}
+
+int IR::mediumScanB(int reading)
+{
+	if (reading > 627)
 		return -1;
 	else if (reading < 182)
 		return 380;
@@ -88,7 +123,7 @@ int IR::mediumScan(int reading)
 	{
 		float result;
 		result = 240052.0*pow( (float)reading, -1.243);
-		reading = (int) result + 0.5;
+		reading = (int) (result + 0.5);
 		
 		return reading;
 	}
