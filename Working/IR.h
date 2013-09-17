@@ -12,7 +12,7 @@
 class IR
 {
 	public:
-		enum Range {shortRange, mediumRange, longRange};//Three types of IR sensor we use
+		enum Range {front, right, back, left};//Three types of IR sensor we use
 		
 		IR(int irPin, Range irType);
 
