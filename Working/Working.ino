@@ -9,27 +9,17 @@
 #include "Movement.h"
 #include "Motor.h"
 #include "GridImports.h"
-#include "GridMap.h"
+#include "GridNav.h"
 #include "Routing.h"
-#include "MazeMap.h"
+#include "MazeNav.h"
 #include "Colour.h"
 #include "ColourSoftware.h"
-
-#define WALL_MIN (175)
-#define WALL_TOLERANCE (25)
 
 Motor motors;
 LineSensors ls;
 Movement mover(&motors, &ls);
 
 MazeMap mazeMap;
-
-typedef struct {
-	int frnt;
-	int rght;
-	int bck;
-	int lft;
-} IrValues;
 
 IrValues irInMm;
 
@@ -60,13 +50,50 @@ void delayTillButton()
 	digitalWrite(LED_PIN, LOW);
 }
 
+void referrenceTest() {
+	Serial.print("Seperate Refs - ");
+	Serial.print("\tF: ");
+	Serial.print((int)&frntIr);
+	Serial.print("\tR: ");
+	Serial.print((int)&rghtIr);
+	Serial.print("\tB: ");
+	Serial.print((int)&bckIr);
+	Serial.print("\tL: ");
+	Serial.println((int)&lftIr);
+	
+	IrSensors irs = {
+		&frntIr,
+		&rghtIr,
+		&bckIr,
+		&lftIr
+	};
+	
+	Serial.print("Container Ref: ");
+	Serial.println((int)&irs);
+
+	Serial.print("Contained Refs - ");
+	Serial.print("\tF: ");
+	Serial.print((int)irs.frnt);
+	Serial.print("\tR: ");
+	Serial.print((int)irs.rght);
+	Serial.print("\tB: ");
+	Serial.print((int)irs.bck);
+	Serial.print("\tL: ");
+	Serial.println((int)irs.lft);	
+	
+	MazeNav mazeNav(&motors, &mover, &irs);
+	
+	mazeNav.debugIrs();
+}
+
 void setup()
 {  
-	Serial.begin(9600);	
-	claw.setup();
+	Serial.begin(9600);
+	referrenceTest();
+/*	claw.setup();
 	motors.setup();
 	claw.shut();
-        delayTillButton();
+        delayTillButton();*/
 }
 
 void loop()
@@ -86,7 +113,7 @@ void loop()
 //  Serial.print(analogRead(IR_BACK_PIN));
 //  Serial.print("\t");
 //  Serial.println(analogRead(IR_LEFT_PIN));
-	wallsAreScary();
+//	wallsAreScary();
 
 }
 float diffs=0;
@@ -144,6 +171,41 @@ if (posBetweenWalls>0.6)
 }
 
 
+
+
+
+
+/*
+	Maze Navigation Class
+*/
+
+/*	|       |
+	|       '-------.
+	|               |
+	|       |<----->| = 350mm wall minimum (full)
+	|               |
+	|       .-------'
+	|       |
+	
+	|       |
+	|       |
+	|   |<->| = ~175mm wall minimum (half)
+	|       |
+	|       |
+	
+	|       |
+	|       '-------.
+	|               |
+	|   |<--------->| ~175mm + 350mm = ~525mm mmax wall
+	|               |
+	|       .-------'
+	|       |
+*/
+
+#define WALL_MIN_FULL (350)
+#define WALL_MIN_HALF (WALL_MIN_FULL / 2)
+#define WALL_TOLERANCE (15)
+
 //Navigate and map maze from starting point
 void firstNavigate()
 {
@@ -163,13 +225,16 @@ void firstNavigate()
 bool isWall(RelDir relDir)
 {
 	if (relDir == FRONT)
-		return (irInMm.frnt < WALL_MIN + WALL_TOLERANCE);
-	else if (relDir == RIGHT)
-		return (irInMm.rght < WALL_MIN + WALL_TOLERANCE);
+		return (irInMm.frnt < WALL_MIN_FULL + WALL_TOLERANCE);
 	else if (relDir == BACK)
-		return (irInMm.bck < WALL_MIN + WALL_TOLERANCE);
-	else if (relDir == LEFT)
-		return (irInMm.lft < WALL_MIN + WALL_TOLERANCE);
+		return (irInMm.bck < WALL_MIN_HALF + WALL_TOLERANCE);
+	else if (irInMm.rght + irInMm.lft > 2 * WALL_MIN_HALF)
+	{
+		if (relDir == LEFT)
+			return (irInMm.lft < WALL_MIN_HALF + WALL_TOLERANCE);
+		else if (relDir == RIGHT)
+			return (irInMm.rght < WALL_MIN_HALF + WALL_TOLERANCE);
+	}
 }
 
 //Updates the IR values
@@ -193,7 +258,7 @@ void searchInitEntrance()
 			mover.moveForward(DEFAULT_SPEED);
 			scanWalls();
 		}
-		mover.moveLength(170, DEFAULT_SPEED);
+		mover.moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
 		motors.stop();
 		mover.rotateDirection(LEFT, DEFAULT_SPEED);
 	}
@@ -201,7 +266,7 @@ void searchInitEntrance()
 
 void searchNextMaze()
 {
-	mover.moveLength(170, DEFAULT_SPEED);
+	mover.moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
 	motors.stop();
 	scanWalls();
 	while (!isWall(FRONT) && isWall(RIGHT) && isWall(LEFT))
@@ -210,7 +275,7 @@ void searchNextMaze()
 	}
 	if (!isWall(FRONT))
 	{
-		mover.moveLength(170, DEFAULT_SPEED);
+		mover.moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
 		motors.stop();
 	}
 }
