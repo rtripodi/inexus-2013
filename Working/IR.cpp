@@ -171,3 +171,15 @@ int IR::calcMeanNoOutliers(int data[], int length)
 
 	return (int) (mean + 0.5);
 }
+
+//Returns large value for debugging purposes
+int IR::getDistLarge()
+{
+	return 10000;
+}
+
+//Returns small value for debugging purposes
+int IR::getDistSmall()
+{
+	return 1;
+}

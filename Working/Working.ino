@@ -35,7 +35,16 @@ IrSensors irs = {
 	&IR(IR_LEFT_PIN, IR::mediumRange)
 };*/
 
+IrSensors irs = {
+	&frntIr,
+	&rghtIr,
+	&bckIr,
+	&lftIr
+};
+
 Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
+
+GridNav gridNav(&motors, &mover, &irs, &claw);
 
 void delayTillButton()
 {
@@ -50,46 +59,26 @@ void delayTillButton()
 	digitalWrite(LED_PIN, LOW);
 }
 
-void referrenceTest() {
-	Serial.print("Seperate Refs - ");
-	Serial.print("\tF: ");
-	Serial.print((int)&frntIr);
-	Serial.print("\tR: ");
-	Serial.print((int)&rghtIr);
-	Serial.print("\tB: ");
-	Serial.print((int)&bckIr);
-	Serial.print("\tL: ");
-	Serial.println((int)&lftIr);
-	
-	IrSensors irs = {
-		&frntIr,
-		&rghtIr,
-		&bckIr,
-		&lftIr
-	};
-	
-	Serial.print("Container Ref: ");
-	Serial.println((int)&irs);
-
-	Serial.print("Contained Refs - ");
-	Serial.print("\tF: ");
-	Serial.print((int)irs.frnt);
-	Serial.print("\tR: ");
-	Serial.print((int)irs.rght);
-	Serial.print("\tB: ");
-	Serial.print((int)irs.bck);
-	Serial.print("\tL: ");
-	Serial.println((int)irs.lft);	
-	
-	MazeNav mazeNav(&motors, &mover, &irs);
-	
-	mazeNav.debugIrs();
+void gridTest()
+{
+	Serial.println("\t\t\t\t\t............");
+	Serial.println("\t\t\t\t\tFIRST BLOCK");
+	Serial.println("\t\t\t\t\t............");
+	gridNav.findBlock();
+	Serial.println("\t\t\t\t\t............");
+	Serial.println("\t\t\t\t\tSECOND BLOCK");
+	Serial.println("\t\t\t\t\t............");
+	gridNav.findBlock();
+	Serial.println("\t\t\t\t\t............");
+	Serial.println("\t\t\t\t\tTHIRD BLOCK");
+	Serial.println("\t\t\t\t\t............");
+	gridNav.findBlock();
 }
 
 void setup()
 {  
 	Serial.begin(9600);
-	referrenceTest();
+	gridTest();
 /*	claw.setup();
 	motors.setup();
 	claw.shut();

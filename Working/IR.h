@@ -23,6 +23,12 @@ class IR
 		//Returns -1 on error
 		int getDist();
 
+		//Returns large value for debugging purposes
+		int getDistLarge();
+		
+		//Returns small value for debugging purposes
+		int getDistSmall();
+		
 	private:
 		int pin; //Analog pin IR sensor is attached to
 		Range type; //Type of sensor for determining function to use to convert readings to mm

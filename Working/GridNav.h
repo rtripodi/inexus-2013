@@ -56,7 +56,6 @@ class GridNav
 				
 		//Determines whether an error occurred with grabbing/holding the block
 		bool haveBlock;
-		bool grabSuccess;
 
 		//Returns the new facing cardinal direction given a turn in the relative direction
 		//Unexpected return for inputs other then: Front, Right, Back, Left
@@ -93,13 +92,13 @@ class GridNav
 		void moveToPoint(Point pt);
 		
 		//Scan front point and set seen flag
-		void scanFrontIr();
+		void mapFrontPoint();
 		
 		//Scan right point and set seen flag
-		void scanRightIr();
+		void mapRightPoint();
 		
 		//Scan left point and set seen flag
-		void scanLeftIr();
+		void mapLeftPoint();
 		
 		int findPathProfit(RelDir relDir, unsigned char *numUnknown);
 		

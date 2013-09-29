@@ -8,6 +8,16 @@ GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *i
 	claw = inClaw;
 	gridMap = GridMap();
 	router = Routing(&gridMap);
+	
+	//DEBUG START
+	Point pt1 = Point(2, 5);
+	Point pt2 = Point(5, 2);
+	Point pt3 = Point(5, 5);
+	
+	gridMap.setFlag(pt1, OCCUPIED);
+	gridMap.setFlag(pt2, OCCUPIED);
+	gridMap.setFlag(pt3, OCCUPIED);
+	//DEBUG END
 }
 
 //Returns the new facing cardinal direction given a turn in the relative direction
@@ -87,10 +97,8 @@ bool GridNav::isBlock(RelDir relDir)
 		return (irInMm.frnt < BLOCK_DIST_F);
 	else if (relDir == LEFT)
 		return (abs(BLOCK_DIST_L - irInMm.lft) < BLOCK_TOLERANCE);
-		//(abs(BLOCK_DIST_L - irInMm.lft) < BLOCK_TOLERANCE);
 	else if (relDir == RIGHT)
 		return (abs(BLOCK_DIST_R - irInMm.rght) < BLOCK_TOLERANCE);
-		//(abs(BLOCK_DIST_R - irInMm.rght) < BLOCK_TOLERANCE);
 	else
 		return false;
 }
@@ -98,8 +106,8 @@ bool GridNav::isBlock(RelDir relDir)
 //TODO: Return point moved to, then currPoint will be made equal to this 
 void GridNav::moveToFrontPoint()
 {
-	mover->moveTillPoint(DEFAULT_SPEED);//VIRTUAL
-	mover->moveOffCross(DEFAULT_SPEED);
+/*	mover->moveTillPoint(DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
+	mover->moveOffCross(DEFAULT_SPEED);//VIRTUAL*/
 	currPoint = adjacentPoint(currPoint, facing, FRONT);
 }
 
@@ -107,50 +115,36 @@ void GridNav::moveToFrontPoint()
 //If the grab is unsuccessful, the robot will return to the point at which it sensed it
 bool GridNav::obtainBlock(RelDir relDir)
 {
-	CarDir prevFacing = facing;
-	Point tempPoint;
-	tempPoint = adjacentPoint(currPoint, facing, relDir);
-	gridMap.setFlag(tempPoint, OCCUPIED);
-	mover->rotateDirection(relDir, DEFAULT_SPEED);//VIRTUAL
+	currPoint = adjacentPoint(currPoint, facing, relDir);
+//	mover->rotateDirection(relDir, DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
 	facing = findNewFacing(facing, relDir);
 	claw->open();
-	irInMm.frnt = (irs->frnt)->getDist();
+	irInMm.frnt = (irs->frnt)->getDistSmall();//DEBUG
 	while (irInMm.frnt > BLOCK_STOP && !mover->onCross() )
 	{
 		mover->moveForward(DEFAULT_SPEED);//VIRTUAL
-		irInMm.frnt = (irs->frnt)->getDist();
+		irInMm.frnt = (irs->frnt)->getDistSmall();//DEBUG
 	}
 	motors->stop();//VIRTUAL
+	
+	//TODO: INSERT COLOUR CHECK HERE
+
 	claw->close();//VIRTUAL
-	if (mover->onCross() )//VIRTUAL
+/*	if (mover->onCross() )//VIRTUAL START: DEBUG Causes hang
 	{
 		mover->moveOffCross();
 		currPoint = adjacentPoint(currPoint, facing, FRONT);
 	}
 	else
-		moveToFrontPoint();
-	irInMm.frnt = (irs->frnt)->getDist();
+		moveToFrontPoint();//VIRTUAL END*/
+	irInMm.frnt = (irs->frnt)->getDistSmall();//DEBUG
 	if (irInMm.frnt <= BLOCK_STOP + 40)
 	{
-//		Serial.print("Picked up block from: (");//DEBUG
-//		Serial.print(currPoint.x);//DEBUG
-//		Serial.print(", ");//DEBUG
-//		Serial.println(currPoint.y);//DEBUG
-		
 		gridMap.removeFlag(currPoint, OCCUPIED);
-		grabSuccess = true;
 		return true;
 	}
 	else
-	{
-		claw->shut();
-		mover->rotateDirection(BACK, DEFAULT_SPEED);//VIRTUAL
-		facing = findNewFacing(facing, BACK);
-		moveToFrontPoint();
-		mover->rotateDirection(dirCarToRel(prevFacing), DEFAULT_SPEED);//VIRTUAL
-		grabSuccess = false;
 		return false;
-	}
 }
 
 //Returns the cardinal direction of a point given the inputted relative direction
@@ -192,7 +186,7 @@ RelDir GridNav::dirCarToRel(CarDir newCardDir)
 void GridNav::moveToAdjPoint(Point pt)
 {
 	CarDir newDir = carDirOfPoint(pt);
-	mover->rotateDirection(dirCarToRel(newDir), DEFAULT_SPEED);//VIRTUAL
+//	mover->rotateDirection(dirCarToRel(newDir), DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
 	facing = newDir;
 	moveToFrontPoint();
 }
@@ -211,51 +205,54 @@ void GridNav::moveToPoint(Point pt)
 }
 
 //Scan front point and set seen flag
-void GridNav::scanFrontIr()
+void GridNav::mapFrontPoint()
 {
 	Point tempPoint;
-	irInMm.frnt = (irs->frnt)->getDist();//VIRTUAL
+	irInMm.frnt = (irs->frnt)->getDistLarge();//DEBUG
+	Serial.print("Front: ");//DEBUG
+	Serial.println(irInMm.frnt);//DEBUG
 	tempPoint = adjacentPoint(currPoint, facing, FRONT);
 	gridMap.setFlag(tempPoint, SEEN);
+	if (isBlock(FRONT))
+		gridMap.setFlag(tempPoint, OCCUPIED);
 }
 	
 //Scan right point and set seen flag
-void GridNav::scanRightIr()
+void GridNav::mapRightPoint()
 {
 	Point tempPoint;
-	irInMm.rght = (irs->rght)->getDist();//VIRTUAL
+	irInMm.rght = (irs->rght)->getDistLarge();//DEBUG
+	Serial.print("Right: ");//DEBUG
+	Serial.println(irInMm.rght);//DEBUG
 	tempPoint = adjacentPoint(currPoint, facing, RIGHT);
 	gridMap.setFlag(tempPoint, SEEN);
+	if (isBlock(RIGHT))
+		gridMap.setFlag(tempPoint, OCCUPIED);
 }
 
 //Scan left point and set seen flag
-void GridNav::scanLeftIr()
+void GridNav::mapLeftPoint()
 {
 	Point tempPoint;
-	irInMm.lft = (irs->lft)->getDist();//VIRTUAL
+	irInMm.lft = (irs->lft)->getDistLarge();//DEBUG
+	Serial.print("Left: ");//DEBUG
+	Serial.println(irInMm.lft);//DEBUG
 	tempPoint = adjacentPoint(currPoint, facing, LEFT);
 	gridMap.setFlag(tempPoint, SEEN);
+	if (isBlock(LEFT))
+		gridMap.setFlag(tempPoint, OCCUPIED);
 }
 
 int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 {
-/*	Serial.println();//DEBUG
-	Serial.print("Path: ");//DEBUG
-	printRelDir(relDir);//DEBUG
-	Serial.println();//DEBUG*/
 	CarDir tempFacing = findNewFacing(facing, relDir);
 	int totalProfit = 0;
 	if (facing == tempFacing)
 		totalProfit += 5;
 	Point tempPoint = adjacentPoint(currPoint, facing, relDir);
 	Point rightPoint, leftPoint;
-	while ( gridMap.contains(tempPoint) && !gridMap.isFlagSet(tempPoint, OCCUPIED))
+	while ( gridMap.contains(tempPoint) )//DEBUG&& !gridMap.isFlagSet(tempPoint, OCCUPIED))
 	{
-/*		Serial.print("F(");//DEBUG
-		Serial.print(tempPoint.x);//DEBUG
-		Serial.print(", ");//DEBUG
-		Serial.print(tempPoint.y);//DEBUG
-		Serial.print(")");//DEBUG*/
 		//Profit of visited
 		if (gridMap.isFlagSet(tempPoint, VISITED))
 			totalProfit += 5;
@@ -272,11 +269,6 @@ int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 		leftPoint = adjacentPoint(tempPoint, tempFacing, LEFT);
 		if (gridMap.contains(rightPoint))
 		{
-/*			Serial.print(" R(");//DEBUG
-			Serial.print(rightPoint.x);//DEBUG
-			Serial.print(", ");//DEBUG
-			Serial.print(rightPoint.y);//DEBUG
-			Serial.print(")");//DEBUG*/
 			if (gridMap.isFlagSet(rightPoint, VISITED))
 				totalProfit += 5;
 			else if (gridMap.isFlagSet(rightPoint, SEEN))
@@ -289,11 +281,6 @@ int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 		}
 		if (gridMap.contains(leftPoint))
 		{
-/*			Serial.print(" L(");//DEBUG
-			Serial.print(leftPoint.x);//DEBUG
-			Serial.print(", ");//DEBUG
-			Serial.print(leftPoint.y);//DEBUG
-			Serial.print(")");//DEBUG*/
 			if (gridMap.isFlagSet(leftPoint, VISITED))
 				totalProfit += 5;
 			else if (gridMap.isFlagSet(leftPoint, SEEN))
@@ -346,13 +333,13 @@ void GridNav::chooseNextPath()
 		{
 			if (leftPathProfit > rightPathProfit)
 			{
-				mover->rotateDirection(LEFT, DEFAULT_SPEED);//VIRTUAL
+//				mover->rotateDirection(LEFT, DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
 				facing = findNewFacing(facing, LEFT);
 				moveToFrontPoint();
 			}
 			else
 			{
-				mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL
+//				mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
 				facing = findNewFacing(facing, RIGHT);
 				moveToFrontPoint();
 			}
@@ -378,13 +365,13 @@ void GridNav::chooseNextPath()
 			{
 				if (leftPathProfit > rightPathProfit)
 				{
-					mover->rotateDirection(LEFT, DEFAULT_SPEED);//VIRTUAL
+//					mover->rotateDirection(LEFT, DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
 					facing = findNewFacing(facing, LEFT);
 					moveToFrontPoint();
 				}
 				else
 				{
-					mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL
+//					mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
 					facing = findNewFacing(facing, RIGHT);
 					moveToFrontPoint();
 				}
@@ -402,19 +389,22 @@ void GridNav::checkForBlocks()
 {
 	gridMap.setFlag(currPoint, VISITED);
 	
+	Point frontPoint = adjacentPoint(currPoint, facing, FRONT);
+	Point rightPoint = adjacentPoint(currPoint, facing, RIGHT);
+	Point leftPoint = adjacentPoint(currPoint, facing, LEFT);
+	
 	//Shouldn't need to reset irValues, if not on map should disregard
-	if(gridMap.contains( adjacentPoint(currPoint, facing, FRONT)))
-		scanFrontIr();
-	if(gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)))
-		scanRightIr();
-	if(gridMap.contains( adjacentPoint(currPoint, facing, LEFT)))
-		scanLeftIr();
-
-	if (gridMap.contains( adjacentPoint(currPoint, facing, FRONT)) && isBlock(FRONT) )
+	if(gridMap.contains(frontPoint))
+		mapFrontPoint();
+	if(gridMap.contains(rightPoint))
+		mapRightPoint();
+	if(gridMap.contains(leftPoint))
+		mapLeftPoint();
+	if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
 		haveBlock = obtainBlock(FRONT);
-	else if (gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)) && isBlock(RIGHT) )
+	else if (gridMap.contains(rightPoint) && gridMap.isFlagSet(rightPoint, OCCUPIED))
 		haveBlock = obtainBlock(RIGHT);
-	else if (gridMap.contains( adjacentPoint(currPoint, facing, LEFT)) && isBlock(LEFT) )
+	else if (gridMap.contains(leftPoint) && gridMap.isFlagSet(leftPoint, OCCUPIED))
 		haveBlock = obtainBlock(LEFT);
 	else
 	{
@@ -425,19 +415,24 @@ void GridNav::checkForBlocks()
 void GridNav::initCheckForBlocks()
 {
 	gridMap.setFlag(currPoint, VISITED);
+
+	//Shouldn't need to reset irValues, if not on map should disregard
+	Point frontPoint = adjacentPoint(currPoint, facing, FRONT);
+	Point rightPoint = adjacentPoint(currPoint, facing, RIGHT);
+	Point leftPoint = adjacentPoint(currPoint, facing, LEFT);
 	
 	//Shouldn't need to reset irValues, if not on map should disregard
-	if(gridMap.contains( adjacentPoint(currPoint, facing, FRONT)))
-		scanFrontIr();
-	if(gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)))
-		scanRightIr();
-	if(gridMap.contains( adjacentPoint(currPoint, facing, LEFT)))
-		scanLeftIr();
-	if (gridMap.contains( adjacentPoint(currPoint, facing, FRONT)) && isBlock(FRONT) )
+	if(gridMap.contains(frontPoint))
+		mapFrontPoint();
+	if(gridMap.contains(rightPoint))
+		mapRightPoint();
+	if(gridMap.contains(leftPoint))
+		mapLeftPoint();
+	if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
 		haveBlock = obtainBlock(FRONT);
-	else if (gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)) && isBlock(RIGHT) )
+	else if (gridMap.contains(rightPoint) && gridMap.isFlagSet(rightPoint, OCCUPIED))
 		haveBlock = obtainBlock(RIGHT);
-	else if (gridMap.contains( adjacentPoint(currPoint, facing, LEFT)) && isBlock(LEFT) )
+	else if (gridMap.contains(leftPoint) && gridMap.isFlagSet(leftPoint, OCCUPIED))
 		haveBlock = obtainBlock(LEFT);
 	else
 	{
@@ -451,7 +446,7 @@ void GridNav::initCheckForBlocks()
 		}
 		else
 		{
-			mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL
+//			mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
 			facing = findNewFacing(facing, RIGHT);
 			moveToFrontPoint();
 		}
@@ -469,18 +464,28 @@ void GridNav::findBlock()
 	Point entrPoint = currPoint;
 
 	haveBlock = false;
-	grabSuccess = true;
 	facing = WEST;
 
+	//DEBUG START
+	Serial.print("Current: (");
+	Serial.print(currPoint.x);
+	Serial.print(", ");
+	Serial.print(currPoint.y);
+	Serial.print(")\tFacing: ");
+	printCarDir(facing);
+	Serial.println();
+	//DEBUG END
+	
 	initCheckForBlocks();
 	printGrid();
 	while (!haveBlock)
 	{
 		checkForBlocks();
-		printGrid();
+		printGrid();//DEBUG
 	}
+	Serial.println("Returning");//DEBUG
 	moveToPoint(entrPoint);
-	Serial.println("Done.");
+	Serial.println("Done.");//DEBUG
 }
 
 /////////////////////// DEBUG PRINTING FUNCTIONS ///////////////////////
