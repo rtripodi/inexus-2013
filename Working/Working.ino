@@ -65,14 +65,17 @@ void gridTest()
 	Serial.println("\t\t\t\t\tFIRST BLOCK");
 	Serial.println("\t\t\t\t\t............");
 	gridNav.findBlock();
+	delayTillButton();
 	Serial.println("\t\t\t\t\t............");
 	Serial.println("\t\t\t\t\tSECOND BLOCK");
 	Serial.println("\t\t\t\t\t............");
 	gridNav.findBlock();
+	delayTillButton();
 	Serial.println("\t\t\t\t\t............");
 	Serial.println("\t\t\t\t\tTHIRD BLOCK");
 	Serial.println("\t\t\t\t\t............");
 	gridNav.findBlock();
+	//Serial.println((irs.frnt)->getDist());
 }
 
 void gridIrReadings()

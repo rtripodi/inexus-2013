@@ -128,7 +128,7 @@
 #define MOTOR_2_SIG_A 11
 #define MOTOR_2_SIG_B 10
 
-#define DEFAULT_SPEED 80
+#define DEFAULT_SPEED 95
 
 //For line following.
 #define EDGE_SENSITIVITY 1000

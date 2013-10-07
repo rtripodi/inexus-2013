@@ -16,12 +16,8 @@
 
 #define CENTRE_DIST (300)
 #define BLOCK_ACT_DIST (250)
-#define BLOCK_DIST_F (270)
-#define BLOCK_DIST_L (250)
-#define BLOCK_DIST_R (250)
-
 #define BLOCK_TOLERANCE (50)
-#define BLOCK_STOP (60)
+#define BLOCK_STOP (80 - 30)
 
 //Front IR senses 275-300mm for block
 //Left IR senses 275-300mm for block
@@ -117,6 +113,10 @@ class GridNav
 		void printCarDir(CarDir carDir);
 		
 		void printRelDir(RelDir relDir);
+		
+		Point closestBlock();
+				
+		void moveToBlock(Point pt);
 };
 
 #endif
