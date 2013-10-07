@@ -13,24 +13,32 @@ void IR::setup(){}
 //Returns -1 on error
 int IR::getDist()
 {
-	int reading = read();
-	int distInMillis = -1;
-	switch (type)
+	float reading = (float) read();
+	
+	if(reading > 400.0)
 	{
-		case front:
-			distInMillis = shortScan(reading);
-			break;
-		case right:
-			distInMillis = mediumScanR(reading);
-			break;
-		case back:
-			distInMillis = mediumScanB(reading);
-			break;
-		case left:
-			distInMillis = mediumScanL(reading);
-			break;
+		return (int)((948.33 - reading) / 8.6);
 	}
-	return distInMillis;
+	else if(reading > 280.0)
+	{
+		return (int)((657.67 - reading) / 4.05); 
+	}
+	else if(reading > 148.0)
+	{
+		return (int)((417.86 - reading) / 1.6036); 
+	}
+	else if(reading > 78.0)
+	{
+		return (int)((260.1 - reading) / 0.5699); 
+	}
+	else if(reading > 37.0)
+	{
+		return (int)((121.04 - reading) / 0.1667); 
+	}
+	else
+	{
+		return 510;
+	}
 }
 
 //Reads multiple raw values from IR sensor and returns a mean that disregards outliers
@@ -45,94 +53,6 @@ int IR::read()
 	
 	return calcMeanNoOutliers(rawReadings, IR_ITERATIONS);
 }
-
-//Reads multiple raw values from IR sensor and returns a pure mean that includes outliers
-int IR::readPureMean()
-{
-	int dataSum = 0;
-	for (int ii = 0; ii < IR_ITERATIONS; ++ii)
-	{
-		dataSum += analogRead(pin);
-	}
-
-	return (int) ( (float) dataSum / (float) IR_ITERATIONS + 0.5);
-}
-
-//Converts reading to distance in mm for 4-30cm sensor
-//Returns -1 on error
-//  TODO: check the effect on values outside 79-478 raw value range
-int IR::shortScan(int reading)
-{
-	int millimetres = -1;	//Init to error value
-	float rawReading = (float) reading;
-	if (reading > 352 && reading <= 478)//50mm to 70mm
-		millimetres = (int)(-0.1586*rawReading + 125.66);
-	else if (reading > 224 && reading <= 352)//70mm to 108mm
-		millimetres = (int)(-0.3093*rawReading + 177.79);
-	else if (reading > 110 && reading <= 224)//108mm to 204mm
-		millimetres = (int)(-0.855*rawReading + 298.04);
-	else if (reading >= 79 && reading <= 110)//204mm to 295mm
-		millimetres = (int)(-2.7738*rawReading + 513.8);
-	else if (reading < 79)
-		millimetres = 310;	//  Stub value for out of range
-	return millimetres;
-}
-
-//UNIMPLEMENTED
-//Converts reading to distance in mm for 10-80cm sensor
-//Returns -1 on error
-int IR::mediumScanR(int reading)
-{
-	if (reading > 627)
-		return -1;
-	else if (reading < 140)
-		return 400;
-	else
-	{
-		float result;
-		result = 23170*pow( (float)reading, -0.844);
-		reading = (int) (result + 0.5);
-		
-		return reading;
-	}
-}
-
-int IR::mediumScanL(int reading)
-{
-	if (reading > 627)
-		return -1;
-	else if (reading < 150)
-		return 400;
-	else
-	{
-		float result;
-		result = 24574*pow( (float)reading, -0.861);
-		reading = (int) (result + 0.5);
-		
-		return reading;
-	}
-}
-
-int IR::mediumScanB(int reading)
-{
-	if (reading > 627)
-		return -1;
-	else if (reading < 182)
-		return 380;
-	else
-	{
-		float result;
-		result = 240052.0*pow( (float)reading, -1.243);
-		reading = (int) (result + 0.5);
-		
-		return reading;
-	}
-}
-
-//UNIMPLEMENTED
-//Converts reading to distance in mm for 20-150cm sensor
-//Returns -1 on error
-int IR::longScan(int reading) { return -1; }
 
 //Returns the mean which best represents the inputted data by disregarding outliers
 int IR::calcMeanNoOutliers(int data[], int length)

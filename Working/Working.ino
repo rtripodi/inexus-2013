@@ -24,7 +24,7 @@ MazeMap mazeMap;
 IrValues irInMm;
 
 IR frntIr = IR(IR_FRONT_PIN, IR::front);
-IR rghtIr = IR(IR_RIGHT_PIN, IR::left);
+IR rghtIr = IR(IR_RIGHT_PIN, IR::right);
 IR bckIr = IR(IR_BACK_PIN, IR::back);
 IR lftIr = IR(IR_LEFT_PIN, IR::left);
 /*
@@ -75,18 +75,65 @@ void gridTest()
 	gridNav.findBlock();
 }
 
+void gridIrReadings()
+{
+	gridNav.debugIrs();
+}
+
 void setup()
 {  
 	Serial.begin(9600);
-	gridTest();
-/*	claw.setup();
+	claw.setup();
 	motors.setup();
-	claw.shut();
-        delayTillButton();*/
+	claw.open();
+    delayTillButton();
+	for (int ii = 0; ii <= 100; ii++)
+	{
+		ls.calibrate();
+		delay(5);
+	}
+	delayTillButton();
+	gridTest();
 }
 
 void loop()
 {
+/*	gridIrReadings();
+	int dataSum = 0;
+	for (int ii = 0; ii < 50; ++ii)
+	{
+		dataSum += analogRead(IR_FRONT_PIN);
+		delayMicroseconds(50);
+	}
+	Serial.print("F: ");
+	Serial.print((int) ( (float) dataSum / (float) 50 + 0.5));
+	dataSum = 0;
+	for (int ii = 0; ii < 50; ++ii)
+	{
+		dataSum += analogRead(IR_RIGHT_PIN);
+		delayMicroseconds(50);
+	}
+	Serial.print("\tR: ");
+	Serial.print((int) ( (float) dataSum / (float) 50 + 0.5));
+	dataSum = 0;
+	for (int ii = 0; ii < 50; ++ii)
+	{
+		dataSum += analogRead(IR_BACK_PIN);
+		delayMicroseconds(50);
+	}
+	Serial.print("\tB: ");
+	Serial.print((int) ( (float) dataSum / (float) 50 + 0.5));
+	dataSum = 0;
+	for (int ii = 0; ii < 50; ++ii)
+	{
+		dataSum += analogRead(IR_LEFT_PIN);
+		delayMicroseconds(50);
+	}
+	Serial.print("\tL: ");
+	Serial.print((int) ( (float) dataSum / (float) 50 + 0.5));
+	Serial.print("\tF in mm: ");
+	Serial.println(frntIr.getDist());
+	delay(500);*/
 //	scanWalls();
   /*Serial.print(irInMm.frnt);
   Serial.print("\t");

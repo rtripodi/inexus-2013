@@ -7,6 +7,7 @@ MazeNav::MazeNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs)
 	irs = inIrs;
 	mazeMap = MazeMap();
 	
+	//DEBUG START
 	Serial.print("Class Container Ref: ");
 	Serial.println((int)irs);
 	
@@ -19,6 +20,7 @@ MazeNav::MazeNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs)
 	Serial.print((int)(irs->bck));
 	Serial.print("\tL: ");
 	Serial.println((int)(irs->lft));
+	//DEBUG END
 }
 
 //Navigate and map maze from starting point

@@ -20,7 +20,7 @@
 #define BLOCK_DIST_L (250)
 #define BLOCK_DIST_R (250)
 
-#define BLOCK_TOLERANCE (10)
+#define BLOCK_TOLERANCE (50)
 #define BLOCK_STOP (60)
 
 //Front IR senses 275-300mm for block
@@ -44,6 +44,7 @@ class GridNav
 	private:
 		GridMap gridMap;
 		Routing router;
+		Path path;
 
 		//Current point on grid
 		Point currPoint;
