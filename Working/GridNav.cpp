@@ -484,15 +484,22 @@ void GridNav::initCheckForBlocks()
 		unsigned char numUnknown = 0; // Sum of unknowns for paths
 		int frontPathProfit = findPathProfit(FRONT, &numUnknown);
 		int rightPathProfit = findPathProfit(RIGHT, &numUnknown);
-		if (frontPathProfit > rightPathProfit)
+		if(numUnknown == 0)
 		{
-			moveToFrontPoint();
+			moveToPoint(closestUnknown() );
 		}
 		else
 		{
-			mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
-			facing = findNewFacing(facing, RIGHT);
-			moveToFrontPoint();
+			if (frontPathProfit > rightPathProfit)
+			{
+				moveToFrontPoint();
+			}
+			else
+			{
+				mover->rotateDirection(RIGHT, DEFAULT_SPEED);//VIRTUAL: DEBUG Causes hang
+				facing = findNewFacing(facing, RIGHT);
+				moveToFrontPoint();
+			}
 		}
 	}
 }

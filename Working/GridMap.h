@@ -19,36 +19,6 @@
 #include "Config.h"
 #include "GridImports.h"
 
-//Grid dimensions
-#define GRID_MAX_X (3)
-#define GRID_MAX_Y (3)
-
-//Known locations
-#define ENTRANCE_X (GRID_MAX_X)
-#define ENTRANCE_Y (0)
-
-//The status of point on the grid is bitmapped to 1 byte and contains the following flags:
-//	Seen - The point has been seen
-//	Visited - Have been to the point
-//	Occupied - Holds a block
-//	Red - Holds a block that is mostly red
-//	Green - Holds a block that is mostly green
-//	Blue - Holds a block that is mostly blue
-//
-//Order of flags: SVxxORGB, where x denotes currently unused bits.
-
-//Most significant nibble mask bits
-#define SEEN	(0x80)
-#define VISITED	(0x40)
-#define UNUSED1	(0x20)
-#define UNUSED2	(0x10)
-
-//Least significant nibble mask bits
-#define OCCUPIED	(0x08)
-#define RED			(0x04)
-#define GREEN		(0x02)
-#define BLUE		(0x01)
-
 class GridMap : public Maze
 {
 	public:

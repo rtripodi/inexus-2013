@@ -14,15 +14,6 @@
 #include "Routing.h"
 #include "Navigation.h"
 
-#define CENTRE_DIST (300)
-#define BLOCK_ACT_DIST (250)
-#define BLOCK_TOLERANCE (50)
-#define BLOCK_STOP (80 - 30)
-
-//Front IR senses 275-300mm for block
-//Left IR senses 275-300mm for block
-//Right IR senses 250-275mm for block
-
 class GridNav
 {
 	public:

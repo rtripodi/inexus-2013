@@ -8,8 +8,7 @@
 #endif
 
 #include "Direction.h"
-
-#define MAZE_MAX 256
+#include "Config.h"
 
 class MazeMap
 {

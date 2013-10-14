@@ -138,3 +138,81 @@
 #define TURN_RIGHT (90)
 #define TURN_BACK 180
 #define TURN_LEFT (-90)
+
+/********************************************
+ *  GridMap
+ ********************************************/
+
+//Grid dimensions
+#define GRID_MAX_X (7)
+#define GRID_MAX_Y (3)
+
+//Known locations
+#define ENTRANCE_X (GRID_MAX_X)
+#define ENTRANCE_Y (0)
+
+//The status of point on the grid is bitmapped to 1 byte and contains the following flags:
+//	Seen - The point has been seen
+//	Visited - Have been to the point
+//	Occupied - Holds a block
+//	Red - Holds a block that is mostly red
+//	Green - Holds a block that is mostly green
+//	Blue - Holds a block that is mostly blue
+//
+//Order of flags: SVxxORGB, where x denotes currently unused bits.
+
+//Most significant nibble mask bits
+#define SEEN	(0x80)
+#define VISITED	(0x40)
+#define UNUSED1	(0x20)
+#define UNUSED2	(0x10)
+
+//Least significant nibble mask bits
+#define OCCUPIED	(0x08)
+#define RED			(0x04)
+#define GREEN		(0x02)
+#define BLUE		(0x01)
+
+/********************************************
+ *  MazeMap
+ ********************************************/
+
+#define MAZE_MAX 256
+
+/********************************************
+ *  GridNav
+ ********************************************/
+
+#define CENTRE_DIST (300)
+#define BLOCK_ACT_DIST (250)
+#define BLOCK_TOLERANCE (50)
+#define BLOCK_STOP (80 - 30)
+
+/********************************************
+ *  MazeNav
+ ********************************************/
+/*	|       |
+	|       '-------.
+	|               |
+	|       |<----->| = 350mm wall minimum (full)
+	|               |
+	|       .-------'
+	|       |
+	
+	|       |
+	|       |
+	|   |<->| = ~175mm wall minimum (half)
+	|       |
+	|       |
+	
+	|       |
+	|       '-------.
+	|               |
+	|   |<--------->| ~175mm + 350mm = ~525mm max wall
+	|               |
+	|       .-------'
+	|       |
+*/
+#define WALL_MIN_FULL (350)
+#define WALL_MIN_HALF (175)
+#define WALL_TOLERANCE (15)
