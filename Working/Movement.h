@@ -14,7 +14,7 @@ class Movement
 		bool onCross();
 		void moveTillPoint(int speed = DEFAULT_SPEED);
 		void moveOffCross(int speed = DEFAULT_SPEED);
-		void moveForward(int speed);
+		bool moveForward(int speed);
 		void moveTicks(int ticks, int speed = DEFAULT_SPEED);
 		int tickError();
 		void moveLength(int length, int speed = DEFAULT_SPEED);

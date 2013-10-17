@@ -34,7 +34,7 @@ struct Point
     Serial.print(x);
     Serial.print(",");
     Serial.print(y);
-    Serial.println(")");
+    Serial.print(")");
   }
   
   //Takes coordinates in the form of 2 ints and transforms them into a byte for sending between robots

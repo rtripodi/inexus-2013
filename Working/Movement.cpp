@@ -1,5 +1,7 @@
 #include "Movement.h"
 
+#define SIMULATION
+
 Movement::Movement(Motor * inMotors, LineSensors * inSensors)
 {
 	motors = inMotors;
@@ -114,7 +116,7 @@ void Movement::lineCorrection(int speed)
 	}
 	else 
 	{
-		//Movement::reversing();
+		//reversing();
 	}
 }
 
@@ -123,7 +125,7 @@ void Movement::moveTillPoint(int speed)
 	moveOffCross(speed);	
 	while(!onCross())
 	{
-		Movement::lineCorrection(speed);
+		lineCorrection(speed);
 		delay(75);
 	}
 	moveOffCross(speed);
@@ -138,15 +140,21 @@ void Movement::moveOffCross(int speed)
 	motors->stop();
 }
 
-void Movement::moveForward(int speed)
+bool Movement::moveForward(int speed)
 {
-	moveOffCross(speed);
-	while(!onCross())
+#ifndef SIMULATION
+	if (!onCross())
 	{	
-		Movement::lineCorrection(speed);
-		delay(75);
+		lineCorrection(speed);
+		return false;
 	}
-	moveOffCross(speed);
+	else
+	{
+#endif
+		return true;
+#ifndef SIMULATION
+	}
+#endif
 }
 
 //This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
@@ -219,6 +227,7 @@ void Movement::moveLength(int length, int speed)
 //Turns in given relative direction
 void Movement::rotateDirection(RelDir relDir, int speed)
 {
+#ifndef SIMULATION
 	switch (relDir)
 	{
 	case FRONT:
@@ -234,6 +243,7 @@ void Movement::rotateDirection(RelDir relDir, int speed)
 		rotateAngle(TURN_LEFT);
 		break;
 	}
+#endif
 }
 
 //clockwise turning is positive angle, anti-clockwise turning is negative angle.Speed is positive.

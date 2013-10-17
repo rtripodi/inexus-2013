@@ -27,13 +27,6 @@ IR frntIr = IR(IR_FRONT_PIN, IR::front);
 IR rghtIr = IR(IR_RIGHT_PIN, IR::right);
 IR bckIr = IR(IR_BACK_PIN, IR::back);
 IR lftIr = IR(IR_LEFT_PIN, IR::left);
-/*
-IrSensors irs = {
-	&IR(IR_FRONT_PIN, IR::shortRange),
-	&IR(IR_RIGHT_PIN, IR::mediumRange),
-	&IR(IR_BACK_PIN, IR::mediumRange),
-	&IR(IR_LEFT_PIN, IR::mediumRange)
-};*/
 
 IrSensors irs = {
 	&frntIr,
@@ -65,96 +58,36 @@ void gridTest()
 	Serial.println("\t\t\t\t\tFIRST BLOCK");
 	Serial.println("\t\t\t\t\t............");
 	gridNav.findBlock();
-	delayTillButton();
+//	delayTillButton();
 	Serial.println("\t\t\t\t\t............");
 	Serial.println("\t\t\t\t\tSECOND BLOCK");
 	Serial.println("\t\t\t\t\t............");
 	gridNav.findBlock();
-	delayTillButton();
+//	delayTillButton();
 	Serial.println("\t\t\t\t\t............");
 	Serial.println("\t\t\t\t\tTHIRD BLOCK");
 	Serial.println("\t\t\t\t\t............");
 	gridNav.findBlock();
-	//Serial.println((irs.frnt)->getDist());
-}
-
-void gridIrReadings()
-{
-	gridNav.debugIrs();
 }
 
 void setup()
 {  
 	Serial.begin(9600);
-	claw.setup();
+/*	claw.setup();
 	motors.setup();
 	claw.open();
-    delayTillButton();
+	delayTillButton();
 	for (int ii = 0; ii <= 100; ii++)
 	{
 		ls.calibrate();
 		delay(5);
 	}
-	delayTillButton();
+	delayTillButton();*/
 	gridTest();
 }
 
-void loop()
-{
-/*	gridIrReadings();
-	int dataSum = 0;
-	for (int ii = 0; ii < 50; ++ii)
-	{
-		dataSum += analogRead(IR_FRONT_PIN);
-		delayMicroseconds(50);
-	}
-	Serial.print("F: ");
-	Serial.print((int) ( (float) dataSum / (float) 50 + 0.5));
-	dataSum = 0;
-	for (int ii = 0; ii < 50; ++ii)
-	{
-		dataSum += analogRead(IR_RIGHT_PIN);
-		delayMicroseconds(50);
-	}
-	Serial.print("\tR: ");
-	Serial.print((int) ( (float) dataSum / (float) 50 + 0.5));
-	dataSum = 0;
-	for (int ii = 0; ii < 50; ++ii)
-	{
-		dataSum += analogRead(IR_BACK_PIN);
-		delayMicroseconds(50);
-	}
-	Serial.print("\tB: ");
-	Serial.print((int) ( (float) dataSum / (float) 50 + 0.5));
-	dataSum = 0;
-	for (int ii = 0; ii < 50; ++ii)
-	{
-		dataSum += analogRead(IR_LEFT_PIN);
-		delayMicroseconds(50);
-	}
-	Serial.print("\tL: ");
-	Serial.print((int) ( (float) dataSum / (float) 50 + 0.5));
-	Serial.print("\tF in mm: ");
-	Serial.println(frntIr.getDist());
-	delay(500);*/
-//	scanWalls();
-  /*Serial.print(irInMm.frnt);
-  Serial.print("\t");
-  Serial.print(irInMm.rght);
-  Serial.print("\t");
-  Serial.print(irInMm.bck);
-  Serial.print("\t");
-  Serial.println(irInMm.lft);*/
-//  Serial.print(analogRead(IR_FRONT_PIN));
-//  Serial.print("\t");
-//  Serial.print(analogRead(IR_RIGHT_PIN));
-//  Serial.print("\t");
-//  Serial.print(analogRead(IR_BACK_PIN));
-//  Serial.print("\t");
-//  Serial.println(analogRead(IR_LEFT_PIN));
-//	wallsAreScary();
+void loop() {}
 
-}
 float diffs=0;
 float prevPos = 0;
 void wallsAreScary()
@@ -207,127 +140,4 @@ if (posBetweenWalls>0.6)
   motors.left(0);
   motors.right(40);
   }
-}
-
-
-
-
-
-
-/*
-	Maze Navigation Class
-*/
-
-/*	|       |
-	|       '-------.
-	|               |
-	|       |<----->| = 350mm wall minimum (full)
-	|               |
-	|       .-------'
-	|       |
-	
-	|       |
-	|       |
-	|   |<->| = ~175mm wall minimum (half)
-	|       |
-	|       |
-	
-	|       |
-	|       '-------.
-	|               |
-	|   |<--------->| ~175mm + 350mm = ~525mm mmax wall
-	|               |
-	|       .-------'
-	|       |
-*/
-
-#define WALL_MIN_FULL (350)
-#define WALL_MIN_HALF (WALL_MIN_FULL / 2)
-#define WALL_TOLERANCE (15)
-
-//Navigate and map maze from starting point
-void firstNavigate()
-{
-	RelDir turn;
-	
-	searchInitEntrance();
-	while (1) //DEBUG: Need exit condition
-	{
-		searchNextMaze();
-		scanWalls();
-		turn = alwaysLeft();
-		mazeMap.updateMap(turn);
-	}
-}
-
-//Returns true if a wall is in given relative direction based on IR values
-bool isWall(RelDir relDir)
-{
-	if (relDir == FRONT)
-		return (irInMm.frnt < WALL_MIN_FULL + WALL_TOLERANCE);
-	else if (relDir == BACK)
-		return (irInMm.bck < WALL_MIN_HALF + WALL_TOLERANCE);
-	else if (irInMm.rght + irInMm.lft > 2 * WALL_MIN_HALF)
-	{
-		if (relDir == LEFT)
-			return (irInMm.lft < WALL_MIN_HALF + WALL_TOLERANCE);
-		else if (relDir == RIGHT)
-			return (irInMm.rght < WALL_MIN_HALF + WALL_TOLERANCE);
-	}
-}
-
-//Updates the IR values
-void scanWalls()
-{
-	irInMm.frnt = frntIr.getDist();
-	irInMm.rght = rghtIr.getDist();
-	irInMm.bck = bckIr.getDist();
-	irInMm.lft = lftIr.getDist();
-}
-
-//From starting point, search for entrance
-void searchInitEntrance()
-{
-	scanWalls();
-	if (isWall(FRONT))
-	{
-		mover.rotateDirection(RIGHT, DEFAULT_SPEED);
-		while (isWall(LEFT))
-		{
-			mover.moveForward(DEFAULT_SPEED);
-			scanWalls();
-		}
-		mover.moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
-		motors.stop();
-		mover.rotateDirection(LEFT, DEFAULT_SPEED);
-	}
-}
-
-void searchNextMaze()
-{
-	mover.moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
-	motors.stop();
-	scanWalls();
-	while (!isWall(FRONT) && isWall(RIGHT) && isWall(LEFT))
-	{
-		mover.moveForward(DEFAULT_SPEED);
-	}
-	if (!isWall(FRONT))
-	{
-		mover.moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
-		motors.stop();
-	}
-}
-
-//Separated to allow easier change to another turning scheme
-RelDir alwaysLeft()
-{
-	if (!isWall(LEFT))
-		return LEFT;
-	else if (!isWall(FRONT))
-		return FRONT;
-	else if (!isWall(RIGHT))
-		return RIGHT;
-	else
-		return BACK;
 }
