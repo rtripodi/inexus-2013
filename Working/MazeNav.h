@@ -23,6 +23,8 @@ class MazeNav
 		
 		void firstNavigate();
 		
+		void followMap(RelDir navDir);
+		
 		void debugIrs();
 	
 	private:
@@ -37,7 +39,7 @@ class MazeNav
 
 		void searchInitEntrance();
 
-		void searchNextMaze();
+		bool nextPosition();
 
 		RelDir alwaysLeft();
 };

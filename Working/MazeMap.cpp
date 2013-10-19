@@ -2,15 +2,15 @@
 
 MazeMap::MazeMap()
 {
-    mazeLength = 0;
-    index = 0;
-    mazeDirection = 1;
+	mazeLength = 0;
+	index = 0;
+	mazeDirection = 1;
 	needSimplify = false;
 }
 
 void MazeMap::updateMap(RelDir inRelDir)
 {
-    if(needSimplify)
+	if(needSimplify)
 	{
 		//TODO: I don't think the case of consecutive reversals is possible. Only put here as a safetynet for now
 		if (inRelDir == BACK)
@@ -26,7 +26,7 @@ void MazeMap::updateMap(RelDir inRelDir)
 		maze[index] = inRelDir;
 	if(maze[index] == BACK)
 		needSimplify = true;
-    index++;
+	index++;
 	mazeLength++;
 }
 
@@ -61,18 +61,45 @@ void MazeMap::simplify(RelDir inRelDir)
 
 RelDir MazeMap::getNext()
 {
-    RelDir temp = maze[index];
+	RelDir temp = maze[index];
 	index += mazeDirection;
-    return temp;
+	if (mazeDirection == 1 || temp == FRONT)
+		return temp;
+	else
+	{
+		if (temp == RIGHT)
+			return LEFT;
+		else
+			return RIGHT;
+	}
 }
 
 void MazeMap::resetToStart()
 {
-    mazeDirection = 1;
+	mazeDirection = 1;
 	index = 0;
 }
+
 void MazeMap::resetToEnd()
 {
-    mazeDirection = -1;
-	index = mazeLength;
+	mazeDirection = -1;
+	index = (mazeLength - 1);
+}
+
+bool MazeMap::finalTurn()
+{
+	if (mazeDirection == 1)
+		return (index >= mazeLength);
+	else
+		return (index < 0);
+}
+
+void MazeMap::printMap()
+{
+	Serial.print((char)maze[0]);
+	for (int ii = 1; ii < mazeLength; ++ii)
+	{
+		Serial.print(", ");
+		Serial.print((char)maze[ii]);
+	}
 }

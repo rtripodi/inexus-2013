@@ -38,6 +38,7 @@ IrSensors irs = {
 Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
 
 GridNav gridNav(&motors, &mover, &irs, &claw);
+MazeNav mazeNav(&motors, &mover, &irs);
 
 void delayTillButton()
 {
@@ -75,23 +76,25 @@ void setup()
 	Serial.begin(9600);
 /*	claw.setup();
 	motors.setup();
-	claw.open();
+	claw.shut();
 	delayTillButton();
 	for (int ii = 0; ii <= 100; ii++)
 	{
 		ls.calibrate();
 		delay(5);
 	}
-	delayTillButton();*/
-	gridTest();
+	delayTillButton();
+	gridTest();*/
+	mazeNav.firstNavigate();
 }
 
 void loop() {}
 
 float diffs=0;
-float prevPos = 0;
+float prevPos = 0.5;
 void wallsAreScary()
 {
+  delay(100);
 /*
 get left and right IR readings
 if it's too close to the left wall and it's not already moving in the direction of the right
@@ -102,42 +105,48 @@ slow the left motor
 */
 int leftDist = lftIr.getDist();
 int rightDist = rghtIr.getDist();
+int speed = 80;
 float posBetweenWalls = (float)leftDist/(float)(leftDist+rightDist);//value between 0 and 1, 0 being the left wall 1 being the right
 diffs = posBetweenWalls - prevPos; //+ve value means moving towards right, it's actually in mm/readingtime
 prevPos = posBetweenWalls;
-if ((posBetweenWalls>0.5)&&(diffs>0))
-  {
-  motors.left(40);
-  motors.right(80);
-  }
-if ((posBetweenWalls<0.5)&&(diffs<0))
-  {
-  motors.left(80);
-  motors.right(40);
-  }
-if ((posBetweenWalls>0.5)&&(diffs<0))
-  {
-  motors.left(60);
-  motors.right(80);
-  }
-if ((posBetweenWalls<0.5)&&(diffs>0))
-  {
-  motors.left(80);
-  motors.right(60);
-  }
-if (diffs>0.2||diffs<-0.2)
-{
-  motors.left(80);
-  motors.right(80);
-}
-if (posBetweenWalls<0.4)
-  {
-  motors.left(40);
-  motors.right(0);
-  }
-if (posBetweenWalls>0.6)
-  {
-  motors.left(0);
-  motors.right(40);
-  }
+		//If the line is within a margin of EDGE_SENSITIVITY
+		if (abs(posBetweenWalls-0.5)<0.05)
+		{
+			if (diffs<-0.1)
+			{
+				motors.left(speed);
+				motors.right(speed-speed/4);
+			}
+			if (diffs>0.1)
+			{
+				motors.right(speed);
+				motors.left(speed-speed/4);
+			}
+			if (abs(diffs)<0.1)
+			{
+				motors.both(speed);
+			}
+		}
+		//Otherwise, if it's right on the edge of the sensors
+		else if (posBetweenWalls>0.6)
+		{
+			motors.left(speed/4);
+			motors.right(speed);
+		}
+		else if (posBetweenWalls<0.4)
+		{
+			motors.left(speed);
+			motors.right(speed/4);
+		}
+		//Else if it's off center but not too bad
+		else if (posBetweenWalls-0.5>0.1)
+		{
+			motors.right(speed);
+			motors.left(speed/2);
+		}
+		else if (posBetweenWalls-0.5<-0.1)
+		{
+			motors.right(speed/2);
+			motors.left(speed);
+		}
 }

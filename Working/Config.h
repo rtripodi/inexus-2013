@@ -84,6 +84,12 @@
 #define IR_BACK_PIN (0)
 #define IR_LEFT_PIN (2)
 
+//IR sensor offset from midpoint in mm
+#define IR_FRONT_OFFSET (40)
+#define IR_RIGHT_OFFSET (60)
+#define IR_BACK_OFFSET (60)
+#define IR_LEFT_OFFSET (40)
+
 //Amount of IR reads to determine mean value
 #define IR_ITERATIONS (10)
 
@@ -216,3 +222,4 @@
 #define WALL_MIN_FULL (350)
 #define WALL_MIN_HALF (175)
 #define WALL_TOLERANCE (15)
+

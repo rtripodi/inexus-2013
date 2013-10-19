@@ -14,31 +14,50 @@ void IR::setup(){}
 int IR::getDist()
 {
 	float reading = (float) read();
-	
+	int mmReading;
 	if(reading > 400.0)
 	{
-		return (int)((948.33 - reading) / 8.6);
+		mmReading = (int)((948.33 - reading) / 8.6);
 	}
 	else if(reading > 280.0)
 	{
-		return (int)((657.67 - reading) / 4.05); 
+		mmReading = (int)((657.67 - reading) / 4.05); 
 	}
 	else if(reading > 148.0)
 	{
-		return (int)((417.86 - reading) / 1.6036); 
+		mmReading = (int)((417.86 - reading) / 1.6036); 
 	}
 	else if(reading > 78.0)
 	{
-		return (int)((260.1 - reading) / 0.5699); 
+		mmReading = (int)((260.1 - reading) / 0.5699); 
 	}
 	else if(reading > 37.0)
 	{
-		return (int)((121.04 - reading) / 0.1667); 
+		mmReading = (int)((121.04 - reading) / 0.1667); 
 	}
 	else
 	{
-		return 510;
+		mmReading = 510;
 	}
+	
+	switch (type)
+	{
+		case front:
+			mmReading += IR_FRONT_OFFSET;
+			break;
+		case right:
+			mmReading += IR_RIGHT_OFFSET;
+			break;
+		case back:
+			mmReading += IR_BACK_OFFSET;
+			break;
+		case left:
+			mmReading += IR_LEFT_OFFSET;
+			break;
+		default: break;
+	}
+	
+	return mmReading;
 }
 
 //Reads multiple raw values from IR sensor and returns a mean that disregards outliers
@@ -87,7 +106,9 @@ int IR::calcMeanNoOutliers(int data[], int length)
 
 	//If at least one element is inclusive of the standard deviation, recalculate the mean
 	if (dataSum != 0)
+	{
 		mean = (float) dataSum / (float) newCount;
+	}
 
 	return (int) (mean + 0.5);
 }
