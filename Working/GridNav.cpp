@@ -12,14 +12,12 @@ GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *i
 	gridMap = GridMap();
 	router = Routing(&gridMap);
 	
+	gridMap.setFlag(Point(GRID_MAX_X, 0), SEEN);
+	
 	#ifdef SIMULATION
-		Point pt1 = Point(2, 2);
-		Point pt2 = Point(3, 3);
-		Point pt3 = Point(4, 1);
-		
-		gridMap.setFlag(pt1, OCCUPIED);
-		gridMap.setFlag(pt2, OCCUPIED);
-		gridMap.setFlag(pt3, OCCUPIED);
+		gridMap.setFlag(Point(2, 2), OCCUPIED);
+		gridMap.setFlag(Point(3, 3), OCCUPIED);
+		gridMap.setFlag(Point(4, 1), OCCUPIED);
 	#endif
 }
 
@@ -97,11 +95,11 @@ Point GridNav::frontDiagPoint(Point pt, CarDir inFacing, RelDir relativeTurn)
 bool GridNav::isBlock(RelDir relDir)
 {
 	if (relDir == FRONT)
-		return (irInMm.frnt < CENTRE_DIST);
+		return (abs(irInMm.frnt - BLOCK_ACT_DIST) < BLOCK_TOLERANCE);
 	else if (relDir == LEFT)
-		return (irInMm.lft < CENTRE_DIST);
+		return (abs(irInMm.lft - BLOCK_ACT_DIST) < BLOCK_TOLERANCE);
 	else if (relDir == RIGHT)
-		return (irInMm.rght < CENTRE_DIST);
+		return (abs(irInMm.rght - BLOCK_ACT_DIST) < BLOCK_TOLERANCE);
 	else
 		return false;
 }
@@ -307,7 +305,7 @@ int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 		totalProfit += 5;
 	Point tempPoint = adjacentPoint(currPoint, facing, relDir);
 	Point rightPoint, leftPoint;
-	while ( gridMap.contains(tempPoint) )//DEBUG&& !gridMap.isFlagSet(tempPoint, OCCUPIED))
+	while ( gridMap.contains(tempPoint) )//TODO: && !gridMap.isFlagSet(tempPoint, OCCUPIED))
 	{
 		//Profit of visited
 		if (gridMap.isFlagSet(tempPoint, VISITED))
@@ -352,26 +350,41 @@ int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 	return totalProfit;
 }
 
+//Doesn't take current direction facing into account 
 Point GridNav::closestUnknown()
 {
-	Point tempPoint, closestPoint;
-	int minDist = 100;
+	Point tempPoint, closestPoint = Point(-1, -1);
+	int tempDist, minDist = 100;
 	for (unsigned char x = 0; x <= GRID_MAX_X; ++x)
 	{
 		for (unsigned char y = 0; y <= GRID_MAX_Y; ++y)
 		{
-			tempPoint.x = currPoint.x;
-			tempPoint.y = currPoint.y;
-			if (!gridMap.isFlagSet(tempPoint, SEEN) && (abs(tempPoint.y - currPoint.y) + abs(tempPoint.x - currPoint.x)) < minDist)
-				closestPoint = tempPoint;
+			tempPoint.x = x;
+			tempPoint.y = y;
+			if (!gridMap.isFlagSet(tempPoint, SEEN))
+			{
+				tempDist = (abs(tempPoint.y - currPoint.y) + abs(tempPoint.x - currPoint.x));
+				if (tempDist < minDist)
+				{
+					closestPoint = tempPoint;
+					minDist = tempDist;
+				}
+			}
 		}
 	}
+	#ifdef DEBUG
+		Serial.print("\t\t\t\t");
+		closestPoint.debug("Closest Unknown Point");
+		Serial.println();
+	#endif
 	return closestPoint;
 }
 
+//TODO: Exact same as closestUnknown.  Should be combined.
 Point GridNav::closestBlock()
 {
-	Point tempPoint, closestPoint = Point(-1,-1);
+	Point tempPoint, closestPoint = Point(-1, -1);
+	int tempDist, minDist = 100;
 	for (unsigned char x = 0; x <= GRID_MAX_X; ++x)
 	{
 		for (unsigned char y = 0; y <= GRID_MAX_Y; ++y)
@@ -379,15 +392,24 @@ Point GridNav::closestBlock()
 			tempPoint.x = x;
 			tempPoint.y = y;
 			if (gridMap.isFlagSet(tempPoint, OCCUPIED))
-				closestPoint = tempPoint;
+			{
+				tempDist = (abs(tempPoint.y - currPoint.y) + abs(tempPoint.x - currPoint.x));
+				if (tempDist < minDist)
+				{
+					closestPoint = tempPoint;
+					minDist = tempDist;
+				}
+			}
 		}
 	}
+	#ifdef DEBUG
+		Serial.print("\t\t\t\t");
+		closestPoint.debug("Closest Block");
+		Serial.println();
+	#endif
 	return closestPoint;
 }
 
-//TODO:	If path doesn't contain unknown, find closest unknown and use routing until gridmap
-//		is filled with SEEN at minimum
-//		Needs visited and seen counts
 void GridNav::chooseNextPath()
 {
 	Point pastFront = adjacentPoint( adjacentPoint(currPoint, facing, FRONT), facing, FRONT);
@@ -429,9 +451,7 @@ void GridNav::chooseNextPath()
 			int rightPathProfit = findPathProfit(RIGHT, &numUnknown);
 			if(numUnknown == 0)
 			{
-				//stop
-				Serial.println("Find other unknowns");//DEBUG
-				haveBlock = true;//DEBUG: Allow end condition for testing
+				moveToPoint(closestUnknown() );
 			}
 			else
 			{
@@ -450,10 +470,14 @@ void GridNav::chooseNextPath()
 			}
 		}
 		else
+		{
 			moveToFrontPoint();
+		}
 	}
 	else
+	{
 		moveToFrontPoint();
+	}
 }
 
 //Checks for blocks on adjacent points
@@ -472,7 +496,16 @@ void GridNav::checkForBlocks()
 		mapRightPoint();
 	if(gridMap.contains(leftPoint))
 		mapLeftPoint();
-	if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
+#ifndef SIMULATION
+	if (abs((irs->frnt)->getDist() - BLOCK_STOP) < BLOCK_TOLERANCE)	//TODO: Test improvised block grab
+	{
+		claw->shut();
+		haveBlock = true;
+	}
+	else if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
+#else
+if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
+#endif
 		haveBlock = obtainBlock(FRONT);
 	else if (gridMap.contains(rightPoint) && gridMap.isFlagSet(rightPoint, OCCUPIED))
 		haveBlock = obtainBlock(RIGHT);
@@ -484,6 +517,7 @@ void GridNav::checkForBlocks()
 	}
 }
 
+//TODO: Merge with checkForBlocks.  Include front, left and right paths when choosing next path.
 void GridNav::initCheckForBlocks()
 {
 	gridMap.setFlag(currPoint, VISITED);
@@ -573,12 +607,18 @@ void GridNav::findBlock()
 		#endif
 	}
 	#ifdef DEBUG
-		Serial.println("Returning.");
+		Serial.println();
+		Serial.println("-----\t\t\tReturning\t\t\t-----");
 	#endif
+	Point tempPoint = Point(GRID_MAX_X + 1, 0);
 	moveToPoint(entrPoint);
-	//TODO: Face East
+	CarDir newDir = carDirOfPoint(tempPoint);
+	mover->rotateDirection(dirCarToRel(newDir), DEFAULT_SPEED);
+	facing = newDir;
 	#ifdef DEBUG
-		Serial.println("Done.");
+		Serial.print("Done.\tFacing = ");
+		printCarDir(facing);
+		Serial.println();
 	#endif
 }
 

@@ -83,9 +83,9 @@ void setup()
 		ls.calibrate();
 		delay(5);
 	}
-	delayTillButton();
-	gridTest();*/
-	mazeNav.firstNavigate();
+	delayTillButton();*/
+	gridTest();
+	//mazeNav.firstNavigate();
 }
 
 void loop() {}
