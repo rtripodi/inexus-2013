@@ -74,18 +74,18 @@ void gridTest()
 void setup()
 {  
 	Serial.begin(9600);
-/*	claw.setup();
+	claw.setup();
 	motors.setup();
 	claw.shut();
 	delayTillButton();
-	for (int ii = 0; ii <= 100; ii++)
+/*	for (int ii = 0; ii <= 100; ii++)
 	{
 		ls.calibrate();
 		delay(5);
 	}
-	delayTillButton();*/
-	gridTest();
-	//mazeNav.firstNavigate();
+	delayTillButton();
+	gridTest();*/
+	mazeNav.firstNavigate();
 }
 
 void loop() {}

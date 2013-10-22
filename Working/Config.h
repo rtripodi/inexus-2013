@@ -85,10 +85,10 @@
 #define IR_LEFT_PIN (2)
 
 //IR sensor offset from midpoint in mm
-#define IR_FRONT_OFFSET (40)
-#define IR_RIGHT_OFFSET (60)
-#define IR_BACK_OFFSET (60)
-#define IR_LEFT_OFFSET (40)
+#define IR_FRONT_OFFSET (5)
+#define IR_RIGHT_OFFSET (70)
+#define IR_BACK_OFFSET (70)
+#define IR_LEFT_OFFSET (60)
 
 //Amount of IR reads to determine mean value
 #define IR_ITERATIONS (10)
@@ -141,9 +141,9 @@
 #define QTR_READ_DELAY 75
 
 #define TURN_FRONT 0
-#define TURN_RIGHT (90)
+#define TURN_RIGHT (90 -5)
 #define TURN_BACK 180
-#define TURN_LEFT (-90)
+#define TURN_LEFT (-90 +5)
 
 /********************************************
  *  GridMap
@@ -221,5 +221,5 @@
 */
 #define WALL_MIN_FULL (350)
 #define WALL_MIN_HALF (175)
-#define WALL_TOLERANCE (15)
+#define WALL_TOLERANCE (50)
 

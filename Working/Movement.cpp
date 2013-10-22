@@ -1,6 +1,6 @@
 #include "Movement.h"
 
-#define SIMULATION
+//#define SIMULATION
 
 Movement::Movement(Motor * inMotors, LineSensors * inSensors)
 {
@@ -181,18 +181,19 @@ void Movement::moveTicks(int ticks, int speed)
 	{
 		//adjust motor speed to compensate for error
 		int error = tickError();
-		if(error > 0) { 
-			leftSpeed -= 1; 
+		if(error > 0)
+		{
+			leftSpeed -= 1;
 		}
-		else if(error < 0) { 
-			rightSpeed -= 1; 
+		else if (error < 0)
+		{
+			rightSpeed -= 1;
 		}
-		else { 
-			leftSpeed = speed; 
-			rightSpeed = speed; 
+		else
+		{
+			leftSpeed = speed;
+			rightSpeed = speed;
 		}
-		leftSpeed = speed; 
-		rightSpeed = speed;
 		//send message to motors to adjust speed
 		motors->left(leftSpeed);
 		motors->right(rightSpeed);
@@ -213,14 +214,12 @@ int Movement::tickError()
 
 //Length is in mm, rounded to whole number.
 //This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
-//WARNING, ERROR, TODO: This is untested
 void Movement::moveLength(int length, int speed)
 {
 	int ticks;
 	//convert the length to ticks
 	//Simplified formulae: ( Length * 48 [number of ticks in one revolution]) / ( Pi * Wheel Diameter)
-	ticks = round((length * 48)/135.1);
-	speed = speed;
+	ticks = round((float)(length * 48)/135.1);
 	moveTicks(ticks,speed);
 }
 
@@ -248,7 +247,6 @@ void Movement::rotateDirection(RelDir relDir, int speed)
 
 //clockwise turning is positive angle, anti-clockwise turning is negative angle.Speed is positive.
 //This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
-//WARNING, ERROR, TODO: This is untested
 void Movement::rotateAngle(int angle, int speed)
 {
 	//Don't do anything if a rotation of zero is inputted
@@ -288,11 +286,21 @@ void Movement::rotateAngle(int angle, int speed)
 
 		while((abs(leftTicks) < abs(ticks) )|| (abs(rightTicks) < abs(ticks)))
 		{
-			//		//adjust motor speed to compensate for error
-			//		int error = tickError();
-			//		if(error > 0) { leftSpeed -= 1; }
-			//		else if(error < 0) { rightSpeed -= 1; }
-			//		else { leftSpeed = speed; rightSpeed = speed; }
+			//adjust motor speed to compensate for error
+			int error = tickError();
+			if(error > 0)
+			{
+				leftSpeed -= 1;
+			}
+			else if (error < 0)
+			{
+				rightSpeed -= 1;
+			}
+			else
+			{
+				leftSpeed = speed;
+				rightSpeed = speed;
+			}
 
 			//send message to motors to adjust speed
 			motors->left(leftSpeed);

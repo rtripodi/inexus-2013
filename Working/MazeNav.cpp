@@ -1,6 +1,6 @@
 #include "MazeNav.h"
 
-#define SIMULATION
+//#define SIMULATION
 #define DEBUG
 
 MazeNav::MazeNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs)
@@ -71,14 +71,16 @@ for(int ii = 0; ii < 11; ++ii)
 	while (Serial.available() == 0);  //Wait for input
 	buffer[ii] = Serial.read();
 }
-sscanf (buffer, "%d %d %d", &irInMm.frnt, &irInMm.rght, &irInMm.lft);
-irInMm.bck = 500;
-Serial.print("\t\t\t\tIRs - F: ");
-Serial.print(irInMm.frnt);
-Serial.print("\tR: ");
-Serial.print(irInMm.rght);
-Serial.print("\tL: ");
-Serial.println(irInMm.lft);
+sscanf (buffer, "%d %d %d", &irInMm.bck, &irInMm.rght, &irInMm.lft);
+irInMm.frnt = 500;
+#endif
+#ifdef DEBUG
+	Serial.print("\t\t\t\tIRs - B: ");
+	Serial.print(irInMm.bck);
+	Serial.print("\tR: ");
+	Serial.print(irInMm.rght);
+	Serial.print("\tL: ");
+	Serial.println(irInMm.lft);
 #endif
 }
 
@@ -88,30 +90,45 @@ void MazeNav::searchInitEntrance()
 	scanWalls();
 	if (isWall(FRONT))
 	{
+		#ifdef DEBUG
+			Serial.println("Front wall found.");
+		#endif
 #ifndef SIMULATION
 		mover->rotateDirection(RIGHT, DEFAULT_SPEED);
 #endif
 		scanWalls();
 		while (isWall(LEFT))
 		{
+			#ifdef DEBUG
+				Serial.println("Searching for entrance.");
+			#endif
 #ifndef SIMULATION
 			motors->both(DEFAULT_SPEED, mover->tickError());
 #endif
 			scanWalls();
 		}
+		#ifdef DEBUG
+			Serial.println("Found entrance.");
+		#endif
 #ifndef SIMULATION
 		mover->moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
 		motors->stop();
 		mover->rotateDirection(LEFT, DEFAULT_SPEED);
 #endif
 	}
+	#ifdef DEBUG
+	else
+	{
+		Serial.println("Found entrance.");
+	}
+	#endif
 #ifndef SIMULATION
-	mover->moveLength(WALL_MIN_FULL, DEFAULT_SPEED);
+	mover->moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
 	motors->stop();
 #endif
-#ifdef DEBUG
-Serial.println("Entered maze");
-#endif
+	#ifdef DEBUG
+		Serial.println("Entered maze");
+	#endif
 }
 
 bool MazeNav::nextPosition()
