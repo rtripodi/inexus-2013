@@ -180,8 +180,8 @@ void Movement::moveTicks(int ticks, int speed)
 	while((abs(leftTicks) < abs(ticks) )|| (abs(rightTicks) < abs(ticks)))
 	{
 		//adjust motor speed to compensate for error
-		int error = tickError();
-		if(error > 0)
+		/*int error = tickError();			//TODO: Investigate effect
+		if (error > 0)
 		{
 			leftSpeed -= 1;
 		}
@@ -190,10 +190,11 @@ void Movement::moveTicks(int ticks, int speed)
 			rightSpeed -= 1;
 		}
 		else
-		{
+		{*/
 			leftSpeed = speed;
 			rightSpeed = speed;
-		}
+		//}
+		
 		//send message to motors to adjust speed
 		motors->left(leftSpeed);
 		motors->right(rightSpeed);
@@ -287,8 +288,8 @@ void Movement::rotateAngle(int angle, int speed)
 		while((abs(leftTicks) < abs(ticks) )|| (abs(rightTicks) < abs(ticks)))
 		{
 			//adjust motor speed to compensate for error
-			int error = tickError();
-			if(error > 0)
+			/*int error = tickError();			//TODO: Investigate effect
+			if (error > 0)
 			{
 				leftSpeed -= 1;
 			}
@@ -297,10 +298,10 @@ void Movement::rotateAngle(int angle, int speed)
 				rightSpeed -= 1;
 			}
 			else
-			{
+			{*/
 				leftSpeed = speed;
 				rightSpeed = speed;
-			}
+			//}
 
 			//send message to motors to adjust speed
 			motors->left(leftSpeed);
@@ -313,5 +314,3 @@ void Movement::rotateAngle(int angle, int speed)
 		}
 	}
 }
-
-
