@@ -18,7 +18,7 @@ bool Movement::onCross()
 
 int lastLinePos = 0;
 int linePos = 0;
-int difference=0; //Positive means the line is moving to the right
+int difference = 0; //Positive means the line is moving to the right
 
 void Movement::reversing(int speed)
 {
@@ -157,16 +157,40 @@ bool Movement::moveForward(int speed)
 #endif
 }
 
+
+void Movement::resetEncoders()
+{
+	wheelEnc.getCountsAndResetM1();
+	wheelEnc.getCountsAndResetM2();
+}
+
+//returns the average of the ticks on both motors
+int Movement::getTicks()
+{
+	int motorOne = abs(wheelEnc.getCountsM1());
+	int motorTwo = abs(wheelEnc.getCountsM2());
+	return (motorOne + motorTwo) / 2;
+}
+
+//tickError returns a value used to adjust the movement speed
+//of wheels based on the number of ticks seen by each motor.
+//It will be between -5 and 5
+int Movement::tickError()
+{
+	int motorOne = abs(wheelEnc.getCountsM1());
+	int motorTwo = abs(wheelEnc.getCountsM2());
+	return constrain((motorOne - motorTwo), -5, 5);		//DEBUG: Removed multiplication by 3/4
+}
+
 //This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
 //WARNING, ERROR, TODO: This is untested, also probably doesn't work going backwards
 void Movement::moveTicks(int ticks, int speed)
 {
-	//reset encoders (both wheels now have 0 ticks)
-	wheelEnc.getCountsAndResetM1();
-	wheelEnc.getCountsAndResetM2();
+	resetEncoders();
 
 	//adjust speed and ticks if we're going backwards
-	if(ticks < 0) { 
+	if (ticks < 0)
+	{ 
 		speed = - speed; 
 		ticks = - ticks; 
 	}
@@ -177,7 +201,7 @@ void Movement::moveTicks(int ticks, int speed)
 	int leftSpeed = speed;
 	int rightSpeed = speed;
 
-	while((abs(leftTicks) < abs(ticks) )|| (abs(rightTicks) < abs(ticks)))
+	while ((abs(leftTicks) < abs(ticks) ) || (abs(rightTicks) < abs(ticks)))
 	{
 		//adjust motor speed to compensate for error
 		/*int error = tickError();			//TODO: Investigate effect
@@ -206,22 +230,60 @@ void Movement::moveTicks(int ticks, int speed)
 	}
 }
 
-int Movement::tickError()
+// moveTicks moves the number of ticks given.
+// A positive ticks number will go forward, a negative ticks number 
+// will go backwards.
+// We do not stop after hitting the number of ticks. Call motorStop().
+void Movement::oldMoveTicks(int ticks, int motorSpeed)
 {
-	int motorOne = abs(wheelEnc.getCountsM1());
-	int motorTwo = abs(wheelEnc.getCountsM2());
-	return 3*constrain((motorOne - motorTwo), -5, 5)/4;
+	resetEncoders();
+	
+	if(ticks < 0)
+	{
+		motorSpeed = - motorSpeed;
+	}
+	
+	int error, motorOne, motorTwo;
+	do
+	{
+		motorOne = abs(wheelEnc.getCountsM1());
+		motorTwo = abs(wheelEnc.getCountsM2());
+		error = tickError();
+		if (error < 0)
+		{
+			motors->right(0);
+			motors->left(motorSpeed);
+		}
+		else if (error > 0)
+		{
+			motors->left(0);
+			motors->right(motorSpeed);
+		}
+		else
+		{
+			motors->both(motorSpeed, error);
+		}
+	} while ( (motorTwo < abs(ticks)) && (motorOne < abs(ticks)) );
 }
 
 //Length is in mm, rounded to whole number.
 //This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
+//convert the length to ticks
+//Simplified formulae: ( Length * 48 [number of ticks in one revolution]) / ( Pi * Wheel Diameter)
 void Movement::moveLength(int length, int speed)
 {
-	int ticks;
-	//convert the length to ticks
-	//Simplified formulae: ( Length * 48 [number of ticks in one revolution]) / ( Pi * Wheel Diameter)
-	ticks = round((float)(length * 48)/135.1);
-	moveTicks(ticks,speed);
+	moveTicks( round((float)(length * 48)/135.1), speed);
+}
+
+void Movement::oldMoveLength(int length, int speed)
+{
+	oldMoveTicks( round((float)(length * 48)/135.1), speed);
+}
+
+//Uses rotateTicks function from old code
+void Movement::oldRotateAngle(int angle, int speed)
+{
+	rotateTicks( round((float)(abs(angle) * 96)/215.0), speed);
 }
 
 //Turns in given relative direction
@@ -253,11 +315,9 @@ void Movement::rotateAngle(int angle, int speed)
 	//Don't do anything if a rotation of zero is inputted
 	if (angle != 0)
 	{
-		angle=constrain(angle,-180,180);
+		angle = constrain(angle,-180,180);
 
-		//reset encoders (both wheels now have 0 ticks)
-		wheelEnc.getCountsAndResetM1();
-		wheelEnc.getCountsAndResetM2();
+		resetEncoders();
 
 		//Initialise variables to hold ticks and speed
 		int ticks = 0;
@@ -273,19 +333,19 @@ void Movement::rotateAngle(int angle, int speed)
 		//replace 18 with distance between wheels, 3 with wheel diameter
 
 		//adjust speed and angle if turning anti-clockwise
-		if(angle < 0)
+		if (angle < 0)
 		{ 
 			leftSpeed = - speed; 
 			rightSpeed = speed; 
 		}
 		//adjust speed and angle if turning clockwise
-		else if(angle > 0)
+		else if (angle > 0)
 		{ 
 			leftSpeed = speed; 
 			rightSpeed = - speed; 
 		}
 
-		while((abs(leftTicks) < abs(ticks) )|| (abs(rightTicks) < abs(ticks)))
+		while ( (abs(leftTicks) < abs(ticks) )|| (abs(rightTicks) < abs(ticks)) )
 		{
 			//adjust motor speed to compensate for error
 			/*int error = tickError();			//TODO: Investigate effect
@@ -313,4 +373,55 @@ void Movement::rotateAngle(int angle, int speed)
 			rightTicks = abs(wheelEnc.getCountsM2());
 		}
 	}
+}
+
+//Rotates the number of ticks specified
+//if it doesn't stop turning it means one of the encoders aren't working
+//try fiddling with some wires or something...
+void Movement::rotateTicks(int ticks, int motorSpeed)
+{
+	resetEncoders();
+
+	if (ticks < 0)
+	{
+		motorSpeed = - motorSpeed;
+	}
+
+	int minSpeed = 28;
+	int lowSpeed = motorSpeed / 2;
+	if ( (lowSpeed > 0) && (lowSpeed < minSpeed) )
+	{
+		lowSpeed = minSpeed;
+	}
+	else if ( (lowSpeed < 0) && (lowSpeed > -minSpeed) )
+	{
+		lowSpeed = - minSpeed;
+	}
+
+	int error, motorOne, motorTwo;
+	do
+	{
+		motorOne = abs(wheelEnc.getCountsM1());
+		motorTwo = abs(wheelEnc.getCountsM2());
+
+		error = tickError();
+		if (error < 0)
+		{
+			motors->left( - motorSpeed);
+			motors->right(lowSpeed);
+		}
+		else if (error > 0)
+		{
+			motors->right(motorSpeed);
+			motors->left( - lowSpeed);
+		}
+		else
+		{
+			motors->right(motorSpeed);
+			motors->left( - motorSpeed);
+		}
+		delay(1);
+	} while( (motorTwo < abs(ticks)) || (motorOne < abs(ticks)) );
+	motors->stop();
+	resetEncoders();
 }

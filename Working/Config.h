@@ -99,6 +99,9 @@
 //Serial used for Motor Controller
 #define MotorControl Serial2
 
+#define MOTOR_BAUD_RATE (38400)
+#define MOTOR_ESTABLISH_BAUD (0xAA)
+
 /********************************************
  *  Colour Sensor                           *
  ********************************************/
@@ -143,7 +146,12 @@
 #define TURN_FRONT 0
 #define TURN_RIGHT (90 -5)
 #define TURN_BACK 180
-#define TURN_LEFT (-90 +5)
+#define TURN_LEFT (-TURN_RIGHT +5)
+
+#define TICKS_FRONT (0)
+#define TICKS_RIGHT (-39)
+#define TICKS_BACK (82)
+#define TICKS_LEFT (-TICKS_LEFT)
 
 /********************************************
  *  GridMap

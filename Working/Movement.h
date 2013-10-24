@@ -21,6 +21,13 @@ class Movement
 		void rotateDirection(RelDir relDir, int speed = DEFAULT_SPEED);
 		void rotateAngle(int angle, int speed = DEFAULT_SPEED);
 
+		void resetEncoders();
+		int getTicks();
+		void oldMoveTicks(int ticks, int motorSpeed);
+		void oldMoveLength(int length, int speed);
+		void oldRotateAngle(int angle, int speed);
+		void rotateTicks(int ticks, int motorSpeed);
+		
 	private:
 		void reversing(int speed = DEFAULT_SPEED);
 		void lineCorrection(int speed = DEFAULT_SPEED);
