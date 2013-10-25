@@ -92,12 +92,12 @@ class GridNav
 		
 		Point closestUnknown();
 		
+		void startNextPath();
+		
 		void chooseNextPath();
 		
 		//Checks for blocks on adjacent points
 		void checkForBlocks();
-		
-		void initCheckForBlocks();		
 		
 		void printGrid();
 		

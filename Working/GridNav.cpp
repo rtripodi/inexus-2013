@@ -222,10 +222,22 @@ void GridNav::moveToAdjPoint(Point pt)
 void GridNav::moveToPoint(Point pt)
 {
 	router.generateRoute(currPoint, pt, facing, &path);
+	//TODO: Check next facing, turn and then scan. Then follow path
 	for (int ii = 0; ii < path.length; ++ii)
 	{
 		moveToAdjPoint(path.path[ii]);
+		
 		gridMap.setFlag(currPoint, VISITED);
+		
+		if (gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)))
+		{
+			mapRightPoint();
+		}
+		if (gridMap.contains( adjacentPoint(currPoint, facing, LEFT)))
+		{
+			mapLeftPoint();
+		}
+		
 		#ifdef DEBUG
 			printGrid();
 		#endif
@@ -241,7 +253,22 @@ void GridNav::moveToBlock(Point pt)
 	for (int ii = 0; ii < path.length; ++ii)
 	{
 		moveToAdjPoint(path.path[ii]);
+		
 		gridMap.setFlag(currPoint, VISITED);
+		
+		if (gridMap.contains( adjacentPoint(currPoint, facing, FRONT)))
+		{
+			mapFrontPoint();
+		}
+		if (gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)))
+		{
+			mapRightPoint();
+		}
+		if (gridMap.contains( adjacentPoint(currPoint, facing, LEFT)))
+		{
+			mapLeftPoint();
+		}
+		
 		#ifdef DEBUG
 			printGrid();
 		#endif
@@ -410,34 +437,48 @@ Point GridNav::closestBlock()
 	return closestPoint;
 }
 
+void GridNav::startNextPath()
+{
+	unsigned char numUnknownFront = 0,
+		numUnknownLeft = 0,
+		numUnknownRight = 0;
+	
+	int frontPathProfit = findPathProfit(FRONT, &numUnknownFront);
+	int leftPathProfit = findPathProfit(LEFT, &numUnknownLeft);
+	int rightPathProfit = findPathProfit(RIGHT, &numUnknownRight);
+	
+	if ( (numUnknownFront + numUnknownLeft + numUnknownRight) == 0)
+	{
+		moveToPoint(closestUnknown() );
+	}
+	else
+	{
+		if ( (frontPathProfit >= leftPathProfit) && (frontPathProfit >= rightPathProfit) )
+		{
+			moveToFrontPoint();
+		}
+		else if (leftPathProfit >= rightPathProfit)
+		{
+			mover->rotateDirection(LEFT, DEFAULT_SPEED);
+			facing = findNewFacing(facing, LEFT);
+			moveToFrontPoint();
+		}
+		else
+		{
+			mover->rotateDirection(RIGHT, DEFAULT_SPEED);
+			facing = findNewFacing(facing, RIGHT);
+			moveToFrontPoint();
+		}
+	}
+}
+
 void GridNav::chooseNextPath()
 {
 	Point pastFront = adjacentPoint( adjacentPoint(currPoint, facing, FRONT), facing, FRONT);
 
-	if(!gridMap.contains(adjacentPoint(currPoint, facing, FRONT)))
+	if ( !gridMap.contains(adjacentPoint(currPoint, facing, FRONT)))
 	{
-		unsigned char numUnknown = 0; // Sum of unknowns for paths
-		int leftPathProfit = findPathProfit(LEFT, &numUnknown);
-		int rightPathProfit = findPathProfit(RIGHT, &numUnknown);
-		if(numUnknown == 0)
-		{
-			moveToPoint(closestUnknown() );
-		}
-		else
-		{
-			if (leftPathProfit > rightPathProfit)
-			{
-				mover->rotateDirection(LEFT, DEFAULT_SPEED);
-				facing = findNewFacing(facing, LEFT);
-				moveToFrontPoint();
-			}
-			else
-			{
-				mover->rotateDirection(RIGHT, DEFAULT_SPEED);
-				facing = findNewFacing(facing, RIGHT);
-				moveToFrontPoint();
-			}
-		}
+		startNextPath();
 	}
 	else if (!gridMap.contains(pastFront) || gridMap.isFlagSet(pastFront, SEEN))
 	{
@@ -446,28 +487,7 @@ void GridNav::chooseNextPath()
 		
 		if ( !gridMap.contains(leftDiag) || !gridMap.contains(rightDiag) || (gridMap.isFlagSet(leftDiag, SEEN) && gridMap.isFlagSet(rightDiag, SEEN)))
 		{
-			unsigned char numUnknown = 0; // Sum of unknowns for paths
-			int leftPathProfit = findPathProfit(LEFT, &numUnknown);
-			int rightPathProfit = findPathProfit(RIGHT, &numUnknown);
-			if(numUnknown == 0)
-			{
-				moveToPoint(closestUnknown() );
-			}
-			else
-			{
-				if (leftPathProfit > rightPathProfit)
-				{
-					mover->rotateDirection(LEFT, DEFAULT_SPEED);
-					facing = findNewFacing(facing, LEFT);
-					moveToFrontPoint();
-				}
-				else
-				{
-					mover->rotateDirection(RIGHT, DEFAULT_SPEED);
-					facing = findNewFacing(facing, RIGHT);
-					moveToFrontPoint();
-				}
-			}
+			startNextPath();
 		}
 		else
 		{
@@ -490,12 +510,18 @@ void GridNav::checkForBlocks()
 	Point leftPoint = adjacentPoint(currPoint, facing, LEFT);
 	
 	//Shouldn't need to reset irValues, if not on map should disregard
-	if(gridMap.contains(frontPoint))
+	if (gridMap.contains(frontPoint))
+	{
 		mapFrontPoint();
-	if(gridMap.contains(rightPoint))
+	}
+	if (gridMap.contains(rightPoint))
+	{
 		mapRightPoint();
-	if(gridMap.contains(leftPoint))
+	}
+	if (gridMap.contains(leftPoint))
+	{
 		mapLeftPoint();
+	}
 #ifndef SIMULATION
 	if (abs((irs->frnt)->getDist() - BLOCK_STOP) < BLOCK_TOLERANCE)	//TODO: Test improvised block grab
 	{
@@ -508,61 +534,16 @@ if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
 #endif
 		haveBlock = obtainBlock(FRONT);
 	else if (gridMap.contains(rightPoint) && gridMap.isFlagSet(rightPoint, OCCUPIED))
+	{
 		haveBlock = obtainBlock(RIGHT);
+	}
 	else if (gridMap.contains(leftPoint) && gridMap.isFlagSet(leftPoint, OCCUPIED))
+	{
 		haveBlock = obtainBlock(LEFT);
+	}
 	else
 	{
 		chooseNextPath();
-	}
-}
-
-//TODO: Merge with checkForBlocks.  Include front, left and right paths when choosing next path.
-void GridNav::initCheckForBlocks()
-{
-	gridMap.setFlag(currPoint, VISITED);
-	
-	//Shouldn't need to reset irValues, if not on map should disregard
-	Point frontPoint = adjacentPoint(currPoint, facing, FRONT);
-	Point rightPoint = adjacentPoint(currPoint, facing, RIGHT);
-	Point leftPoint = adjacentPoint(currPoint, facing, LEFT);
-	
-	//Shouldn't need to reset irValues, if not on map should disregard
-	if(gridMap.contains(frontPoint))
-		mapFrontPoint();
-	if(gridMap.contains(rightPoint))
-		mapRightPoint();
-	if(gridMap.contains(leftPoint))
-		mapLeftPoint();
-	if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
-		haveBlock = obtainBlock(FRONT);
-	else if (gridMap.contains(rightPoint) && gridMap.isFlagSet(rightPoint, OCCUPIED))
-		haveBlock = obtainBlock(RIGHT);
-	else if (gridMap.contains(leftPoint) && gridMap.isFlagSet(leftPoint, OCCUPIED))
-		haveBlock = obtainBlock(LEFT);
-	else
-	{
-		//Choose new path based on maximum profit
-		unsigned char numUnknown = 0; // Sum of unknowns for paths
-		int frontPathProfit = findPathProfit(FRONT, &numUnknown);
-		int rightPathProfit = findPathProfit(RIGHT, &numUnknown);
-		if(numUnknown == 0)
-		{
-			moveToPoint(closestUnknown() );
-		}
-		else
-		{
-			if (frontPathProfit > rightPathProfit)
-			{
-				moveToFrontPoint();
-			}
-			else
-			{
-				mover->rotateDirection(RIGHT, DEFAULT_SPEED);
-				facing = findNewFacing(facing, RIGHT);
-				moveToFrontPoint();
-			}
-		}
 	}
 }
 
@@ -588,15 +569,6 @@ void GridNav::findBlock()
 	if (closestOccupied != invalidPt)
 	{
 		moveToBlock(closestOccupied);
-	}
-	else
-	{
-#endif
-		initCheckForBlocks();
-		#ifdef DEBUG
-			printGrid();
-		#endif
-#ifndef SIMULATION
 	}
 #endif
 	while (!haveBlock)
@@ -681,7 +653,26 @@ void GridNav::printGrid()
 		{
 			tempPoint.x = x;
 			tempPoint.y = y;
-			sprintf(buffer, "[%c]", gridMap.getFlagsAsChar(tempPoint) );
+			if ((currPoint.x == x) && (currPoint.y == y))
+			{
+				switch (facing)
+				{
+					case NORTH:
+						sprintf(buffer, "[>]");
+						break;
+					case EAST:
+						sprintf(buffer, "[v]");
+						break;
+					case SOUTH:
+						sprintf(buffer, "[<]");
+						break;
+					case WEST:
+						sprintf(buffer, "[^]");
+						break;
+				}
+			}
+			else
+				sprintf(buffer, "[%c]", gridMap.getFlagsAsChar(tempPoint) );
 			Serial.print(buffer);
 		}
 		Serial.println();

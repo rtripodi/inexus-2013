@@ -150,8 +150,8 @@
 
 #define TICKS_FRONT (0)
 #define TICKS_RIGHT (-39)
-#define TICKS_BACK (82)
-#define TICKS_LEFT (-TICKS_LEFT)
+#define TICKS_BACK (78)
+#define TICKS_LEFT (-TICKS_RIGHT)
 
 /********************************************
  *  GridMap

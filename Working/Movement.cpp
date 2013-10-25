@@ -1,6 +1,6 @@
 #include "Movement.h"
 
-//#define SIMULATION
+#define SIMULATION
 
 Movement::Movement(Motor * inMotors, LineSensors * inSensors)
 {
@@ -293,16 +293,15 @@ void Movement::rotateDirection(RelDir relDir, int speed)
 	switch (relDir)
 	{
 	case FRONT:
-		rotateAngle(TURN_FRONT);
 		break;
 	case RIGHT:
-		rotateAngle(TURN_RIGHT);
+		rotateTicks(TICKS_RIGHT);
 		break;
 	case BACK:
-		rotateAngle(TURN_BACK);
+		rotateTicks(TICKS_BACK);
 		break;
 	case LEFT:
-		rotateAngle(TURN_LEFT);
+		rotateTicks(TICKS_LEFT);
 		break;
 	}
 #endif
@@ -345,7 +344,7 @@ void Movement::rotateAngle(int angle, int speed)
 			rightSpeed = - speed; 
 		}
 
-		while ( (abs(leftTicks) < abs(ticks) )|| (abs(rightTicks) < abs(ticks)) )
+		while ( (abs(leftTicks) < abs(ticks) ) || (abs(rightTicks) < abs(ticks)) )
 		{
 			//adjust motor speed to compensate for error
 			/*int error = tickError();			//TODO: Investigate effect
@@ -375,10 +374,64 @@ void Movement::rotateAngle(int angle, int speed)
 	}
 }
 
+void Movement::rotateTicks(int ticks, int speed)
+{
+Serial.println(ticks);
+	//Don't do anything if a rotation of zero is inputted
+	if (ticks != 0)
+	{
+		resetEncoders();
+
+		//Initialise variables to hold ticks and speed
+		int leftTicks = 0;
+		int rightTicks = 0;
+		int leftSpeed = speed;
+		int rightSpeed = speed;
+
+		//adjust speed and angle if turning anti-clockwise
+		if (ticks < 0)
+		{ 
+			leftSpeed = (-speed); 
+			rightSpeed = speed; 
+		}
+		//adjust speed and angle if turning clockwise
+		else if (ticks > 0)
+		{ 
+			leftSpeed = speed; 
+			rightSpeed = (-speed); 
+		}
+
+		while ( (abs(leftTicks) < abs(ticks) ) || (abs(rightTicks) < abs(ticks)) )
+		{
+			//adjust motor speed to compensate for error
+			/*int error = tickError();
+			if (error > 0)
+			{
+				leftSpeed -= 1;
+			}
+			else if (error < 0)
+			{
+				rightSpeed -= 1;
+			}*/
+
+			//send message to motors to adjust speed
+			motors->left(leftSpeed);
+			motors->right(rightSpeed);
+			delay(1); //Delay 1ms so we don't flood the Serial line
+
+			//check ticks to see if we've moved far enough
+			leftTicks = abs(wheelEnc.getCountsM1());
+			rightTicks = abs(wheelEnc.getCountsM2());
+		}
+		motors->stop();
+		resetEncoders();
+	}
+}
+
 //Rotates the number of ticks specified
 //if it doesn't stop turning it means one of the encoders aren't working
 //try fiddling with some wires or something...
-void Movement::rotateTicks(int ticks, int motorSpeed)
+void Movement::oldRotateTicks(int ticks, int motorSpeed)
 {
 	resetEncoders();
 
@@ -393,7 +446,7 @@ void Movement::rotateTicks(int ticks, int motorSpeed)
 	{
 		lowSpeed = minSpeed;
 	}
-	else if ( (lowSpeed < 0) && (lowSpeed > -minSpeed) )
+	else if ( (lowSpeed < 0) && (lowSpeed > ( - minSpeed)) )
 	{
 		lowSpeed = - minSpeed;
 	}
