@@ -1,6 +1,7 @@
 #include "Movement.h"
 
 #define SIMULATION
+#define DEBUG
 
 Movement::Movement(Motor * inMotors, LineSensors * inSensors)
 {
@@ -174,7 +175,7 @@ int Movement::getTicks()
 
 //tickError returns a value used to adjust the movement speed
 //of wheels based on the number of ticks seen by each motor.
-//It will be between -5 and 5
+//It will be between -5 (M1 < M2) and 5 (M1 > M2)
 int Movement::tickError()
 {
 	int motorOne = abs(wheelEnc.getCountsM1());
@@ -187,103 +188,86 @@ int Movement::tickError()
 void Movement::moveTicks(int ticks, int speed)
 {
 	resetEncoders();
-
+	
 	//adjust speed and ticks if we're going backwards
 	if (ticks < 0)
 	{ 
 		speed = - speed; 
 		ticks = - ticks; 
 	}
-
+	
 	//Initialise variables to hold ticks and speed
 	int leftTicks = 0;
 	int rightTicks = 0;
 	int leftSpeed = speed;
 	int rightSpeed = speed;
-
-	while ((abs(leftTicks) < abs(ticks) ) || (abs(rightTicks) < abs(ticks)))
+	
+	#ifdef DEBUG
+		Serial.print("Left\tRight");
+	#endif
+	while ( (abs(leftTicks) < abs(ticks) ) || (abs(rightTicks) < abs(ticks) ) )
 	{
 		//adjust motor speed to compensate for error
-		/*int error = tickError();			//TODO: Investigate effect
+		int error = tickError();			//TODO: Investigate effect
+		#ifdef DEBUG
+			Serial.print("\t\tError: ");
+			Serial.print(error);
+		#endif
 		if (error > 0)
 		{
-			leftSpeed -= 1;
+			#ifdef DEBUG
+				Serial.println("\tSlowing left");
+			#endif
+			leftSpeed -= (int)(speed*0.02 + 0.5);
+			rightSpeed = speed;
 		}
 		else if (error < 0)
 		{
-			rightSpeed -= 1;
+			#ifdef DEBUG
+				Serial.println("\tSlowing right");
+			#endif
+			leftSpeed = speed;
+			rightSpeed -= (int)(speed*0.02 + 0.5);
 		}
 		else
-		{*/
+		{
+			#ifdef DEBUG
+				Serial.println("\tReseting speeds");
+			#endif
 			leftSpeed = speed;
 			rightSpeed = speed;
-		//}
+		}
 		
 		//send message to motors to adjust speed
 		motors->left(leftSpeed);
 		motors->right(rightSpeed);
 		delay(1); //Delay 1ms so we don't flood the Serial line
-
+		
 		//check ticks to see if we've moved far enough
 		leftTicks = abs(wheelEnc.getCountsM1());
 		rightTicks = abs(wheelEnc.getCountsM2());
+		#ifdef DEBUG
+			Serial.print(leftTicks);
+			Serial.print("\t");
+			Serial.print(rightTicks);
+		#endif
 	}
 }
 
-// moveTicks moves the number of ticks given.
-// A positive ticks number will go forward, a negative ticks number 
-// will go backwards.
-// We do not stop after hitting the number of ticks. Call motorStop().
-void Movement::oldMoveTicks(int ticks, int motorSpeed)
-{
-	resetEncoders();
-	
-	if(ticks < 0)
-	{
-		motorSpeed = - motorSpeed;
-	}
-	
-	int error, motorOne, motorTwo;
-	do
-	{
-		motorOne = abs(wheelEnc.getCountsM1());
-		motorTwo = abs(wheelEnc.getCountsM2());
-		error = tickError();
-		if (error < 0)
-		{
-			motors->right(0);
-			motors->left(motorSpeed);
-		}
-		else if (error > 0)
-		{
-			motors->left(0);
-			motors->right(motorSpeed);
-		}
-		else
-		{
-			motors->both(motorSpeed, error);
-		}
-	} while ( (motorTwo < abs(ticks)) && (motorOne < abs(ticks)) );
-}
-
-//Length is in mm, rounded to whole number.
-//This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
-//convert the length to ticks
-//Simplified formulae: ( Length * 48 [number of ticks in one revolution]) / ( Pi * Wheel Diameter)
+//Converts length into ticks and calls moveTicks function
 void Movement::moveLength(int length, int speed)
 {
-	moveTicks( round((float)(length * 48)/135.1), speed);
+	//ticks = length*48/(D_w*pi) = length*48/(42*pi) ~= angle*(48/132)
+	//Where D_w is the wheel diameter
+	moveTicks( round((float)(length * 48)/132.0), speed);
 }
 
-void Movement::oldMoveLength(int length, int speed)
+//Converts angle into ticks and calls rotateTicks function
+void Movement::rotateAngle(int angle, int speed)
 {
-	oldMoveTicks( round((float)(length * 48)/135.1), speed);
-}
-
-//Uses rotateTicks function from old code
-void Movement::oldRotateAngle(int angle, int speed)
-{
-	rotateTicks( round((float)(abs(angle) * 96)/215.0), speed);
+	//ticks = (angle/360)*(48*D_t)/D_w = (angle/360)*(48*145)/42 = angle*(23/63)
+	//Where D_t is the turning circle diameter and D_w is the wheel diameter
+	rotateTicks( round((float)(angle * 23)/63.0), speed);
 }
 
 //Turns in given relative direction
@@ -305,73 +289,6 @@ void Movement::rotateDirection(RelDir relDir, int speed)
 		break;
 	}
 #endif
-}
-
-//clockwise turning is positive angle, anti-clockwise turning is negative angle.Speed is positive.
-//This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
-void Movement::rotateAngle(int angle, int speed)
-{
-	//Don't do anything if a rotation of zero is inputted
-	if (angle != 0)
-	{
-		angle = constrain(angle,-180,180);
-
-		resetEncoders();
-
-		//Initialise variables to hold ticks and speed
-		int ticks = 0;
-		int leftTicks = 0;
-		int rightTicks = 0;
-		int leftSpeed = speed;
-		int rightSpeed = speed;
-
-		//convert the angle to ticks
-		//Simplified formulae: (Wheel Base Diameter * 48 [number of ticks in one revolution]) / (Wheel Diameter * 360) * Angle
-		ticks = round((abs(angle) * 96)/215);
-		//ticks = round((18*abs(angle/360)/(3))*48)
-		//replace 18 with distance between wheels, 3 with wheel diameter
-
-		//adjust speed and angle if turning anti-clockwise
-		if (angle < 0)
-		{ 
-			leftSpeed = - speed; 
-			rightSpeed = speed; 
-		}
-		//adjust speed and angle if turning clockwise
-		else if (angle > 0)
-		{ 
-			leftSpeed = speed; 
-			rightSpeed = - speed; 
-		}
-
-		while ( (abs(leftTicks) < abs(ticks) ) || (abs(rightTicks) < abs(ticks)) )
-		{
-			//adjust motor speed to compensate for error
-			/*int error = tickError();			//TODO: Investigate effect
-			if (error > 0)
-			{
-				leftSpeed -= 1;
-			}
-			else if (error < 0)
-			{
-				rightSpeed -= 1;
-			}
-			else
-			{*/
-				leftSpeed = speed;
-				rightSpeed = speed;
-			//}
-
-			//send message to motors to adjust speed
-			motors->left(leftSpeed);
-			motors->right(rightSpeed);
-			delay(1); //Delay 1ms so we don't flood the Serial line
-
-			//check ticks to see if we've moved far enough
-			leftTicks = abs(wheelEnc.getCountsM1());
-			rightTicks = abs(wheelEnc.getCountsM2());
-		}
-	}
 }
 
 void Movement::rotateTicks(int ticks, int speed)
@@ -426,6 +343,47 @@ Serial.println(ticks);
 		motors->stop();
 		resetEncoders();
 	}
+}
+
+// moveTicks moves the number of ticks given.
+// A positive ticks number will go forward, a negative ticks number 
+// will go backwards.
+// We do not stop after hitting the number of ticks. Call motorStop().
+void Movement::oldMoveTicks(int ticks, int motorSpeed)
+{
+	resetEncoders();
+	
+	if(ticks < 0)
+	{
+		motorSpeed = - motorSpeed;
+	}
+	
+	int error, motorOne, motorTwo;
+	do
+	{
+		motorOne = abs(wheelEnc.getCountsM1());
+		motorTwo = abs(wheelEnc.getCountsM2());
+		error = tickError();
+		/*if (error < 0)
+		{
+			motors->left(motorSpeed);
+			motors->right(0);
+		}
+		else if (error > 0)
+		{
+			motors->left(0);
+			motors->right(motorSpeed);
+		}
+		else
+		{*/
+			motors->both(motorSpeed, error);
+		//}
+	} while ( (motorTwo < abs(ticks)) && (motorOne < abs(ticks)) );
+}
+
+void Movement::oldMoveLength(int length, int speed)
+{
+	oldMoveTicks( round((float)(length * 48)/132.0), speed);
 }
 
 //Rotates the number of ticks specified

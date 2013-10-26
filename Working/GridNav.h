@@ -21,33 +21,29 @@ class GridNav
 		Movement *mover;
 		IrSensors *irs;
 		Claw *claw;
-
+		
 		GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw);
 		
 		void findBlock();
-
+		
 		void debugIrs();
 		
 	private:
 		GridMap gridMap;
 		Routing router;
 		Path path;
-
+		
 		//Current point on grid
 		Point currPoint;
 		
 		//Current facing cardinal direction
 		CarDir facing;
-
+		
 		//Stores distance in mm read from each IR sensor
 		IrValues irInMm;
-				
+		
 		//Determines whether an error occurred with grabbing/holding the block
 		bool haveBlock;
-
-		//Returns the new facing cardinal direction given a turn in the relative direction
-		//Unexpected return for inputs other then: Front, Right, Back, Left
-		CarDir findNewFacing(CarDir inFacing, RelDir relativeTurn);
 		
 		//Returns the closest point in the inputted relative direction
 		//Unexpected return for a relative direction causing a point off the grid
@@ -68,10 +64,6 @@ class GridNav
 		
 		//Returns the cardinal direction of a point given the inputted relative direction
 		CarDir carDirOfPoint(Point pt);
-		
-		//Turns the robot in the desired cardinal direction
-		//Unexpected results for inputs other then: North, East, South, West
-		RelDir dirCarToRel(CarDir newCardDir);
 		
 		//Moves to given point
 		void moveToAdjPoint(Point pt);

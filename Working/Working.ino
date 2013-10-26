@@ -83,12 +83,20 @@ void setup()
 		ls.calibrate();
 		delay(5);
 	}
-	delayTillButton();*/
+	delayTillButton();
 	gridTest();
-	//mazeNav.firstNavigate();
+	mazeNav.firstNavigate();*/
 }
 
-void loop() {}
+void loop()
+{
+	delayTillButton();
+	mover.moveTicks(55);
+	motors.stop();
+	delayTillButton();
+	mover.oldMoveTicks(55, DEFAULT_SPEED);
+	motors.stop();
+}
 
 float diffs=0;
 float prevPos = 0.5;
