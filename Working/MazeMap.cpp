@@ -8,7 +8,7 @@ MazeMap::MazeMap()
 	needSimplify = false;
 }
 
-void MazeMap::updateMap(RelDir inRelDir)
+void MazeMap::updateMap(RelDir inRelDir, int inEastTicks, int inNorthTicks)
 {
 	if(needSimplify)
 	{
@@ -23,8 +23,12 @@ void MazeMap::updateMap(RelDir inRelDir)
 			simplify(inRelDir);
 	}
 	else
-		maze[index] = inRelDir;
-	if(maze[index] == BACK)
+	{
+		maze[index].turn = inRelDir;
+		maze[index].eastTicks = inEastTicks;
+		maze[index].northTicks = inNorthTicks;
+	}
+	if(maze[index].turn == BACK)
 		needSimplify = true;
 	index++;
 	mazeLength++;
@@ -37,31 +41,31 @@ void MazeMap::simplify(RelDir inRelDir)
 
 	//Left, Right, Forward, Back(reverse)
 	//L = RBF = FBR, R = LBF = FBL, F = LBL = RBR, B = LBR = RBL = FBF
-	if ( (maze[index] == RIGHT &&  inRelDir == FRONT) || (maze[index] == FRONT &&  inRelDir == RIGHT) )
+	if ( (maze[index].turn == RIGHT &&  inRelDir == FRONT) || (maze[index].turn == FRONT &&  inRelDir == RIGHT) )
 	{
-		maze[index] = LEFT;
+		maze[index].turn = LEFT;
 		needSimplify = false;
 	}
-	else if ( (maze[index] == LEFT &&  inRelDir == FRONT) || (maze[index] == FRONT &&  inRelDir == LEFT) )
+	else if ( (maze[index].turn == LEFT &&  inRelDir == FRONT) || (maze[index].turn == FRONT &&  inRelDir == LEFT) )
 	{
-		maze[index] = RIGHT;
+		maze[index].turn = RIGHT;
 		needSimplify = false;
 	}
-	else if ( (maze[index] == LEFT &&  inRelDir == LEFT) || (maze[index] == RIGHT &&  inRelDir == RIGHT) )
+	else if ( (maze[index].turn == LEFT &&  inRelDir == LEFT) || (maze[index].turn == RIGHT &&  inRelDir == RIGHT) )
 	{
-		maze[index] = FRONT;
+		maze[index].turn = FRONT;
 		needSimplify = false;
 	}
-	else if ( (maze[index] == LEFT &&  inRelDir == RIGHT) || (maze[index] == RIGHT &&  inRelDir == LEFT) || (maze[index] == FRONT &&  inRelDir == FRONT) )
+	else if ( (maze[index].turn == LEFT &&  inRelDir == RIGHT) || (maze[index].turn == RIGHT &&  inRelDir == LEFT) || (maze[index].turn == FRONT &&  inRelDir == FRONT) )
 	{
-		maze[index] = BACK;
+		maze[index].turn = BACK;
 		needSimplify = true;
 	}
 }
 
 RelDir MazeMap::getNext()
 {
-	RelDir temp = maze[index];
+	RelDir temp = maze[index].turn;
 	index += mazeDirection;
 	if (mazeDirection == 1 || temp == FRONT)
 		return temp;
@@ -94,12 +98,24 @@ bool MazeMap::finalTurn()
 		return (index < 0);
 }
 
-void MazeMap::printMap()
+void MazeMap::printMapTurns()
 {
-	Serial.print((char)maze[0]);
+	Serial.print((char)maze[0].turn);
 	for (int ii = 1; ii < mazeLength; ++ii)
 	{
 		Serial.print(", ");
-		Serial.print((char)maze[ii]);
+		Serial.print((char)maze[ii].turn);
+	}
+}
+
+void MazeMap::printMapLog()
+{
+	for (int ii = 0; ii < mazeLength; ++ii)
+	{
+		Serial.print((char)maze[ii].turn);
+		Serial.print("\teastTicks: ");
+		Serial.print(maze[ii].eastTicks);
+		Serial.print("\tnorthTicks: ");
+		Serial.println(maze[ii].northTicks);
 	}
 }

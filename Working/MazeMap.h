@@ -18,7 +18,7 @@ class MazeMap
 		MazeMap();
 		
 		//Adds inputted relative direction to the turns list 
-		void updateMap(RelDir inRelDir);
+		void updateMap(RelDir inRelDir, int inEastTicks, int inNorthTicks);
 		
 		//Returns the next relative direction to turn 
 		RelDir getNext();
@@ -32,12 +32,21 @@ class MazeMap
 		//Returns true if the map is pointing at the last turn of the maze
 		bool finalTurn();
 		
-		//Prints the contents of the maze array
-		void printMap();
+		//Prints the turns in the maze map
+		void printMapTurns();
+		
+		//Prints the turns and ticks in the maze map
+		void printMapLog();
 		
 	private:
 		
-		RelDir maze[MAZE_MAX];
+		typedef struct {
+			RelDir turn;
+			int eastTicks;
+			int northTicks;
+		} TurnData;
+		
+		TurnData maze[MAZE_MAX];
 		
 		//The shortest amount of turns taken to traverse the maze
 		unsigned char mazeLength;

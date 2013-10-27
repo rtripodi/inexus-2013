@@ -33,6 +33,10 @@ class MazeNav
 		//Stores distance in mm read from each IR sensor
 		IrValues irInMm;
 		
+		CarDir facing;
+		
+		int eastTicks, northTicks;
+		
 		bool isWall(RelDir relDir);
 		
 		void scanWalls();
@@ -40,6 +44,8 @@ class MazeNav
 		void searchInitEntrance();
 
 		bool nextPosition();
+		
+		void updateTicks();
 
 		RelDir alwaysLeft();
 };

@@ -257,7 +257,7 @@ void Movement::moveTicks(int ticks, int speed)
 //Converts length into ticks and calls moveTicks function
 void Movement::moveLength(int length, int speed)
 {
-	//ticks = length*48/(D_w*pi) = length*48/(42*pi) ~= angle*(48/132)
+	//ticks = length*48/(D_w*pi) = length*48/(42*pi) ~= length*(48/132)
 	//Where D_w is the wheel diameter
 	moveTicks( round((float)(length * 48)/132.0), speed);
 }

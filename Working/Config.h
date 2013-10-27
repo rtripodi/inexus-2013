@@ -231,3 +231,7 @@
 #define WALL_MIN_HALF (175)
 #define WALL_TOLERANCE (50)
 
+//Maze is 2400mm x 2400mm, Dropzone 350mm x 350mm
+//Using: ticks ~= length*(48/132)
+#define MAX_EAST_TICKS (809)	// length = (2400-350/2)
+#define MAX_NORTH_TICKS (681)	// length = (2400-350*(3/2))

@@ -15,6 +15,11 @@ MazeNav::MazeNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs)
 void MazeNav::firstNavigate()
 {
 	RelDir turn;
+	facing = WEST;
+	
+	eastTicks = MAX_EAST_TICKS;
+	northTicks = 0;
+	
 	searchInitEntrance();
 	while (1) //TODO: Need exit condition
 	{
@@ -28,14 +33,16 @@ if (irInMm.frnt <= 0)
 Serial.print("Turn: ");
 Serial.println((char)turn);
 #endif
-		mazeMap.updateMap(turn);
+		facing = findNewFacing(facing, turn);
+		updateTicks();
+		mazeMap.updateMap(turn, eastTicks, northTicks);
 #ifndef SIMULATION
 		mover->rotateDirection(turn, DEFAULT_SPEED);
 #endif
 	}
 #ifdef DEBUG
 Serial.println("MazeMap: ");
-mazeMap.printMap();
+mazeMap.printMapTurns();
 Serial.println();
 #endif
 }
@@ -96,6 +103,7 @@ void MazeNav::searchInitEntrance()
 #ifndef SIMULATION
 		mover->rotateDirection(RIGHT, DEFAULT_SPEED);
 #endif
+		facing = NORTH;
 		scanWalls();
 		while (isWall(LEFT))
 		{
@@ -113,15 +121,20 @@ void MazeNav::searchInitEntrance()
 #ifndef SIMULATION
 		mover->moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
 		motors->stop();
+		updateTicks();
+		mazeMap.updateMap(LEFT, eastTicks, northTicks);
 		mover->rotateDirection(LEFT, DEFAULT_SPEED);
+		facing = WEST;
 #endif
 	}
-	#ifdef DEBUG
 	else
 	{
-		Serial.println("Found entrance.");
+		updateTicks();
+		mazeMap.updateMap(LEFT, eastTicks, northTicks);
+		#ifdef DEBUG
+			Serial.println("Found entrance.");
+		#endif
 	}
-	#endif
 #ifndef SIMULATION
 	mover->moveLength(WALL_MIN_HALF, DEFAULT_SPEED);
 	motors->stop();
@@ -182,6 +195,25 @@ Serial.println((char)turn);
 #ifndef SIMULATION
 		mover->rotateDirection(turn, DEFAULT_SPEED);
 #endif
+	}
+}
+
+void MazeNav::updateTicks()
+{
+	switch (facing)
+	{
+		case NORTH:
+			northTicks += mover->getTicks();
+			break;
+		case EAST:
+			eastTicks += mover->getTicks();
+			break;
+		case SOUTH:
+			northTicks -= mover->getTicks();
+			break;
+		case WEST:
+			eastTicks -= mover->getTicks();
+			break;
 	}
 }
 
