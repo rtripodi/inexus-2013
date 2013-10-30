@@ -102,6 +102,23 @@
 #define MOTOR_BAUD_RATE (38400)
 #define MOTOR_ESTABLISH_BAUD (0xAA)
 
+
+#define M1_ANTI_CLOCKWISE	0x8A
+#define M1_CLOCKWISE		0x88
+#define M2_ANTI_CLOCKWISE	0x8C
+#define M2_CLOCKWISE		0x8E
+
+//Left Motor: M0 on board, M1 in code
+#define LEFT_ANTI_CLOCKWISE		M1_ANTI_CLOCKWISE
+#define LEFT_CLOCKWISE			M1_CLOCKWISE
+
+//Right Motor: M1 on board, M2 in code
+#define RIGHT_ANTI_CLOCKWISE	M2_ANTI_CLOCKWISE
+#define RIGHT_CLOCKWISE			M2_CLOCKWISE
+
+#define getCountsLeft getCountsM1
+#define getCountsRight getCountsM2
+
 /********************************************
  *  Colour Sensor                           *
  ********************************************/

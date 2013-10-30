@@ -27,18 +27,15 @@ void Motor::both(int motorSpeed, int error)
 //motorSpeed will be constrained between 0 and 127
 void Motor::left(int motorSpeed)
 {
-	const byte leftMotorAntiClockwise = 0x8C,
-		leftMotorClockwise = 0x8E;
-
 	if (motorSpeed >= 0)
 	{
-		MotorControl.write(leftMotorAntiClockwise);
+		MotorControl.write(LEFT_ANTI_CLOCKWISE);
 		MotorControl.write(limit_0_to_127(motorSpeed));
 	}
 	else
 	{
 		motorSpeed = - motorSpeed;
-		MotorControl.write(leftMotorClockwise);
+		MotorControl.write(LEFT_CLOCKWISE);
 		MotorControl.write(limit_0_to_127(motorSpeed));
 	}
 }
@@ -47,18 +44,15 @@ void Motor::left(int motorSpeed)
 //motorSpeed will be constrained between 0 and 127
 void Motor::right(int motorSpeed)
 {
-	const byte rightMotorAntiClockwise = 0x8A,
-		rightMotorClockwise = 0x88;
-
 	if (motorSpeed >= 0)
 	{
-		MotorControl.write(rightMotorClockwise);
+		MotorControl.write(RIGHT_ANTI_CLOCKWISE);
 		MotorControl.write(limit_0_to_127(motorSpeed));
 	}
 	else
 	{
 		motorSpeed = - motorSpeed;
-		MotorControl.write(rightMotorAntiClockwise);
+		MotorControl.write(RIGHT_CLOCKWISE);
 		MotorControl.write(limit_0_to_127(motorSpeed));
 	}
 }

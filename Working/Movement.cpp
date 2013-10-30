@@ -178,9 +178,9 @@ int Movement::getTicks()
 //It will be between -5 (M1 < M2) and 5 (M1 > M2)
 int Movement::tickError()
 {
-	int motorOne = abs(wheelEnc.getCountsM1());
-	int motorTwo = abs(wheelEnc.getCountsM2());
-	return constrain((motorOne - motorTwo), -5, 5);		//DEBUG: Removed multiplication by 3/4
+	int leftTicks = abs(wheelEnc.getCountsLeft());
+	int rightTicks = abs(wheelEnc.getCountsRight());
+	return constrain((leftTicks - rightTicks), -5, 5);		//DEBUG: Removed multiplication by 3/4
 }
 
 //This function doesn't stop motors, you should call motors.stop() if you want to stop after moving the number of ticks
@@ -244,8 +244,8 @@ void Movement::moveTicks(int ticks, int speed)
 		delay(1); //Delay 1ms so we don't flood the Serial line
 		
 		//check ticks to see if we've moved far enough
-		leftTicks = abs(wheelEnc.getCountsM1());
-		rightTicks = abs(wheelEnc.getCountsM2());
+		leftTicks = abs(wheelEnc.getCountsLeft());
+		rightTicks = abs(wheelEnc.getCountsRight());
 		#ifdef DEBUG
 			Serial.print(leftTicks);
 			Serial.print("\t");
@@ -337,8 +337,8 @@ Serial.println(ticks);
 			delay(1); //Delay 1ms so we don't flood the Serial line
 
 			//check ticks to see if we've moved far enough
-			leftTicks = abs(wheelEnc.getCountsM1());
-			rightTicks = abs(wheelEnc.getCountsM2());
+			leftTicks = abs(wheelEnc.getCountsLeft());
+			rightTicks = abs(wheelEnc.getCountsRight());
 		}
 		motors->stop();
 		resetEncoders();
