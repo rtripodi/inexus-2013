@@ -103,10 +103,10 @@
 #define MOTOR_ESTABLISH_BAUD (0xAA)
 
 
-#define M1_ANTI_CLOCKWISE	0x8A
-#define M1_CLOCKWISE		0x88
-#define M2_ANTI_CLOCKWISE	0x8C
-#define M2_CLOCKWISE		0x8E
+#define M1_CLOCKWISE		0x8A
+#define M1_ANTI_CLOCKWISE	0x88
+#define M2_CLOCKWISE		0x8C
+#define M2_ANTI_CLOCKWISE	0x8E
 
 //Left Motor: M0 on board, M1 in code
 #define LEFT_ANTI_CLOCKWISE		M1_ANTI_CLOCKWISE
@@ -159,6 +159,7 @@
 //For line following.
 #define EDGE_SENSITIVITY 1000
 #define QTR_READ_DELAY 75
+#define CORRECTION_ANGLE 40
 
 #define TURN_FRONT 0
 #define TURN_RIGHT (90 -5)
@@ -166,7 +167,7 @@
 #define TURN_LEFT (-TURN_RIGHT +5)
 
 #define TICKS_FRONT (0)
-#define TICKS_RIGHT (-39)
+#define TICKS_RIGHT (39)
 #define TICKS_BACK (78)
 #define TICKS_LEFT (-TICKS_RIGHT)
 

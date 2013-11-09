@@ -46,13 +46,13 @@ void Motor::right(int motorSpeed)
 {
 	if (motorSpeed >= 0)
 	{
-		MotorControl.write(RIGHT_ANTI_CLOCKWISE);
+		MotorControl.write(RIGHT_CLOCKWISE);
 		MotorControl.write(limit_0_to_127(motorSpeed));
 	}
 	else
 	{
 		motorSpeed = - motorSpeed;
-		MotorControl.write(RIGHT_CLOCKWISE);
+		MotorControl.write(RIGHT_ANTI_CLOCKWISE);
 		MotorControl.write(limit_0_to_127(motorSpeed));
 	}
 }

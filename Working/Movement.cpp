@@ -77,17 +77,17 @@ void Movement::lineCorrection(int speed)
 		//If the line is within a margin of EDGE_SENSITIVITY
 		if (abs(linePos-3500)<EDGE_SENSITIVITY)
 		{
-			if (difference<-30)
+			if (difference<-CORRECTION_ANGLE)
 			{
 				motors->left(speed);
 				motors->right(speed-speed/4);
 			}
-			if (difference>30)
+			if (difference>CORRECTION_ANGLE)
 			{
 				motors->right(speed);
 				motors->left(speed-speed/4);
 			}
-			if (abs(difference)<30)
+			if (abs(difference)<CORRECTION_ANGLE)
 			{
 				motors->both(speed);
 			}
