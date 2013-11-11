@@ -18,6 +18,7 @@
 Motor motors;
 LineSensors ls;
 Movement mover(&motors, &ls);
+ColourSoftware colourSensor;
 
 MazeMap mazeMap;
 
@@ -71,14 +72,47 @@ void gridTest()
 	gridNav.findBlock();
 }
 
+void calibrateColour()
+{
+	Serial.println("Press to Calibrate Black");
+	delayTillButton();
+	colourSensor.calibrateBlack();
+	Serial.println("Press to Calibrate White");
+	delayTillButton();
+	colourSensor.calibrateWhite();
+	delayTillButton();
+}
+
+void colourTest()
+{
+	switch (colourSensor.senseColour() )
+	{
+		case ColourSoftware::red:
+			Serial.println("Red");
+			break;
+		case ColourSoftware::green:
+			Serial.println("Green");
+			break;
+		case ColourSoftware::blue:
+			Serial.println("Blue");
+			break;
+		default:
+			Serial.println("Unknown");
+			break;
+	}
+	delay(100);
+	delayTillButton();
+}
+
 void setup()
 {  
 	Serial.begin(9600);
 	claw.setup();
+	claw.open();
 	motors.setup();
-	claw.shut();
-/*	delayTillButton();
-	for (int ii = 0; ii <= 100; ii++)
+	colourSensor.setup();
+	calibrateColour();
+	/*for (int ii = 0; ii <= 100; ii++)
 	{
 		ls.calibrate();
 		delay(5);
@@ -90,12 +124,13 @@ void setup()
 
 void loop()
 {
-	delayTillButton();
+	colourTest();
+	/*delayTillButton();
 	mover.moveTicks(55);
 	motors.stop();
 	delayTillButton();
 	mover.oldMoveTicks(55, DEFAULT_SPEED);
-	motors.stop();
+	motors.stop();*/
 }
 
 float diffs=0;

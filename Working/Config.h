@@ -133,14 +133,16 @@
 #define COLOUR_UNUSED_PIN (255)
 
 //OldSoftwareSerial pins
-#define COLOUR_INPUT_PIN (2)
-#define COLOUR_OUTPUT_PIN (3)
+#define COLOUR_INPUT_PIN (10)
+#define COLOUR_OUTPUT_PIN (11)
 
 #define COLOUR_BAUD (4800)
 
 #define COLOUR_DELAY (200)
 
-#define COLOUR_LOOP_DELAY (100)
+#define COLOUR_LOOP_DELAY (50)
+
+#define COLOUR_ITERATIONS (10)
 
 /********************************************
  *  Movement

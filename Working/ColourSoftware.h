@@ -13,7 +13,7 @@
 class ColourSoftware
 {
 	public:
-		enum ColourType {red, grn, blu, undef};
+		enum ColourType {red, green, blue, undef};
 		
 		ColourSoftware() : colSer(COLOUR_INPUT_PIN, COLOUR_OUTPUT_PIN) {}
 		
@@ -44,6 +44,10 @@ class ColourSoftware
 		rgbColour whtRef;
 		
 		void correctReading();
+		
+		void waitForReading();
+		
+		rgbColour averageReadings();
 		
 		void reset();
 };
