@@ -1,112 +1,192 @@
-/*
-   Based on ColorPAL demo code for Arduino -
-     Source: http://learn.parallax.com/colorpal-arduino-demo
-     Author: Martin Heermance, with some assistance from Gordon McComb
-	 
-   ColorPAL Resources: http://classic.parallax.com/tabid/768/ProductID/617/Default.aspx
-		or http://www.parallax.com/product/28380
-*/
-
+//Source: http://forum.arduino.cc/index.php/topic,21206.0.html#6
 #include "Colour.h"
 
-Colour::Colour() {}
+//#define PRINT_RAW
+#define PRINT_PARSED
+#define MULTIPLE_READINGS
 
 void Colour::setup()
 {
 	reset();
-	ColourSensor.begin(COLOUR_BAUD);
-	ColourSensor.write("= (00 $ m) !");  // Command to read RGB colours, see product documentation
+	colSer.begin(4800);
+	colSer.print("= (00 $ m) !");
+	pinMode(COLOUR_OUTPUT_PIN, INPUT);
 }
 
 Colour::ColourType Colour::senseColour()
 {
-	while (!readData())
-		delay(COLOUR_LOOP_DELAY);
-//	correctReading();
-/*	Serial.print("R: ");//DEBUG
-	Serial.print(reading.red);//DEBUG
-	Serial.print("\tG: ");//DEBUG
-	Serial.print(reading.grn);//DEBUG
-	Serial.print("\tB: ");//DEBUG
-	Serial.print(reading.blu);//DEBUG
-	Serial.println();//DEBUG*/
-	if (reading.red > reading.grn + reading.blu)
+#ifdef MULTIPLE_READINGS
+	reading = averageReadings();
+	
+	#ifdef PRINT_PARSED
+		Serial.print("Average - R: ");
+		Serial.print(reading.red);
+		Serial.print("\tG: ");
+		Serial.print(reading.grn);
+		Serial.print("\tB: ");
+		Serial.print(reading.blu);
+		Serial.println();
+	#endif
+	
+	correctReading();
+#else
+	waitForReading()
+	correctReading();
+#endif
+	
+	#ifdef PRINT_PARSED
+		Serial.print("Corrected - R: ");
+		Serial.print(reading.red);
+		Serial.print("\tG: ");
+		Serial.print(reading.grn);
+		Serial.print("\tB: ");
+		Serial.print(reading.blu);
+		Serial.println();
+	#endif
+	
+	if ((reading.red > reading.grn) && (reading.red > reading.blu))
 		return red;
-	else if (reading.grn > reading.red + reading.blu)
-		return grn;
-	else if (reading.blu > reading.red + reading.grn)
-		return blu;
+	else if ((reading.grn > reading.red) && (reading.grn > reading.blu))
+		return green;
+	else if ((reading.blu > reading.red) && (reading.blu > reading.grn))
+		return blue;
 	else
 		return undef;
 }
 
 bool Colour::readData()
 {
-	char buffer[32];
-	if (ColourSensor.available() > 0)
+	char buffer[9];
+	buffer[0] = colSer.read();
+	if (buffer[0] == '$')
 	{
-		//Wait for a $ character, then read three 3 digit hex numbers
-		buffer[0] = ColourSensor.read();
-		if (buffer[0] == '$')
+		for (int ii = 0; ii < 9; ++ii)
 		{
-			for(int ii = 0; ii < 9; ++ii)
-			{
-				while (ColourSensor.available() == 0);  //Wait for next input character
-				buffer[ii] = ColourSensor.read();
-				if (buffer[ii] == '$')  //Return early if $ character encountered
-					return false;
-			}
-			sscanf (buffer, "%3x%3x%3x", &reading.red, &reading.grn, &reading.blu);
-			Serial.print("R: ");//DEBUG
-			for (int ii = 0; ii < 3; ++ii)//DEBUG
-				Serial.print(buffer[ii]);//DEBUG
-			Serial.print("\tG: ");//DEBUG
-			for (int ii = 3; ii < 6; ++ii)//DEBUG
-				Serial.print(buffer[ii]);//DEBUG
-			Serial.print("\tB: ");//DEBUG
-			for (int ii = 6; ii < 9; ++ii)//DEBUG
-				Serial.print(buffer[ii]);//DEBUG
-			Serial.println();//DEBUG			
-			return true;
+			buffer[ii] = colSer.read();
+			if (buffer[ii] == '$')  //Return early if $ character encountered
+				return false;
 		}
+		sscanf (buffer, "%3x%3x%3x", &reading.red, &reading.grn, &reading.blu);
+		
+		#ifdef PRINT_RAW
+			Serial.print("Raw - R: ");
+			for (int ii = 0; ii < 3; ++ii)
+				Serial.print(buffer[ii]);
+			Serial.print("\tG: ");
+			for (int ii = 3; ii < 6; ++ii)
+				Serial.print(buffer[ii]);
+			Serial.print("\tB: ");
+			for (int ii = 6; ii < 9; ++ii)
+				Serial.print(buffer[ii]);
+			Serial.println();
+		#endif
+		
+		return true;
 	}
 	return false;
 }
 
 void Colour::calibrateBlack()
 {
-	while (!readData())
-		delay(COLOUR_LOOP_DELAY);
+#ifdef MULTIPLE_READINGS
+	blkRef = averageReadings();
+	
+	#ifdef PRINT_PARSED
+		Serial.print("Average - R: ");
+		Serial.print(blkRef.red);
+		Serial.print("\tG: ");
+		Serial.print(blkRef.grn);
+		Serial.print("\tB: ");
+		Serial.print(blkRef.blu);
+		Serial.println();
+	#endif
+#else
+	waitForReading()
 	blkRef = reading;
+#endif
 }
 
 void Colour::calibrateWhite()
 {
-	while (!readData())
-		delay(COLOUR_LOOP_DELAY);
+#ifdef MULTIPLE_READINGS
+	whtRef = averageReadings();
+	
+	#ifdef PRINT_PARSED
+		Serial.print("Average - R: ");
+		Serial.print(whtRef.red);
+		Serial.print("\tG: ");
+		Serial.print(whtRef.grn);
+		Serial.print("\tB: ");
+		Serial.print(whtRef.blu);
+		Serial.println();
+	#endif
+#else
+	waitForReading()
 	whtRef = reading;
+#endif
 }
 
-//Follows following example formula stated in product documentation: Cr = 255 * (Ur – Kr) / (Wr – Kr)
-//C: Corrected, U: Uncorrected, K: Black Reference, W: White Reference, r: Red
 void Colour::correctReading()
-{
-	reading.red = 255 * (int) ((float) (reading.red - blkRef.red) / (float) (whtRef.red - blkRef.red) + 0.5);
-	reading.grn = 255 * (int) ((float) (reading.grn - blkRef.grn) / (float) (whtRef.grn - blkRef.grn) + 0.5);
-	reading.blu = 255 * (int) ((float) (reading.blu - blkRef.blu) / (float) (whtRef.blu - blkRef.blu) + 0.5);
+{	
+	reading.red = round(255.0 * (float) (reading.red - blkRef.red) / (float) (whtRef.red - blkRef.red));
+	reading.grn = round(255.0 * (float) (reading.grn - blkRef.grn) / (float) (whtRef.grn - blkRef.grn));
+	reading.blu = round(255.0 * (float) (reading.blu - blkRef.blu) / (float) (whtRef.blu - blkRef.blu));
 }
 
-// Reset ColorPAL; see ColorPAL documentation for sequence
-void Colour::reset()
+void Colour::waitForReading()
 {
-	delay(COLOUR_DELAY);
-	pinMode(ColourSensor, OUTPUT);
-	digitalWrite(ColourSensor, LOW);
-	pinMode(ColourSensor, INPUT);
-	while (digitalRead(ColourSensor) != HIGH);
-	pinMode(ColourSensor, OUTPUT);
-	digitalWrite(ColourSensor, LOW);
-	delay(80);
-	pinMode(ColourSensor, INPUT);
-	delay(COLOUR_DELAY);
+	while (!readData())
+	{
+		delay(COLOUR_LOOP_DELAY);
+		delay(5);	//Needed or hang occurs.  Strangely, cannot just add to above Config delay.
+	}
 }
+
+Colour::rgbColour Colour::averageReadings()
+{	
+	rgbColour temp;
+	float totalRed = 0.0, totalGreen = 0.0, totalBlue = 0.0;
+	for (int ii = 0; ii < COLOUR_ITERATIONS; ++ii)
+	{
+		waitForReading();
+		totalRed += (float)reading.red;
+		totalGreen += (float)reading.grn;
+		totalBlue += (float)reading.blu;
+	}
+	temp.red = (int)(totalRed/((float)COLOUR_ITERATIONS) + 0.5);
+	temp.grn = (int)(totalGreen/((float)COLOUR_ITERATIONS) + 0.5);
+	temp.blu = (int)(totalBlue/((float)COLOUR_ITERATIONS) + 0.5);
+	
+	return temp;
+}
+
+void Colour::reset() 
+{ 
+	pinMode(COLOUR_INPUT_PIN, INPUT);
+	pinMode(COLOUR_OUTPUT_PIN, INPUT);
+	digitalWrite(COLOUR_INPUT_PIN, HIGH); // Enable the pull-up resistor
+	digitalWrite(COLOUR_OUTPUT_PIN, HIGH); // Enable the pull-up resistor
+	
+	pinMode(COLOUR_INPUT_PIN, OUTPUT);
+	pinMode(COLOUR_OUTPUT_PIN, OUTPUT);
+	digitalWrite(COLOUR_INPUT_PIN, LOW);
+	digitalWrite(COLOUR_OUTPUT_PIN, LOW);
+	
+	pinMode(COLOUR_INPUT_PIN,INPUT);
+	pinMode(COLOUR_OUTPUT_PIN,INPUT);
+	
+	while ((digitalRead(COLOUR_INPUT_PIN) != HIGH) || (digitalRead(COLOUR_OUTPUT_PIN) != HIGH))
+	{
+		delay(50);
+	}
+	
+	pinMode(COLOUR_INPUT_PIN, OUTPUT);
+	pinMode(COLOUR_OUTPUT_PIN, OUTPUT);
+	digitalWrite(COLOUR_INPUT_PIN, LOW);
+	digitalWrite(COLOUR_OUTPUT_PIN, LOW);
+	delay(80);
+	
+	pinMode(COLOUR_INPUT_PIN, INPUT);
+	pinMode(COLOUR_OUTPUT_PIN, OUTPUT);
+	delay(COLOUR_DELAY);
+} 

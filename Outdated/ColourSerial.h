@@ -1,5 +1,5 @@
-#ifndef ColourSoftware_h
-#define ColourSoftware_h
+#ifndef Colour_h
+#define Colour_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
   #include "Arduino.h"
@@ -8,18 +8,18 @@
 #endif
 
 #include "Config.h"
-#include <OldSoftwareSerial.h>
+#include <Serial.h>
 
-class ColourSoftware
+class ColourSerial
 {
 	public:
-		enum ColourType {red, green, blue, undef};
+		enum ColourType {red, grn, blu, undef};
 		
-		ColourSoftware() : colSer(COLOUR_INPUT_PIN, COLOUR_OUTPUT_PIN) {}
+		ColourSerial();
 		
 		void setup();
 		
-		ColourSoftware::ColourType senseColour();
+		ColourSerial::ColourType senseColour();
 		
 		bool readData();
 		
@@ -28,7 +28,9 @@ class ColourSoftware
 		void calibrateWhite();
 		
 	private:
-		OldSoftwareSerial colSer;
+		//Set up two software serials on the same pin
+		//SoftwareSerial serIn;
+		//SoftwareSerial serOut;
 		
 		//Reading in format {red, blue, green}
 		//Change to struct later
@@ -44,10 +46,6 @@ class ColourSoftware
 		rgbColour whtRef;
 		
 		void correctReading();
-		
-		void waitForReading();
-		
-		rgbColour averageReadings();
 		
 		void reset();
 };

@@ -11,16 +11,12 @@
 #include "GridImports.h"
 #include "GridNav.h"
 #include "Routing.h"
-#include "MazeNav.h"
 #include "Colour.h"
-#include "ColourSoftware.h"
 
 Motor motors;
 LineSensors ls;
 Movement mover(&motors, &ls);
-ColourSoftware colourSensor;
-
-MazeMap mazeMap;
+Colour colourSensor;
 
 IrValues irInMm;
 
@@ -39,7 +35,6 @@ IrSensors irs = {
 Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
 
 GridNav gridNav(&motors, &mover, &irs, &claw);
-MazeNav mazeNav(&motors, &mover, &irs);
 
 void delayTillButton()
 {
@@ -87,13 +82,13 @@ void colourTest()
 {
 	switch (colourSensor.senseColour() )
 	{
-		case ColourSoftware::red:
+		case Colour::red:
 			Serial.println("Red");
 			break;
-		case ColourSoftware::green:
+		case Colour::green:
 			Serial.println("Green");
 			break;
-		case ColourSoftware::blue:
+		case Colour::blue:
 			Serial.println("Blue");
 			break;
 		default:
@@ -118,8 +113,7 @@ void setup()
 		delay(5);
 	}
 	delayTillButton();
-	gridTest();
-	mazeNav.firstNavigate();*/
+	gridTest();*/
 }
 
 void loop()
