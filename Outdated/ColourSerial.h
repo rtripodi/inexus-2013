@@ -13,7 +13,7 @@
 class ColourSerial
 {
 	public:
-		enum ColourType {red, grn, blu, undef};
+		enum ColourType {red, green, blue, undef};
 		
 		ColourSerial();
 		
@@ -46,6 +46,10 @@ class ColourSerial
 		rgbColour whtRef;
 		
 		void correctReading();
+		
+		void waitForReading();
+		
+		rgbColour averageReadings();
 		
 		void reset();
 };

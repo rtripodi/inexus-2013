@@ -173,6 +173,8 @@
 #define TICKS_BACK (78)
 #define TICKS_LEFT (-TICKS_RIGHT)
 
+#define TICKS_CORRECTION_FACTOR (0.02)
+
 /********************************************
  *  GridMap
  ********************************************/
@@ -220,7 +222,7 @@
 #define CENTRE_DIST (300)
 #define BLOCK_ACT_DIST (250)
 #define BLOCK_TOLERANCE (50)
-#define BLOCK_STOP (80 - 30)
+#define BLOCK_STOP (80)
 
 /********************************************
  *  MazeNav

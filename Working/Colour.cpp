@@ -30,7 +30,7 @@ Colour::ColourType Colour::senseColour()
 	
 	correctReading();
 #else
-	waitForReading()
+	waitForReading();
 	correctReading();
 #endif
 	
@@ -44,11 +44,13 @@ Colour::ColourType Colour::senseColour()
 		Serial.println();
 	#endif
 	
-	if ((reading.red > reading.grn) && (reading.red > reading.blu))
+	float totalRGB = (float)(abs(reading.red) + abs(reading.grn) + abs(reading.blu));
+	
+	if ( ((float)reading.red / totalRGB) > 0.4)
 		return red;
-	else if ((reading.grn > reading.red) && (reading.grn > reading.blu))
+	else if ( ((float)reading.grn / totalRGB) > 0.4)
 		return green;
-	else if ((reading.blu > reading.red) && (reading.blu > reading.grn))
+	else if ( ((float)reading.blu / totalRGB) > 0.4)
 		return blue;
 	else
 		return undef;
@@ -101,7 +103,7 @@ void Colour::calibrateBlack()
 		Serial.println();
 	#endif
 #else
-	waitForReading()
+	waitForReading();
 	blkRef = reading;
 #endif
 }
@@ -121,7 +123,7 @@ void Colour::calibrateWhite()
 		Serial.println();
 	#endif
 #else
-	waitForReading()
+	waitForReading();
 	whtRef = reading;
 #endif
 }

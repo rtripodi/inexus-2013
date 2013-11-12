@@ -8,6 +8,7 @@ void Motor::setup()
 {
 	MotorControl.begin(MOTOR_BAUD_RATE);
 	MotorControl.write(MOTOR_ESTABLISH_BAUD);
+	stop();
 }
 
 //Adjust the speed of both motors

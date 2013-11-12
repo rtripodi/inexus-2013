@@ -78,9 +78,9 @@ void calibrateColour()
 	delayTillButton();
 }
 
-void colourTest()
+void printColour(Colour::ColourType inColour)
 {
-	switch (colourSensor.senseColour() )
+	switch (inColour)
 	{
 		case Colour::red:
 			Serial.println("Red");
@@ -95,8 +95,28 @@ void colourTest()
 			Serial.println("Unknown");
 			break;
 	}
+}
+
+void grabBlock()
+{
+	claw.open();
+	motors.both(80);
+	while (frntIr.getDist() > BLOCK_STOP);
+	motors.stop();
+	
+	printColour( colourSensor.senseColour() );
+	
+	mover.moveTicks(-100);
+	mover.rotateTicks(TICKS_BACK);
+}
+
+void testMovement()
+{
+	mover.moveTicks(400);
+	motors.stop();
 	delay(100);
-	delayTillButton();
+	mover.moveTicks(-400);
+	motors.stop();
 }
 
 void setup()
@@ -118,13 +138,8 @@ void setup()
 
 void loop()
 {
-	colourTest();
-	/*delayTillButton();
-	mover.moveTicks(55);
-	motors.stop();
 	delayTillButton();
-	mover.oldMoveTicks(55, DEFAULT_SPEED);
-	motors.stop();*/
+	grabBlock();
 }
 
 float diffs=0;

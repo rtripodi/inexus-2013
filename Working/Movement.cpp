@@ -1,7 +1,7 @@
 #include "Movement.h"
 
-#define SIMULATION
-#define DEBUG
+//#define SIMULATION
+//#define DEBUG
 
 Movement::Movement(Motor * inMotors, LineSensors * inSensors)
 {
@@ -192,8 +192,8 @@ void Movement::moveTicks(int ticks, int speed)
 	//adjust speed and ticks if we're going backwards
 	if (ticks < 0)
 	{ 
-		speed = - speed; 
-		ticks = - ticks; 
+		speed = - speed;
+		ticks = - ticks;
 	}
 	
 	//Initialise variables to hold ticks and speed
@@ -208,7 +208,7 @@ void Movement::moveTicks(int ticks, int speed)
 	while ( (abs(leftTicks) < abs(ticks) ) || (abs(rightTicks) < abs(ticks) ) )
 	{
 		//adjust motor speed to compensate for error
-		int error = tickError();			//TODO: Investigate effect
+		int error = tickError();
 		#ifdef DEBUG
 			Serial.print("\t\tError: ");
 			Serial.print(error);
@@ -218,7 +218,7 @@ void Movement::moveTicks(int ticks, int speed)
 			#ifdef DEBUG
 				Serial.println("\tSlowing left");
 			#endif
-			leftSpeed -= (int)(speed*0.02 + 0.5);
+			leftSpeed -= round(speed*TICKS_CORRECTION_FACTOR);
 			rightSpeed = speed;
 		}
 		else if (error < 0)
@@ -227,7 +227,7 @@ void Movement::moveTicks(int ticks, int speed)
 				Serial.println("\tSlowing right");
 			#endif
 			leftSpeed = speed;
-			rightSpeed -= (int)(speed*0.02 + 0.5);
+			rightSpeed -= round(speed*TICKS_CORRECTION_FACTOR);
 		}
 		else
 		{

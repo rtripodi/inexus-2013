@@ -9,6 +9,10 @@
 
 #include "ColourSerial.h"
 
+//#define PRINT_RAW
+#define PRINT_PARSED
+#define MULTIPLE_READINGS
+
 ColourSerial::ColourSerial() {}
 
 void ColourSerial::setup()
@@ -20,22 +24,43 @@ void ColourSerial::setup()
 
 ColourSerial::ColourType ColourSerial::senseColour()
 {
-	while (!readData())
-		delay(COLOUR_LOOP_DELAY);
-//	correctReading();
-/*	Serial.print("R: ");//DEBUG
-	Serial.print(reading.red);//DEBUG
-	Serial.print("\tG: ");//DEBUG
-	Serial.print(reading.grn);//DEBUG
-	Serial.print("\tB: ");//DEBUG
-	Serial.print(reading.blu);//DEBUG
-	Serial.println();//DEBUG*/
-	if (reading.red > reading.grn + reading.blu)
+#ifdef MULTIPLE_READINGS
+	reading = averageReadings();
+	
+	#ifdef PRINT_PARSED
+		Serial.print("Average - R: ");
+		Serial.print(reading.red);
+		Serial.print("\tG: ");
+		Serial.print(reading.grn);
+		Serial.print("\tB: ");
+		Serial.print(reading.blu);
+		Serial.println();
+	#endif
+	
+	correctReading();
+#else
+	waitForReading();
+	correctReading();
+#endif
+	
+	#ifdef PRINT_PARSED
+		Serial.print("Corrected - R: ");
+		Serial.print(reading.red);
+		Serial.print("\tG: ");
+		Serial.print(reading.grn);
+		Serial.print("\tB: ");
+		Serial.print(reading.blu);
+		Serial.println();
+	#endif
+	
+	float totalRGB = (float)(abs(reading.red) + abs(reading.grn) + abs(reading.blu));
+	
+	if ( ((float)reading.red / totalRGB) > 0.4)
 		return red;
-	else if (reading.grn > reading.red + reading.blu)
-		return grn;
-	else if (reading.blu > reading.red + reading.grn)
-		return blu;
+	else if ( ((float)reading.grn / totalRGB) > 0.4)
+		return green;
+	else if ( ((float)reading.blu / totalRGB) > 0.4)
+		return blue;
 	else
 		return undef;
 }
@@ -57,16 +82,20 @@ bool ColourSerial::readData()
 					return false;
 			}
 			sscanf (buffer, "%3x%3x%3x", &reading.red, &reading.grn, &reading.blu);
-			Serial.print("R: ");//DEBUG
-			for (int ii = 0; ii < 3; ++ii)//DEBUG
-				Serial.print(buffer[ii]);//DEBUG
-			Serial.print("\tG: ");//DEBUG
-			for (int ii = 3; ii < 6; ++ii)//DEBUG
-				Serial.print(buffer[ii]);//DEBUG
-			Serial.print("\tB: ");//DEBUG
-			for (int ii = 6; ii < 9; ++ii)//DEBUG
-				Serial.print(buffer[ii]);//DEBUG
-			Serial.println();//DEBUG			
+			
+			#ifdef PRINT_RAW
+				Serial.print("Raw - R: ");
+				for (int ii = 0; ii < 3; ++ii)
+					Serial.print(buffer[ii]);
+				Serial.print("\tG: ");
+				for (int ii = 3; ii < 6; ++ii)
+					Serial.print(buffer[ii]);
+				Serial.print("\tB: ");
+				for (int ii = 6; ii < 9; ++ii)
+					Serial.print(buffer[ii]);
+				Serial.println();
+			#endif
+			
 			return true;
 		}
 	}
@@ -75,25 +104,78 @@ bool ColourSerial::readData()
 
 void ColourSerial::calibrateBlack()
 {
-	while (!readData())
-		delay(COLOUR_LOOP_DELAY);
+#ifdef MULTIPLE_READINGS
+	blkRef = averageReadings();
+	
+	#ifdef PRINT_PARSED
+		Serial.print("Average - R: ");
+		Serial.print(blkRef.red);
+		Serial.print("\tG: ");
+		Serial.print(blkRef.grn);
+		Serial.print("\tB: ");
+		Serial.print(blkRef.blu);
+		Serial.println();
+	#endif
+#else
+	waitForReading();
 	blkRef = reading;
+#endif
 }
 
 void ColourSerial::calibrateWhite()
 {
-	while (!readData())
-		delay(COLOUR_LOOP_DELAY);
+#ifdef MULTIPLE_READINGS
+	whtRef = averageReadings();
+	
+	#ifdef PRINT_PARSED
+		Serial.print("Average - R: ");
+		Serial.print(whtRef.red);
+		Serial.print("\tG: ");
+		Serial.print(whtRef.grn);
+		Serial.print("\tB: ");
+		Serial.print(whtRef.blu);
+		Serial.println();
+	#endif
+#else
+	waitForReading();
 	whtRef = reading;
+#endif
 }
 
 //Follows following example formula stated in product documentation: Cr = 255 * (Ur – Kr) / (Wr – Kr)
 //C: Corrected, U: Uncorrected, K: Black Reference, W: White Reference, r: Red
 void ColourSerial::correctReading()
 {
-	reading.red = 255 * (int) ((float) (reading.red - blkRef.red) / (float) (whtRef.red - blkRef.red) + 0.5);
-	reading.grn = 255 * (int) ((float) (reading.grn - blkRef.grn) / (float) (whtRef.grn - blkRef.grn) + 0.5);
-	reading.blu = 255 * (int) ((float) (reading.blu - blkRef.blu) / (float) (whtRef.blu - blkRef.blu) + 0.5);
+	reading.red = round(255.0 * (float) (reading.red - blkRef.red) / (float) (whtRef.red - blkRef.red));
+	reading.grn = round(255.0 * (float) (reading.grn - blkRef.grn) / (float) (whtRef.grn - blkRef.grn));
+	reading.blu = round(255.0 * (float) (reading.blu - blkRef.blu) / (float) (whtRef.blu - blkRef.blu));
+}
+
+void ColourSerial::waitForReading()
+{
+	while (!readData())
+	{
+		delay(COLOUR_LOOP_DELAY);
+		delay(5);	//Needed or hang occurs.  Strangely, cannot just add to above Config delay.
+	}
+}
+
+ColourSerial::rgbColour ColourSerial::averageReadings()
+{	
+	rgbColour temp;
+	float totalRed = 0.0, totalGreen = 0.0, totalBlue = 0.0;
+	for (int ii = 0; ii < COLOUR_ITERATIONS; ++ii)
+	{
+		waitForReading();
+		totalRed += (float)reading.red;
+		totalGreen += (float)reading.grn;
+		totalBlue += (float)reading.blu;
+	}
+	temp.red = (int)(totalRed/((float)COLOUR_ITERATIONS) + 0.5);
+	temp.grn = (int)(totalGreen/((float)COLOUR_ITERATIONS) + 0.5);
+	temp.blu = (int)(totalBlue/((float)COLOUR_ITERATIONS) + 0.5);
+	
+	return temp;
 }
 
 // Reset ColorPAL; see ColorPAL documentation for sequence
