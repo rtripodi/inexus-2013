@@ -224,6 +224,8 @@
 #define BLOCK_TOLERANCE (50)
 #define BLOCK_STOP (80)
 
+#define TICKS_AWAY_FROM_BLOCK (70)
+
 /********************************************
  *  MazeNav
  ********************************************/

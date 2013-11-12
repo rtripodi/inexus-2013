@@ -3,21 +3,27 @@
 #define SIMULATION
 #define DEBUG
 
-GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw)
+GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw, Colour *inColour)
 {
 	motors = inMotor;
 	mover = inMovement;
 	irs = inIrs;
 	claw = inClaw;
+	colourSensor = inColour;
 	gridMap = GridMap();
 	router = Routing(&gridMap);
 	
 	gridMap.setFlag(Point(GRID_MAX_X, 0), SEEN);
+	attempt = 0;
 	
 	#ifdef SIMULATION
 		gridMap.setFlag(Point(2, 2), OCCUPIED);
 		gridMap.setFlag(Point(3, 3), OCCUPIED);
 		gridMap.setFlag(Point(4, 1), OCCUPIED);
+		
+		gridMap.setFlag(Point(2, 2), RED);
+		gridMap.setFlag(Point(3, 3), GREEN);
+		gridMap.setFlag(Point(4, 1), BLUE);
 	#endif
 }
 
@@ -100,16 +106,29 @@ void GridNav::moveToFrontPoint()
 	currPoint = adjacentPoint(currPoint, facing, FRONT);
 }
 
+void GridNav::moveToPreviousPoint()
+{
+	mover->moveTicks(-TICKS_AWAY_FROM_BLOCK);
+	mover->rotateTicks(TICKS_BACK);
+	facing = findNewFacing(facing, BACK);
+	moveToFrontPoint();
+}
+
 //Sets the OCCUPIED flag for the point in the inputted relative direction and attempts to grab the block
 //If the grab is unsuccessful, the robot will return to the point at which it sensed it
 bool GridNav::obtainBlock(RelDir relDir)
 {
+	CarDir prevFacing = facing;
+	Point prevPoint = currPoint;
+	
 	bool isSuccess = true;
 	bool reachedCross = false;
+	Colour::ColourType blockColour;
 	claw->open();
 	mover->rotateDirection(relDir, DEFAULT_SPEED);
 	motors->stop();
 	facing = findNewFacing(facing, relDir);
+	Point blockPoint = adjacentPoint(currPoint, facing, FRONT);
 	irInMm.frnt = (irs->frnt)->getDist();
 	while (irInMm.frnt > BLOCK_STOP && !reachedCross)
 	{
@@ -118,7 +137,67 @@ bool GridNav::obtainBlock(RelDir relDir)
 	}
 	motors->stop();
 	
-	//TODO: INSERT COLOUR CHECK HERE
+#ifndef SIMULATION
+	blockColour = colourSensor->senseColour();
+	
+	// If colour was undetermined, use process of elimination if possible
+	if (blockColour == Colour::undef)
+	{
+		if ( gridMap.contains(gridMap.getGreenPoint()) && gridMap.contains(gridMap.getBluePoint()) )
+			blockColour = Colour::red;
+		if ( gridMap.contains(gridMap.getRedPoint()) && gridMap.contains(gridMap.getBluePoint()) )
+			blockColour = Colour::green;
+		if ( gridMap.contains(gridMap.getRedPoint()) && gridMap.contains(gridMap.getGreenPoint()) )
+			blockColour = Colour::blue;
+	}
+#else
+if (gridMap.isFlagSet(blockPoint, RED))
+	blockColour = Colour::red;
+else if (gridMap.isFlagSet(blockPoint, GREEN))
+	blockColour = Colour::green;
+else if (gridMap.isFlagSet(blockPoint, BLUE))
+	blockColour = Colour::blue;
+#endif
+	
+	switch (blockColour)
+	{
+		case Colour::red:
+			gridMap.setFlag(blockPoint, RED);
+			gridMap.setRedPoint(blockPoint);
+			if (attempt != 1)
+			{
+				currPoint = blockPoint;
+				moveToPreviousPoint();
+				return false;
+			}
+			break;
+		case Colour::green:
+			gridMap.setFlag(blockPoint, GREEN);
+			gridMap.setGreenPoint(blockPoint);
+			if (attempt != 2)
+			{
+				currPoint = blockPoint;
+				moveToPreviousPoint();
+				return false;
+			}
+			break;
+		case Colour::blue:
+			gridMap.setFlag(blockPoint, BLUE);
+			gridMap.setBluePoint(blockPoint);
+			if (attempt != 3)
+			{
+				currPoint = blockPoint;
+				moveToPreviousPoint();
+				return false;
+			}
+			break;
+		default:
+			currPoint = blockPoint;
+			moveToPreviousPoint();
+			return false;
+			break;
+	}
+	
 	
 	claw->close();
 #ifndef SIMULATION
@@ -525,24 +604,31 @@ void GridNav::findBlock()
 	irInMm.rght = 1000;
 	irInMm.bck = 1000;
 	irInMm.lft = 1000;
-
+	
+	attempt++;
 	currPoint = Point(GRID_MAX_X, 0);
 	Point entrPoint = currPoint;
-
-	printGrid();
-	
 	haveBlock = false;
 	facing = WEST;
+	
+	printGrid();
 	
 	Point invalidPt = Point(-1,-1);
 	Point closestOccupied = closestBlock();
 	
-#ifndef SIMULATION
-	if (closestOccupied != invalidPt)
+	switch (attempt)
 	{
-		moveToBlock(closestOccupied);
+		case 2:
+			if ( gridMap.contains(gridMap.getGreenPoint()) )
+				moveToBlock( gridMap.getGreenPoint() );
+			break;
+		case 3:
+			if ( gridMap.contains(gridMap.getBluePoint()) )
+				moveToBlock( gridMap.getBluePoint() );
+			break;
+		default: break;
 	}
-#endif
+
 	while (!haveBlock)
 	{
 		checkForBlocks();

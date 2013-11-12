@@ -9,6 +9,7 @@
 
 #include "Config.h"
 #include "Claw.h"
+#include "Colour.h"
 #include "IR.h"
 #include "Movement.h"
 #include "Routing.h"
@@ -21,8 +22,9 @@ class GridNav
 		Movement *mover;
 		IrSensors *irs;
 		Claw *claw;
+		Colour *colourSensor;
 		
-		GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw);
+		GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw, Colour *inColour);
 		
 		void findBlock();
 		
@@ -32,6 +34,7 @@ class GridNav
 		GridMap gridMap;
 		Routing router;
 		Path path;
+		unsigned char attempt;
 		
 		//Current point on grid
 		Point currPoint;
@@ -57,6 +60,8 @@ class GridNav
 		
 		//TODO: Return point moved to, then currPoint will be made equal to this 
 		void moveToFrontPoint();
+		
+		void moveToPreviousPoint();
 		
 		//Sets the OCCUPIED flag for the point in the inputted relative direction and attempts to grab the block
 		//If the grab is unsuccessful, the robot will return to the point at which it sensed it

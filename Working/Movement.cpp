@@ -1,6 +1,6 @@
 #include "Movement.h"
 
-//#define SIMULATION
+#define SIMULATION
 //#define DEBUG
 
 Movement::Movement(Motor * inMotors, LineSensors * inSensors)
@@ -187,6 +187,7 @@ int Movement::tickError()
 //WARNING, ERROR, TODO: This is untested, also probably doesn't work going backwards
 void Movement::moveTicks(int ticks, int speed)
 {
+#ifndef SIMULATION
 	resetEncoders();
 	
 	//adjust speed and ticks if we're going backwards
@@ -252,6 +253,7 @@ void Movement::moveTicks(int ticks, int speed)
 			Serial.print(rightTicks);
 		#endif
 	}
+#endif
 }
 
 //Converts length into ticks and calls moveTicks function
@@ -293,7 +295,7 @@ void Movement::rotateDirection(RelDir relDir, int speed)
 
 void Movement::rotateTicks(int ticks, int speed)
 {
-Serial.println(ticks);
+#ifndef SIMULATION
 	//Don't do anything if a rotation of zero is inputted
 	if (ticks != 0)
 	{
@@ -343,6 +345,7 @@ Serial.println(ticks);
 		motors->stop();
 		resetEncoders();
 	}
+#endif
 }
 
 // moveTicks moves the number of ticks given.

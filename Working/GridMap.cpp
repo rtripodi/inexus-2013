@@ -9,6 +9,9 @@ GridMap::GridMap()
 			status[x][y] = 0x00;
 		}
 	}
+	redPoint = Point(-1, -1);
+	greenPoint = Point(-1, -1);
+	bluePoint = Point(-1, -1);
 }
 
 //Change desired flag(s) to 1 for passed point
@@ -54,9 +57,45 @@ unsigned char GridMap::getFlags(Point point)
 	return status[point.x][point.y];
 }
 
+Point GridMap::getRedPoint()
+{
+	return redPoint;
+}
+
+Point GridMap::getBluePoint()
+{
+	return bluePoint;
+}
+
+Point GridMap::getGreenPoint()
+{
+	return greenPoint;
+}
+
+void GridMap::setRedPoint(Point inPoint)
+{
+	redPoint = inPoint;
+}
+
+void GridMap::setBluePoint(Point inPoint)
+{
+	bluePoint = inPoint;
+}
+
+void GridMap::setGreenPoint(Point inPoint)
+{
+	greenPoint = inPoint;
+}
+
 char GridMap::getFlagsAsChar(Point point)
 {
-	if (isFlagSet(point, OCCUPIED))
+	if (isFlagSet(point, RED))
+		return 'R';
+	else if (isFlagSet(point, GREEN))
+		return 'G';
+	else if (isFlagSet(point, BLUE))
+		return 'B';
+	else if (isFlagSet(point, OCCUPIED))
 		return 'O';
 	else if (isFlagSet(point, VISITED))
 		return 'V';

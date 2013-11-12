@@ -34,7 +34,7 @@ IrSensors irs = {
 
 Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
 
-GridNav gridNav(&motors, &mover, &irs, &claw);
+GridNav gridNav(&motors, &mover, &irs, &claw, &colourSensor);
 
 void delayTillButton()
 {
@@ -125,21 +125,21 @@ void setup()
 	claw.setup();
 	claw.open();
 	motors.setup();
-	colourSensor.setup();
-	calibrateColour();
+	//colourSensor.setup();
+	//calibrateColour();
 	/*for (int ii = 0; ii <= 100; ii++)
 	{
 		ls.calibrate();
 		delay(5);
 	}
-	delayTillButton();
-	gridTest();*/
+	delayTillButton();*/
+	gridTest();
 }
 
 void loop()
 {
-	delayTillButton();
-	grabBlock();
+	/*delayTillButton();
+	grabBlock();*/
 }
 
 float diffs=0;

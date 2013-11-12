@@ -48,8 +48,18 @@ class GridMap : public Maze
 		//DEBUG: Returns flags for given point as char for printing
 		char getFlagsAsChar(Point point);
 		
+		Point getRedPoint();
+		Point getGreenPoint();
+		Point getBluePoint();
+		
+		void setRedPoint(Point inPoint);
+		void setGreenPoint(Point inPoint);
+		void setBluePoint(Point inPoint);
+		
 	private:
 		unsigned char status[GRID_MAX_X + 1][GRID_MAX_Y + 1];
+		
+		Point redPoint, greenPoint, bluePoint;
 };
 
 #endif
