@@ -25,6 +25,8 @@ IR rghtIr = IR(IR_RIGHT_PIN, IR::right);
 IR bckIr = IR(IR_BACK_PIN, IR::back);
 IR lftIr = IR(IR_LEFT_PIN, IR::left);
 
+int ticks;
+
 IrSensors irs = {
 	&frntIr,
 	&rghtIr,
@@ -100,17 +102,20 @@ void printColour(Colour::ColourType inColour)
 void grabBlock()
 {
 	claw.open();
-	motors.both(80);
-	while (frntIr.getDist() > BLOCK_STOP);
+	
+	bool reachedCross = false;
+	while (frntIr.getDist() > ticks && !reachedCross)
+	{
+		reachedCross = mover.moveForward(DEFAULT_SPEED);
+	}
 	motors.stop();
 	
 	printColour( colourSensor.senseColour() );
 	
-	mover.moveTicks(-100);
-	mover.rotateTicks(TICKS_BACK);
+	mover.moveTillPoint(-DEFAULT_SPEED);
 }
 
-void testMovement()
+void testStraightMovement()
 {
 	mover.moveTicks(400);
 	motors.stop();
@@ -119,15 +124,31 @@ void testMovement()
 	motors.stop();
 }
 
+void testRotate()
+{
+	delayTillButton();
+	pinMode(OPENDAY_MODE_SWITCH, INPUT);
+	pinMode(OPENDAY_IR_SWITCH, INPUT);
+	digitalWrite(OPENDAY_MODE_SWITCH, HIGH);
+	digitalWrite(OPENDAY_IR_SWITCH, HIGH);
+	if (digitalRead(OPENDAY_MODE_SWITCH))
+		ticks--;
+	if (digitalRead(OPENDAY_IR_SWITCH))
+		ticks++;
+	Serial.println(ticks);
+	mover.rotateTicks(ticks);
+}
+
 void setup()
 {  
 	Serial.begin(9600);
 	claw.setup();
 	claw.open();
 	motors.setup();
-	//colourSensor.setup();
-	//calibrateColour();
-	/*for (int ii = 0; ii <= 100; ii++)
+	/*colourSensor.setup();
+	calibrateColour();
+	delayTillButton();
+	for (int ii = 0; ii <= 100; ii++)
 	{
 		ls.calibrate();
 		delay(5);
@@ -138,8 +159,8 @@ void setup()
 
 void loop()
 {
-	/*delayTillButton();
-	grabBlock();*/
+	//delayTillButton();
+	//grabBlock();
 }
 
 float diffs=0;

@@ -4,6 +4,7 @@
 //#define PRINT_RAW
 #define PRINT_PARSED
 #define MULTIPLE_READINGS
+//#define CALIBRATED
 
 void Colour::setup()
 {
@@ -28,10 +29,14 @@ Colour::ColourType Colour::senseColour()
 		Serial.println();
 	#endif
 	
-	correctReading();
+	#ifdef CALIBRATED
+		correctReading();
+	#endif
 #else
 	waitForReading();
-	correctReading();
+	#ifdef CALIBRATED
+		correctReading();
+	#endif
 #endif
 	
 	#ifdef PRINT_PARSED
@@ -43,14 +48,12 @@ Colour::ColourType Colour::senseColour()
 		Serial.print(reading.blu);
 		Serial.println();
 	#endif
-	
-	float totalRGB = (float)(abs(reading.red) + abs(reading.grn) + abs(reading.blu));
-	
-	if ( ((float)reading.red / totalRGB) > 0.4)
+		
+	if ((reading.red > reading.grn) && (reading.red > reading.blu))
 		return red;
-	else if ( ((float)reading.grn / totalRGB) > 0.4)
+	else if ((reading.grn > reading.red) && (reading.grn > reading.blu))
 		return green;
-	else if ( ((float)reading.blu / totalRGB) > 0.4)
+	else if ((reading.blu > reading.red) && (reading.blu > reading.grn))
 		return blue;
 	else
 		return undef;

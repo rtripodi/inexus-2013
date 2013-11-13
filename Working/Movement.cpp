@@ -123,13 +123,26 @@ void Movement::lineCorrection(int speed)
 
 void Movement::moveTillPoint(int speed)
 {
-	moveOffCross(speed);	
-	while(!onCross())
+	if (speed > 0)
 	{
-		lineCorrection(speed);
-		delay(75);
+		moveOffCross(speed);	
+		while(!onCross())
+		{
+			lineCorrection(speed);
+			delay(75);
+		}
+		moveOffCross(speed);
 	}
-	moveOffCross(speed);
+	else if (speed < 0)
+	{
+		speed = - speed;		//Make speed positive to allow following code to be more understandable
+		motors->both(-speed, tickError());
+		while(!onCross())
+		{
+			delay(5);
+		}
+		moveOffCross(speed);
+	}
 }
 
 void Movement::moveOffCross(int speed)

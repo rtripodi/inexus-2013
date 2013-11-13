@@ -48,7 +48,7 @@ bool GridMap::joined(Point pt1, Point pt2)
 //Returns true if point is not occupied
 bool GridMap::isPassable(Point point)
 {
-	return !(isFlagSet(point, OCCUPIED));
+	return (isFlagSet(point, VISITED));
 }
 
 //DEBUG: Returns flags for give point

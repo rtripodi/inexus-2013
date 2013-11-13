@@ -2,6 +2,7 @@
 
 #define SIMULATION
 #define DEBUG
+#define COLOURED_BLOCKS
 
 GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw, Colour *inColour)
 {
@@ -108,10 +109,10 @@ void GridNav::moveToFrontPoint()
 
 void GridNav::moveToPreviousPoint()
 {
-	mover->moveTicks(-TICKS_AWAY_FROM_BLOCK);
-	mover->rotateTicks(TICKS_BACK);
-	facing = findNewFacing(facing, BACK);
-	moveToFrontPoint();
+#ifndef SIMULATION
+	mover->moveTillPoint(-DEFAULT_SPEED);
+#endif
+	currPoint = adjacentPoint(currPoint, facing, BACK);
 }
 
 //Sets the OCCUPIED flag for the point in the inputted relative direction and attempts to grab the block
@@ -137,6 +138,7 @@ bool GridNav::obtainBlock(RelDir relDir)
 	}
 	motors->stop();
 	
+#ifdef COLOURED_BLOCKS
 #ifndef SIMULATION
 	blockColour = colourSensor->senseColour();
 	
@@ -197,7 +199,7 @@ else if (gridMap.isFlagSet(blockPoint, BLUE))
 			return false;
 			break;
 	}
-	
+#endif
 	
 	claw->close();
 #ifndef SIMULATION
@@ -616,18 +618,30 @@ void GridNav::findBlock()
 	Point invalidPt = Point(-1,-1);
 	Point closestOccupied = closestBlock();
 	
+#ifdef COLOURED_BLOCKS
 	switch (attempt)
 	{
 		case 2:
 			if ( gridMap.contains(gridMap.getGreenPoint()) )
 				moveToBlock( gridMap.getGreenPoint() );
+				haveBlock = true;
 			break;
 		case 3:
 			if ( gridMap.contains(gridMap.getBluePoint()) )
 				moveToBlock( gridMap.getBluePoint() );
+				haveBlock = true;
 			break;
 		default: break;
 	}
+#else
+#ifndef SIMULATION
+	if (gridMap.contains(closestBlock()))
+	{
+		moveToBlock(closestBlock());
+		haveBlock = true;
+	}
+#endif
+#endif
 
 	while (!haveBlock)
 	{

@@ -156,7 +156,7 @@
 #define MOTOR_2_SIG_A 11
 #define MOTOR_2_SIG_B 10
 
-#define DEFAULT_SPEED 95
+#define DEFAULT_SPEED 80
 
 //For line following.
 #define EDGE_SENSITIVITY 1000
@@ -169,8 +169,8 @@
 #define TURN_LEFT (-TURN_RIGHT +5)
 
 #define TICKS_FRONT (0)
-#define TICKS_RIGHT (39)
-#define TICKS_BACK (78)
+#define TICKS_RIGHT (39)	//39 for speed of 60-80, 36 for speed of 90
+#define TICKS_BACK (78)		//78 for speed of 60-80, 75 for speed of 90
 #define TICKS_LEFT (-TICKS_RIGHT)
 
 #define TICKS_CORRECTION_FACTOR (0.02)
@@ -222,7 +222,7 @@
 #define CENTRE_DIST (300)
 #define BLOCK_ACT_DIST (250)
 #define BLOCK_TOLERANCE (50)
-#define BLOCK_STOP (80)
+#define BLOCK_STOP (90)
 
 #define TICKS_AWAY_FROM_BLOCK (70)
 
