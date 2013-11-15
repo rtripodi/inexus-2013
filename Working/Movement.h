@@ -32,6 +32,7 @@ class Movement
 	private:
 		void reversing(int speed = DEFAULT_SPEED);
 		void lineCorrection(int speed = DEFAULT_SPEED);
+		void reverseLineCorrection(int speed = DEFAULT_SPEED);
 		PololuWheelEncoders wheelEnc;
 		LineSensors * ls;
 		Motor * motors;
