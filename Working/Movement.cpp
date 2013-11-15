@@ -132,17 +132,17 @@ void Movement::reverseLineCorrection(int speed)
 		linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
 		difference = linePos-lastLinePos;
 		//If the line is within a margin of EDGE_SENSITIVITY
-		if (abs(linePos-3500)<EDGE_SENSITIVITY)
+				if (abs(linePos-3500)<EDGE_SENSITIVITY)
 		{
 			if (difference<-CORRECTION_ANGLE)
 			{
-				motors->left(speed-speed/4);
-				motors->right(speed);
+				motors->left(speed);
+				motors->right(speed-speed/4);
 			}
 			if (difference>CORRECTION_ANGLE)
 			{
-				motors->right(speed-speed/4);
-				motors->left(speed);
+				motors->right(speed);
+				motors->left(speed-speed/4);
 			}
 			if (abs(difference)<CORRECTION_ANGLE)
 			{
