@@ -93,9 +93,9 @@ void Movement::lineCorrection(int speed)
 			}
 		}
 		//Otherwise, if it's right on the edge of the sensors
-		if (speed>0)
+		else if (speed>0)
 		{
-			else if (linePos>6000)
+			if (linePos>6000)
 			{
 				motors->left(speed/4);
 				motors->right(speed);
@@ -119,7 +119,7 @@ void Movement::lineCorrection(int speed)
 		}
 		else
 		{
-		else if (linePos>6000)
+		if (linePos>6000)
 			{
 				motors->left(speed);
 				motors->right(speed/4);
