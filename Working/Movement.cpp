@@ -93,83 +93,53 @@ void Movement::lineCorrection(int speed)
 			}
 		}
 		//Otherwise, if it's right on the edge of the sensors
-		else if (linePos>6000)
+		if (speed>0)
 		{
-			motors->left(speed/4);
-			motors->right(speed);
-		}
-		else if (linePos<1000)
-		{
-			motors->left(speed);
-			motors->right(speed/4);
-		}
-		//Else if it's off center but not too bad
-		else if (linePos-3500>EDGE_SENSITIVITY)
-		{
-			motors->right(speed);
-			motors->left(speed/2);
-		}
-		else if (linePos-3500<-EDGE_SENSITIVITY)
-		{
-			motors->right(speed/2);
-			motors->left(speed);
-		}
-	}
-	else 
-	{
-		//reversing();
-	}
-}
-
-void Movement::reverseLineCorrection(int speed)
-{
-	int qtrTotal;
-
-	lastLinePos = linePos;
-	qtrTotal = ls->reading[0]+ls->reading[1]+ls->reading[2]+ls->reading[3]+ls->reading[4]+ls->reading[5]+ls->reading[6]+ls->reading[7];
-	if (qtrTotal<7000)
-	{
-		linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
-		difference = linePos-lastLinePos;
-		//If the line is within a margin of EDGE_SENSITIVITY
-				if (abs(linePos-3500)<EDGE_SENSITIVITY)
-		{
-			if (difference<-CORRECTION_ANGLE)
+			else if (linePos>6000)
+			{
+				motors->left(speed/4);
+				motors->right(speed);
+			}
+			else if (linePos<1000)
 			{
 				motors->left(speed);
-				motors->right(speed-speed/4);
+				motors->right(speed/4);
 			}
-			if (difference>CORRECTION_ANGLE)
+			//Else if it's off center but not too bad
+			else if (linePos-3500>EDGE_SENSITIVITY)
 			{
 				motors->right(speed);
-				motors->left(speed-speed/4);
+				motors->left(speed/2);
 			}
-			if (abs(difference)<CORRECTION_ANGLE)
+			else if (linePos-3500<-EDGE_SENSITIVITY)
 			{
-				motors->both(speed);
+				motors->right(speed/2);
+				motors->left(speed);
 			}
 		}
-		//Otherwise, if it's right on the edge of the sensors
+		else
+		{
 		else if (linePos>6000)
-		{
-			motors->left(speed);
-			motors->right(speed/4);
-		}
-		else if (linePos<1000)
-		{
-			motors->left(speed/4);
-			motors->right(speed);
-		}
-		//Else if it's off center but not too bad
-		else if (linePos-3500>EDGE_SENSITIVITY)
-		{
-			motors->right(speed/2);
-			motors->left(speed);
-		}
-		else if (linePos-3500<-EDGE_SENSITIVITY)
-		{
-			motors->right(speed);
-			motors->left(speed/2);
+			{
+				motors->left(speed);
+				motors->right(speed/4);
+			}
+			else if (linePos<1000)
+			{
+				motors->left(speed/4);
+				motors->right(speed);
+			}
+			//Else if it's off center but not too bad
+			else if (linePos-3500>EDGE_SENSITIVITY)
+			{
+				motors->right(speed/2);
+				motors->left(speed);
+			}
+			else if (linePos-3500<-EDGE_SENSITIVITY)
+			{
+				motors->right(speed);
+				motors->left(speed/2);
+			}
 		}
 	}
 }
