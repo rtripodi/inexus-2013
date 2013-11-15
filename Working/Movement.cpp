@@ -117,28 +117,28 @@ void Movement::lineCorrection(int speed)
 				motors->left(speed);
 			}
 		}
-		else
+		else if (speed<0)
 		{
 		if (linePos>6000)
-			{
-				motors->left(speed);
-				motors->right(speed/4);
-			}
-			else if (linePos<1000)
 			{
 				motors->left(speed/4);
 				motors->right(speed);
 			}
+			else if (linePos<1000)
+			{
+				motors->left(speed);
+				motors->right(speed/4);
+			}
 			//Else if it's off center but not too bad
 			else if (linePos-3500>EDGE_SENSITIVITY)
 			{
-				motors->right(speed/2);
-				motors->left(speed);
+				motors->right(speed);
+				motors->left(speed/2);
 			}
 			else if (linePos-3500<-EDGE_SENSITIVITY)
 			{
-				motors->right(speed);
-				motors->left(speed/2);
+				motors->right(speed/2);
+				motors->left(speed);
 			}
 		}
 	}
