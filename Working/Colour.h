@@ -27,6 +27,8 @@ class Colour
 		
 		void calibrateWhite();
 		
+		void printColour(ColourType inColour);
+		
 	private:
 		OldSoftwareSerial colSer;
 		

@@ -194,4 +194,23 @@ void Colour::reset()
 	pinMode(COLOUR_INPUT_PIN, INPUT);
 	pinMode(COLOUR_OUTPUT_PIN, OUTPUT);
 	delay(COLOUR_DELAY);
-} 
+}
+
+void Colour::printColour(ColourType inColour)
+{
+	switch (inColour)
+	{
+		case red:
+			Serial.print("Red");
+			break;
+		case green:
+			Serial.print("Green");
+			break;
+		case blue:
+			Serial.print("Blue");
+			break;
+		default:
+			Serial.print("Unknown");
+			break;
+	}
+}

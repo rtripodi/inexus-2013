@@ -4,6 +4,8 @@
 		Accounting for ghost block
 		Accounting for immediately going to occupied block without colour flags
 		Accounting for process of elimination to determine unknown colour
+	
+	NOTE: An infinite loop occurs when trying to move to a closest unknown point that is unreachable
 */
 
 #include "GridNav.h"
@@ -29,7 +31,7 @@ GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *i
 		gridMap.setFlag(Point(2, 2), OCCUPIED);
 		gridMap.setFlag(Point(3, 3), OCCUPIED);
 		gridMap.setFlag(Point(4, 1), OCCUPIED);
-		
+
 		gridMap.setFlag(Point(2, 2), RED);
 		gridMap.setFlag(Point(3, 3), GREEN);
 		gridMap.setFlag(Point(4, 1), BLUE);
@@ -139,6 +141,12 @@ bool GridNav::obtainBlock(RelDir relDir)
 	facing = findNewFacing(facing, relDir);
 	Point blockPoint = adjacentPoint(currPoint, facing, FRONT);
 	
+	#ifdef DEBUG
+		Serial.print("Observing grab block at");
+		blockPoint.debug("");
+		Serial.println();
+	#endif
+	
 	//Try to approach block and stop before making contact
 	irInMm.frnt = (irs->frnt)->getDist();
 	while (irInMm.frnt > BLOCK_STOP && !reachedCross)
@@ -171,6 +179,7 @@ bool GridNav::obtainBlock(RelDir relDir)
 	blockColour = colourSensor->senseColour();
 	
 	//If colour was undetermined, use process of elimination if possible
+	//Assumes colour sensor is 100% accurate
 	if (blockColour == Colour::undef)
 	{
 		if ( gridMap.contains(gridMap.getGreenPoint()) && gridMap.contains(gridMap.getBluePoint()) )
@@ -189,23 +198,29 @@ else if (gridMap.isFlagSet(blockPoint, BLUE))
 	blockColour = Colour::blue;
 #endif
 	
+	#ifdef DEBUG
+		Serial.print("Colour of block: ");
+		colourSensor->printColour(blockColour);
+		Serial.println();
+	#endif
+	
 	switch (blockColour)
 	{
 		case Colour::red:
 			gridMap.setFlag(blockPoint, RED);
 			gridMap.setRedPoint(blockPoint);
-			if (attempt != 1)
-			{
-				currPoint = blockPoint;
-				moveToPreviousPoint();
-				return false;
-			}
+			//if (attempt != 1)	should never occur
+			//if it does, the colour sensor has failed
+			//and the bot will just have to grab the block
 			break;
 		case Colour::green:
 			gridMap.setFlag(blockPoint, GREEN);
 			gridMap.setGreenPoint(blockPoint);
 			if (attempt != 2)
 			{
+				#ifdef DEBUG
+					Serial.println("Unwanted colour. Returning to previous point.");
+				#endif
 				currPoint = blockPoint;
 				moveToPreviousPoint();
 				return false;
@@ -216,6 +231,9 @@ else if (gridMap.isFlagSet(blockPoint, BLUE))
 			gridMap.setBluePoint(blockPoint);
 			if (attempt != 3)
 			{
+				#ifdef DEBUG
+					Serial.println("Unwanted colour. Returning to previous point.");
+				#endif
 				currPoint = blockPoint;
 				moveToPreviousPoint();
 				return false;
@@ -636,10 +654,22 @@ if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
 	if (!haveBlock && gridMap.contains(rightPoint) && gridMap.isFlagSet(rightPoint, OCCUPIED))
 	{
 		haveBlock = obtainBlock(RIGHT);
+		if (!haveBlock)		//Face original direction
+		{
+			mover->rotateDirection(LEFT, DEFAULT_SPEED);
+			motors->stop();
+			facing = findNewFacing(facing, LEFT);
+		}
 	}
 	if (!haveBlock && gridMap.contains(leftPoint) && gridMap.isFlagSet(leftPoint, OCCUPIED))
 	{
 		haveBlock = obtainBlock(LEFT);
+		if (!haveBlock)		//Face original direction
+		{
+			mover->rotateDirection(RIGHT, DEFAULT_SPEED);
+			motors->stop();
+			facing = findNewFacing(facing, RIGHT);
+		}
 	}
 	if (!haveBlock)
 	{
@@ -669,7 +699,9 @@ void GridNav::findBlock()
 			if ( gridMap.contains(gridMap.getGreenPoint()) )
 			{
 				#ifdef DEBUG
-					Serial.println("Obtaining previously seen Green");
+					Serial.print("Attempting to grab previously seen Green at");
+					(gridMap.getGreenPoint()).debug("");
+					Serial.println();
 				#endif
 				moveToBlock( gridMap.getGreenPoint() );
 				haveBlock = true;
@@ -679,7 +711,9 @@ void GridNav::findBlock()
 			if ( gridMap.contains(gridMap.getBluePoint()) )
 			{
 				#ifdef DEBUG
-					Serial.println("Obtaining previously seen Blue");
+					Serial.print("Attempting to grab previously seen Blue");
+					(gridMap.getBluePoint()).debug("");
+					Serial.println();
 				#endif
 				moveToBlock( gridMap.getBluePoint() );
 				haveBlock = true;

@@ -96,25 +96,6 @@ void calibrateColour()
 	delayTillButton();
 }
 
-void printColour(Colour::ColourType inColour)
-{
-	switch (inColour)
-	{
-		case Colour::red:
-			Serial.println("Red");
-			break;
-		case Colour::green:
-			Serial.println("Green");
-			break;
-		case Colour::blue:
-			Serial.println("Blue");
-			break;
-		default:
-			Serial.println("Unknown");
-			break;
-	}
-}
-
 void grabBlock()
 {
 	claw.open();
@@ -126,7 +107,7 @@ void grabBlock()
 	}
 	motors.stop();
 	
-	printColour( colourSensor.senseColour() );
+	colourSensor.printColour( colourSensor.senseColour() );
 	
 	mover.moveTillPoint(-DEFAULT_SPEED);
 }
