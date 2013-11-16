@@ -13,6 +13,9 @@
 #include "Routing.h"
 #include "Colour.h"
 
+//#define SIMULATION
+#define DEBUG
+
 Motor motors;
 LineSensors ls;
 Movement mover(&motors, &ls);
@@ -53,19 +56,32 @@ void delayTillButton()
 
 void gridTest()
 {
+#ifdef DEBUG
 	Serial.println("\t\t\t\t\t............");
 	Serial.println("\t\t\t\t\tFIRST BLOCK");
 	Serial.println("\t\t\t\t\t............");
+#endif
+#ifndef SIMULATION
+	delayTillButton();
+#endif
 	gridNav.findBlock();
-//	delayTillButton();
+#ifdef DEBUG
 	Serial.println("\t\t\t\t\t............");
 	Serial.println("\t\t\t\t\tSECOND BLOCK");
 	Serial.println("\t\t\t\t\t............");
+#endif
+#ifndef SIMULATION
+	delayTillButton();
+#endif
 	gridNav.findBlock();
-//	delayTillButton();
+#ifdef DEBUG
 	Serial.println("\t\t\t\t\t............");
 	Serial.println("\t\t\t\t\tTHIRD BLOCK");
 	Serial.println("\t\t\t\t\t............");
+#endif
+#ifndef SIMULATION
+	delayTillButton();
+#endif
 	gridNav.findBlock();
 }
 
@@ -142,18 +158,19 @@ void testRotate()
 void setup()
 {  
 	Serial.begin(9600);
+#ifndef SIMULATION
 	claw.setup();
 	claw.open();
 	motors.setup();
-	/*colourSensor.setup();
-	calibrateColour();
+	colourSensor.setup();
 	delayTillButton();
 	for (int ii = 0; ii <= 100; ii++)
 	{
 		ls.calibrate();
 		delay(5);
 	}
-	delayTillButton();*/
+	delayTillButton();
+#endif
 	gridTest();
 }
 

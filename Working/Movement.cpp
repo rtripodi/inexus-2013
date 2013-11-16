@@ -1,6 +1,6 @@
 #include "Movement.h"
 
-#define SIMULATION
+//#define SIMULATION
 //#define DEBUG
 
 Movement::Movement(Motor * inMotors, LineSensors * inSensors)
@@ -146,26 +146,13 @@ void Movement::lineCorrection(int speed)
 
 void Movement::moveTillPoint(int speed)
 {
-	if (speed > 0)
+	moveOffCross(speed);	
+	while(!onCross())
 	{
-		moveOffCross(speed);	
-		while(!onCross())
-		{
-			lineCorrection(speed);
-			delay(75);
-		}
-		moveOffCross(speed);
+		lineCorrection(speed);
+		delay(75);
 	}
-	else if (speed < 0)
-	{
-		speed = - speed;		//Make speed positive to allow following code to be more understandable
-		motors->both(-speed, tickError());
-		while(!onCross())
-		{
-			delay(5);
-		}
-		moveOffCross(speed);
-	}
+	moveOffCross(speed);
 }
 
 void Movement::moveOffCross(int speed)
@@ -317,13 +304,13 @@ void Movement::rotateDirection(RelDir relDir, int speed)
 	case FRONT:
 		break;
 	case RIGHT:
-		rotateTicks(TICKS_RIGHT);
+		oldRotateTicks(TICKS_RIGHT);
 		break;
 	case BACK:
-		rotateTicks(TICKS_BACK);
+		oldRotateTicks(TICKS_BACK);
 		break;
 	case LEFT:
-		rotateTicks(TICKS_LEFT);
+		oldRotateTicks(TICKS_LEFT);
 		break;
 	}
 #endif
@@ -431,6 +418,7 @@ void Movement::oldMoveLength(int length, int speed)
 void Movement::oldRotateTicks(int ticks, int motorSpeed)
 {
 	resetEncoders();
+	ticks = -ticks;	//Old code is reversed
 
 	if (ticks < 0)
 	{

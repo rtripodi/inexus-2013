@@ -27,7 +27,7 @@ class Movement
 		void oldMoveTicks(int ticks, int motorSpeed);
 		void oldMoveLength(int length, int speed);
 		void oldRotateAngle(int angle, int speed);
-		void oldRotateTicks(int ticks, int motorSpeed);
+		void oldRotateTicks(int ticks, int motorSpeed = DEFAULT_SPEED);
 		
 	private:
 		void reversing(int speed = DEFAULT_SPEED);

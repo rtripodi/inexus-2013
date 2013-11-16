@@ -1,6 +1,14 @@
+/*
+	UNTESTED:
+		Accounting for case where multiple blocks can be seen from current point
+		Accounting for ghost block
+		Accounting for immediately going to occupied block without colour flags
+		Accounting for process of elimination to determine unknown colour
+*/
+
 #include "GridNav.h"
 
-#define SIMULATION
+//#define SIMULATION
 #define DEBUG
 #define COLOURED_BLOCKS
 
@@ -130,6 +138,8 @@ bool GridNav::obtainBlock(RelDir relDir)
 	motors->stop();
 	facing = findNewFacing(facing, relDir);
 	Point blockPoint = adjacentPoint(currPoint, facing, FRONT);
+	
+	//Try to approach block and stop before making contact
 	irInMm.frnt = (irs->frnt)->getDist();
 	while (irInMm.frnt > BLOCK_STOP && !reachedCross)
 	{
@@ -138,11 +148,29 @@ bool GridNav::obtainBlock(RelDir relDir)
 	}
 	motors->stop();
 	
+	//If ghost block, ignore it.
+#ifndef SIMULATION
+	if (reachedCross)
+	{
+		irInMm.frnt = (irs->frnt)->getDist();
+		if (irInMm.frnt > BLOCK_STOP)
+		{
+			#ifdef DEBUG
+				Serial.println("Ignoring 'ghost block'.");
+			#endif
+			mover->moveOffCross();
+			currPoint = blockPoint;
+			gridMap.removeFlag(blockPoint, OCCUPIED);
+			return false;
+		}
+	}
+#endif
+	
 #ifdef COLOURED_BLOCKS
 #ifndef SIMULATION
 	blockColour = colourSensor->senseColour();
 	
-	// If colour was undetermined, use process of elimination if possible
+	//If colour was undetermined, use process of elimination if possible
 	if (blockColour == Colour::undef)
 	{
 		if ( gridMap.contains(gridMap.getGreenPoint()) && gridMap.contains(gridMap.getBluePoint()) )
@@ -203,10 +231,10 @@ else if (gridMap.isFlagSet(blockPoint, BLUE))
 	
 	claw->close();
 #ifndef SIMULATION
-	if (mover->onCross() )
+	if (reachedCross)
 	{
 		mover->moveOffCross();
-		currPoint = adjacentPoint(currPoint, facing, FRONT);
+		currPoint = blockPoint;
 	}
 	else
 	{
@@ -215,16 +243,19 @@ else if (gridMap.isFlagSet(blockPoint, BLUE))
 #ifndef SIMULATION
 	}
 #endif
+	
+	//Update GridMap
 	gridMap.setFlag(currPoint, VISITED);
 	
 	Point rightPoint = adjacentPoint(currPoint, facing, RIGHT);
 	Point leftPoint = adjacentPoint(currPoint, facing, LEFT);
 	
-	//Shouldn't need to reset irValues, if not on map should disregard
 	if(gridMap.contains(rightPoint))
 		mapRightPoint();
 	if(gridMap.contains(leftPoint))
 		mapLeftPoint();
+	
+	//Check if grab was successful
 #ifndef SIMULATION
 	irInMm.frnt = (irs->frnt)->getDist();
 	if (irInMm.frnt <= BLOCK_STOP)
@@ -379,22 +410,30 @@ irInMm.lft = (irs->lft)->getDistLarge();
 
 int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 {
+	#ifdef DEBUG
+		printRelDir(relDir);
+		Serial.println(" Path:");
+	#endif
 	CarDir tempFacing = findNewFacing(facing, relDir);
 	int totalProfit = 0;
 	if (facing == tempFacing)
-		totalProfit += 5;
+		totalProfit += 1;
 	Point tempPoint = adjacentPoint(currPoint, facing, relDir);
 	Point rightPoint, leftPoint;
-	while ( gridMap.contains(tempPoint) )//TODO: && !gridMap.isFlagSet(tempPoint, OCCUPIED))
+	while ( gridMap.contains(tempPoint) && !gridMap.isFlagSet(tempPoint, OCCUPIED))
 	{
+		#ifdef DEBUG
+			tempPoint.debug("\tPoint");
+			Serial.println();
+		#endif
 		//Profit of visited
 		if (gridMap.isFlagSet(tempPoint, VISITED))
-			totalProfit += 5;
+			totalProfit += 1;
 		else if (gridMap.isFlagSet(tempPoint, SEEN))
-			totalProfit += 10;
+			totalProfit += 3;
 		else
 		{
-			totalProfit += 15;
+			totalProfit += 10;
 			(*numUnknown)++;
 		}
 		
@@ -404,29 +443,34 @@ int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 		if (gridMap.contains(rightPoint))
 		{
 			if (gridMap.isFlagSet(rightPoint, VISITED))
-				totalProfit += 5;
+				totalProfit += 1;
 			else if (gridMap.isFlagSet(rightPoint, SEEN))
-				totalProfit += 10;
+				totalProfit += 3;
 			else
 			{
-				totalProfit += 15;
+				totalProfit += 10;
 				(*numUnknown)++;
 			}
 		}
 		if (gridMap.contains(leftPoint))
 		{
 			if (gridMap.isFlagSet(leftPoint, VISITED))
-				totalProfit += 5;
+				totalProfit += 1;
 			else if (gridMap.isFlagSet(leftPoint, SEEN))
-				totalProfit += 10;
+				totalProfit += 3;
 			else
 			{
-				totalProfit += 15;
+				totalProfit += 10;
 				(*numUnknown)++;
 			}
 		}
 		tempPoint = adjacentPoint(tempPoint, tempFacing, FRONT);
 	}
+	#ifdef DEBUG
+		Serial.print("\tProfit: ");
+		Serial.println(totalProfit);
+		Serial.println();
+	#endif
 	return totalProfit;
 }
 
@@ -527,9 +571,10 @@ void GridNav::startNextPath()
 
 void GridNav::chooseNextPath()
 {
-	Point pastFront = adjacentPoint( adjacentPoint(currPoint, facing, FRONT), facing, FRONT);
+	Point frontPoint = adjacentPoint(currPoint, facing, FRONT);
+	Point pastFront = adjacentPoint(frontPoint, facing, FRONT);
 
-	if ( !gridMap.contains(adjacentPoint(currPoint, facing, FRONT)))
+	if ( !gridMap.contains(frontPoint) || gridMap.isFlagSet(frontPoint, OCCUPIED) )
 	{
 		startNextPath();
 	}
@@ -581,20 +626,22 @@ void GridNav::checkForBlocks()
 		claw->shut();
 		haveBlock = true;
 	}
-	else if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
+	if (!haveBlock && gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
 #else
 if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
 #endif
+	{
 		haveBlock = obtainBlock(FRONT);
-	else if (gridMap.contains(rightPoint) && gridMap.isFlagSet(rightPoint, OCCUPIED))
+	}
+	if (!haveBlock && gridMap.contains(rightPoint) && gridMap.isFlagSet(rightPoint, OCCUPIED))
 	{
 		haveBlock = obtainBlock(RIGHT);
 	}
-	else if (gridMap.contains(leftPoint) && gridMap.isFlagSet(leftPoint, OCCUPIED))
+	if (!haveBlock && gridMap.contains(leftPoint) && gridMap.isFlagSet(leftPoint, OCCUPIED))
 	{
 		haveBlock = obtainBlock(LEFT);
 	}
-	else
+	if (!haveBlock)
 	{
 		chooseNextPath();
 	}
@@ -614,29 +661,42 @@ void GridNav::findBlock()
 	facing = WEST;
 	
 	printGrid();
-	
-	Point invalidPt = Point(-1,-1);
-	Point closestOccupied = closestBlock();
-	
+		
 #ifdef COLOURED_BLOCKS
 	switch (attempt)
 	{
 		case 2:
 			if ( gridMap.contains(gridMap.getGreenPoint()) )
+			{
+				#ifdef DEBUG
+					Serial.println("Obtaining previously seen Green");
+				#endif
 				moveToBlock( gridMap.getGreenPoint() );
 				haveBlock = true;
+			}
 			break;
 		case 3:
 			if ( gridMap.contains(gridMap.getBluePoint()) )
+			{
+				#ifdef DEBUG
+					Serial.println("Obtaining previously seen Blue");
+				#endif
 				moveToBlock( gridMap.getBluePoint() );
 				haveBlock = true;
+			}
 			break;
 		default: break;
 	}
 #else
 #ifndef SIMULATION
+	Point invalidPt = Point(-1,-1);
+	Point closestOccupied = closestBlock();
+	
 	if (gridMap.contains(closestBlock()))
 	{
+		#ifdef DEBUG
+			Serial.println("Obtaining closest block");
+		#endif
 		moveToBlock(closestBlock());
 		haveBlock = true;
 	}
