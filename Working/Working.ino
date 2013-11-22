@@ -13,7 +13,7 @@
 #include "Routing.h"
 #include "Colour.h"
 
-//#define SIMULATION
+#define SIMULATION
 #define DEBUG
 
 Motor motors;

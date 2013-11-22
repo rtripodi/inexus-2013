@@ -1,12 +1,3 @@
-/*
-	Grid directions:
-	       y          W
-	  .---->          ^
-	  |           S <   > N
-	  |               v 
-	x v               E
-*/
-
 #ifndef GridMap_h
 #define GridMap_h
 
@@ -56,10 +47,18 @@ class GridMap : public Maze
 		void setGreenPoint(Point inPoint);
 		void setBluePoint(Point inPoint);
 		
+		Point getBlockPoint(unsigned char blockNumber);
+		void setBlockPoint(Point inPoint);
+		unsigned char getBlockCount();
+		
 	private:
 		unsigned char status[GRID_MAX_X + 1][GRID_MAX_Y + 1];
 		
 		Point redPoint, greenPoint, bluePoint;
+		
+		Point blockPoints[NUMBER_OF_BLOCKS];
+		
+		unsigned char blockCount;
 };
 
 #endif

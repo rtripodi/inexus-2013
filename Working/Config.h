@@ -178,10 +178,18 @@
 /********************************************
  *  GridMap
  ********************************************/
+/*
+	Grid directions:
+	       y          W
+	  .---->          ^
+	  |           S <   > N
+	  |               v 
+	x v               E
+*/
 
 //Grid dimensions
 #define GRID_MAX_X (7)
-#define GRID_MAX_Y (3)
+#define GRID_MAX_Y (7)
 
 //Known locations
 #define ENTRANCE_X (GRID_MAX_X)
@@ -209,6 +217,8 @@
 #define GREEN		(0x02)
 #define BLUE		(0x01)
 
+#define NUMBER_OF_BLOCKS 3
+
 /********************************************
  *  MazeMap
  ********************************************/
@@ -225,6 +235,11 @@
 #define BLOCK_STOP (90)
 
 #define TICKS_AWAY_FROM_BLOCK (70)
+
+#define FACING_PROFIT (5)
+#define VISITED_PROFIT (1)
+#define SEEN_PROFIT (10)
+#define UNKNOWN_PROFIT (100)
 
 /********************************************
  *  MazeNav

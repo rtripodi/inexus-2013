@@ -35,6 +35,7 @@ class GridNav
 		Routing router;
 		Path path;
 		unsigned char attempt;
+		unsigned char coloursScanned;
 		
 		//Current point on grid
 		Point currPoint;
@@ -51,9 +52,7 @@ class GridNav
 		//Returns the closest point in the inputted relative direction
 		//Unexpected return for a relative direction causing a point off the grid
 		Point adjacentPoint(Point pt, CarDir inFacing, RelDir relativeTurn);
-		
-		Point frontDiagPoint(Point pt, CarDir inFacing, RelDir relativeTurn);
-		
+				
 		//Checks whether there is a block within a specified range of the inputted relative direction
 		//Returns false by default for a relative direction causing a point off the grid
 		bool isBlock(RelDir relDir);
@@ -103,8 +102,14 @@ class GridNav
 		void printRelDir(RelDir relDir);
 		
 		Point closestBlock();
-				
-		void moveToBlock(Point pt);
+		
+		Point closestNonVisited();
+		
+		void grabBlockAtPoint(Point pt);
+		
+		void setLastColour();
+		
+		void moveNextToBlock(Point pt);
 };
 
 #endif

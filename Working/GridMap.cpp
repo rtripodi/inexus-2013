@@ -9,9 +9,14 @@ GridMap::GridMap()
 			status[x][y] = 0x00;
 		}
 	}
+	blockCount = 0;
 	redPoint = Point(-1, -1);
 	greenPoint = Point(-1, -1);
 	bluePoint = Point(-1, -1);
+	for (int ii = 0; ii < NUMBER_OF_BLOCKS; ++ii)
+	{
+		blockPoints[ii] = Point(-1, -1);
+	}
 }
 
 //Change desired flag(s) to 1 for passed point
@@ -45,10 +50,10 @@ bool GridMap::joined(Point pt1, Point pt2)
 	return (contains(pt1) && contains(pt2) && del == 1);
 }
 
-//Returns true if point is not occupied
+//Returns true if point is not occupied or unknown
 bool GridMap::isPassable(Point point)
 {
-	return (isFlagSet(point, VISITED));
+	return (!isFlagSet(point, OCCUPIED) && status[point.x][point.y] != 0x00);
 }
 
 //DEBUG: Returns flags for give point
@@ -62,14 +67,14 @@ Point GridMap::getRedPoint()
 	return redPoint;
 }
 
-Point GridMap::getBluePoint()
-{
-	return bluePoint;
-}
-
 Point GridMap::getGreenPoint()
 {
 	return greenPoint;
+}
+
+Point GridMap::getBluePoint()
+{
+	return bluePoint;
 }
 
 void GridMap::setRedPoint(Point inPoint)
@@ -77,23 +82,50 @@ void GridMap::setRedPoint(Point inPoint)
 	redPoint = inPoint;
 }
 
-void GridMap::setBluePoint(Point inPoint)
-{
-	bluePoint = inPoint;
-}
-
 void GridMap::setGreenPoint(Point inPoint)
 {
 	greenPoint = inPoint;
 }
 
+void GridMap::setBluePoint(Point inPoint)
+{
+	bluePoint = inPoint;
+}
+
+Point GridMap::getBlockPoint(unsigned char blockNumber)
+{
+	return blockPoints[blockNumber];
+}
+
+void GridMap::setBlockPoint(Point inPoint)
+{
+	bool isVisitedBlock = false;
+	for (int ii = 0; ii < NUMBER_OF_BLOCKS; ++ii)
+	{
+		if (inPoint == getBlockPoint(ii))
+		{
+			isVisitedBlock = true;
+		}
+	}
+	if (!isVisitedBlock)
+	{
+		blockPoints[blockCount] = inPoint;
+		blockCount++;
+	}
+}
+
+unsigned char GridMap::getBlockCount()
+{
+	return blockCount;
+}
+
 char GridMap::getFlagsAsChar(Point point)
 {
-	if (isFlagSet(point, RED))
+	if (isFlagSet(point, RED) && isFlagSet(point, OCCUPIED))
 		return 'R';
-	else if (isFlagSet(point, GREEN))
+	else if (isFlagSet(point, GREEN) && isFlagSet(point, OCCUPIED))
 		return 'G';
-	else if (isFlagSet(point, BLUE))
+	else if (isFlagSet(point, BLUE) && isFlagSet(point, OCCUPIED))
 		return 'B';
 	else if (isFlagSet(point, OCCUPIED))
 		return 'O';

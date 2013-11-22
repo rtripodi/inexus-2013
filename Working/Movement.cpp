@@ -1,6 +1,6 @@
 #include "Movement.h"
 
-//#define SIMULATION
+#define SIMULATION
 //#define DEBUG
 
 Movement::Movement(Motor * inMotors, LineSensors * inSensors)

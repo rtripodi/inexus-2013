@@ -10,7 +10,7 @@
 
 #include "GridNav.h"
 
-//#define SIMULATION
+#define SIMULATION
 #define DEBUG
 #define COLOURED_BLOCKS
 
@@ -26,16 +26,21 @@ GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *i
 	
 	gridMap.setFlag(Point(GRID_MAX_X, 0), SEEN);
 	attempt = 0;
+	coloursScanned = 0;
 	
-	#ifdef SIMULATION
-		gridMap.setFlag(Point(2, 2), OCCUPIED);
-		gridMap.setFlag(Point(3, 3), OCCUPIED);
-		gridMap.setFlag(Point(4, 1), OCCUPIED);
+#ifdef SIMULATION
+Point redPoint = Point(2, 2);
+Point greenPoint = Point(3, 3);
+Point bluePoint = Point(3, 1);
 
-		gridMap.setFlag(Point(2, 2), RED);
-		gridMap.setFlag(Point(3, 3), GREEN);
-		gridMap.setFlag(Point(4, 1), BLUE);
-	#endif
+gridMap.setFlag(redPoint, OCCUPIED);
+gridMap.setFlag(greenPoint, OCCUPIED);
+gridMap.setFlag(bluePoint, OCCUPIED);
+
+gridMap.setFlag(redPoint, RED);
+gridMap.setFlag(greenPoint, GREEN);
+gridMap.setFlag(bluePoint, BLUE);
+#endif
 }
 
 //Returns the closest point in the inputted relative direction
@@ -58,36 +63,6 @@ Point GridNav::adjacentPoint(Point pt, CarDir inFacing, RelDir relativeTurn)
 		case WEST:
 			pt.x -= 1;
 			break;
-	}
-//	if (gridMap.contains(pt) )
-		return pt;
-}
-
-//Returns the closest point in the inputted relative direction
-//Unexpected return for a relative direction causing a point off the grid
-Point GridNav::frontDiagPoint(Point pt, CarDir inFacing, RelDir relativeTurn)
-{
-	CarDir newCarDir = findNewFacing(inFacing, relativeTurn);
-		
-	if (inFacing == NORTH && newCarDir == EAST)
-	{
-		pt.x += 1;
-		pt.y += 1;
-	}
-	else if (inFacing == NORTH && newCarDir == WEST)
-	{
-		pt.x -= 1;
-		pt.y += 1;
-	}
-	else if (inFacing == SOUTH && newCarDir == EAST)
-	{
-		pt.x += 1;
-		pt.y -= 1;
-	}
-	else if (inFacing == SOUTH && newCarDir == WEST)
-	{
-		pt.x -= 1;
-		pt.y -= 1;
 	}
 //	if (gridMap.contains(pt) )
 		return pt;
@@ -177,18 +152,6 @@ bool GridNav::obtainBlock(RelDir relDir)
 #ifdef COLOURED_BLOCKS
 #ifndef SIMULATION
 	blockColour = colourSensor->senseColour();
-	
-	//If colour was undetermined, use process of elimination if possible
-	//Assumes colour sensor is 100% accurate
-	if (blockColour == Colour::undef)
-	{
-		if ( gridMap.contains(gridMap.getGreenPoint()) && gridMap.contains(gridMap.getBluePoint()) )
-			blockColour = Colour::red;
-		if ( gridMap.contains(gridMap.getRedPoint()) && gridMap.contains(gridMap.getBluePoint()) )
-			blockColour = Colour::green;
-		if ( gridMap.contains(gridMap.getRedPoint()) && gridMap.contains(gridMap.getGreenPoint()) )
-			blockColour = Colour::blue;
-	}
 #else
 if (gridMap.isFlagSet(blockPoint, RED))
 	blockColour = Colour::red;
@@ -209,6 +172,7 @@ else if (gridMap.isFlagSet(blockPoint, BLUE))
 		case Colour::red:
 			gridMap.setFlag(blockPoint, RED);
 			gridMap.setRedPoint(blockPoint);
+			coloursScanned++;
 			//if (attempt != 1)	should never occur
 			//if it does, the colour sensor has failed
 			//and the bot will just have to grab the block
@@ -216,6 +180,7 @@ else if (gridMap.isFlagSet(blockPoint, BLUE))
 		case Colour::green:
 			gridMap.setFlag(blockPoint, GREEN);
 			gridMap.setGreenPoint(blockPoint);
+			coloursScanned++;
 			if (attempt != 2)
 			{
 				#ifdef DEBUG
@@ -229,14 +194,29 @@ else if (gridMap.isFlagSet(blockPoint, BLUE))
 		case Colour::blue:
 			gridMap.setFlag(blockPoint, BLUE);
 			gridMap.setBluePoint(blockPoint);
+			coloursScanned++;
 			if (attempt != 3)
 			{
-				#ifdef DEBUG
-					Serial.println("Unwanted colour. Returning to previous point.");
-				#endif
-				currPoint = blockPoint;
-				moveToPreviousPoint();
-				return false;
+				if ( (gridMap.getBlockCount() == NUMBER_OF_BLOCKS) && (coloursScanned >= 2) )
+				{
+					#ifdef DEBUG
+						Serial.println("Not Green.  Moving to estimated Green location.");
+					#endif
+					setLastColour();
+					currPoint = blockPoint;
+					moveToPreviousPoint();
+					grabBlockAtPoint(gridMap.getGreenPoint());
+					return true;
+				}
+				else
+				{
+					#ifdef DEBUG
+						Serial.println("Unwanted colour. Returning to previous point.");
+					#endif
+					currPoint = blockPoint;
+					moveToPreviousPoint();
+					return false;
+				}
 			}
 			break;
 		default:
@@ -345,85 +325,105 @@ void GridNav::moveToPoint(Point pt)
 		#endif
 	}
 	motors->stop();
-	claw->open();
 }
 
 //TODO: Implement properly (using obtainBlock functionality)
-void GridNav::moveToBlock(Point pt)
+void GridNav::grabBlockAtPoint(Point pt)
 {
-	router.generateRoute(currPoint, pt, facing, &path);
-	for (int ii = 0; ii < path.length; ++ii)
+	if (gridMap.contains(pt))
 	{
-		moveToAdjPoint(path.path[ii]);
-		
-		gridMap.setFlag(currPoint, VISITED);
-		
-		if (gridMap.contains( adjacentPoint(currPoint, facing, FRONT)))
+		router.generateRoute(currPoint, pt, facing, &path);
+		for (int ii = 0; ii < path.length; ++ii)
 		{
-			mapFrontPoint();
+			moveToAdjPoint(path.path[ii]);
+			
+			gridMap.setFlag(currPoint, VISITED);
+			
+			if (gridMap.contains( adjacentPoint(currPoint, facing, FRONT)))
+			{
+				mapFrontPoint();
+			}
+			if (gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)))
+			{
+				mapRightPoint();
+			}
+			if (gridMap.contains( adjacentPoint(currPoint, facing, LEFT)))
+			{
+				mapLeftPoint();
+			}
+			
+			#ifdef DEBUG
+				printGrid();
+			#endif
 		}
-		if (gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)))
-		{
-			mapRightPoint();
-		}
-		if (gridMap.contains( adjacentPoint(currPoint, facing, LEFT)))
-		{
-			mapLeftPoint();
-		}
-		
-		#ifdef DEBUG
-			printGrid();
-		#endif
+		claw->close();
+		motors->stop();
+		haveBlock = true;
+		gridMap.removeFlag(pt, OCCUPIED);
 	}
-	claw->close();
-	motors->stop();
-	haveBlock = true;
-	gridMap.removeFlag(pt, OCCUPIED);
 }
 
 //Scan front point and set seen flag
 void GridNav::mapFrontPoint()
 {
-	Point tempPoint;
+	Point tempPoint = adjacentPoint(currPoint, facing, FRONT);
 #ifdef SIMULATION
 irInMm.frnt = (irs->frnt)->getDistLarge();
+if(gridMap.isFlagSet(tempPoint, OCCUPIED))
+{
+	gridMap.setBlockPoint(tempPoint);
+}
 #else
 	irInMm.frnt = (irs->frnt)->getDist();
 #endif
-	tempPoint = adjacentPoint(currPoint, facing, FRONT);
 	gridMap.setFlag(tempPoint, SEEN);
 	if (isBlock(FRONT))
+	{
 		gridMap.setFlag(tempPoint, OCCUPIED);
+		gridMap.setBlockPoint(tempPoint);
+	}
 }
 	
 //Scan right point and set seen flag
 void GridNav::mapRightPoint()
 {
-	Point tempPoint;
+	Point tempPoint = adjacentPoint(currPoint, facing, RIGHT);
 #ifdef SIMULATION
 irInMm.rght = (irs->rght)->getDistLarge();
+if(gridMap.isFlagSet(tempPoint, OCCUPIED))
+{
+	gridMap.setBlockPoint(tempPoint);
+}
 #else
 	irInMm.rght = (irs->rght)->getDist();
 #endif
-	tempPoint = adjacentPoint(currPoint, facing, RIGHT);
 	gridMap.setFlag(tempPoint, SEEN);
 	if (isBlock(RIGHT))
+	{
 		gridMap.setFlag(tempPoint, OCCUPIED);
+		gridMap.setBlockPoint(tempPoint);
+	}
 }
 
 //Scan left point and set seen flag
 void GridNav::mapLeftPoint()
 {
-	Point tempPoint;
+	Point tempPoint = adjacentPoint(currPoint, facing, LEFT);
 #ifdef SIMULATION
 irInMm.lft = (irs->lft)->getDistLarge();
+if(gridMap.isFlagSet(tempPoint, OCCUPIED))
+{
+	gridMap.setBlockPoint(tempPoint);
+}
 #else
 	irInMm.lft = (irs->lft)->getDist();
 #endif
-	tempPoint = adjacentPoint(currPoint, facing, LEFT);
 	gridMap.setFlag(tempPoint, SEEN);
 	if (isBlock(LEFT))
+	{
 		gridMap.setFlag(tempPoint, OCCUPIED);
+		gridMap.setBlockPoint(tempPoint);
+	}
 }
 
 int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
@@ -435,23 +435,43 @@ int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 	CarDir tempFacing = findNewFacing(facing, relDir);
 	int totalProfit = 0;
 	if (facing == tempFacing)
-		totalProfit += 1;
+		totalProfit += FACING_PROFIT;
 	Point tempPoint = adjacentPoint(currPoint, facing, relDir);
 	Point rightPoint, leftPoint;
+#ifdef SIMULATION	//Needed for simulation because it knows OCCUPIED points
+bool isVisitedBlock = false;
+for (int ii = 0; ii < NUMBER_OF_BLOCKS; ++ii)
+{
+	if (tempPoint == gridMap.getBlockPoint(ii))
+	{
+		isVisitedBlock = true;
+	}
+}
+while ( gridMap.contains(tempPoint) && !isVisitedBlock)
+	{
+		for (int ii = 0; ii < NUMBER_OF_BLOCKS; ++ii)
+		{
+			if (tempPoint == gridMap.getBlockPoint(ii))
+				{
+					isVisitedBlock = true;
+				}
+		}
+#else
 	while ( gridMap.contains(tempPoint) && !gridMap.isFlagSet(tempPoint, OCCUPIED))
 	{
+#endif
 		#ifdef DEBUG
 			tempPoint.debug("\tPoint");
 			Serial.println();
 		#endif
 		//Profit of visited
 		if (gridMap.isFlagSet(tempPoint, VISITED))
-			totalProfit += 1;
+			totalProfit += VISITED_PROFIT;
 		else if (gridMap.isFlagSet(tempPoint, SEEN))
-			totalProfit += 3;
+			totalProfit += SEEN_PROFIT;
 		else
 		{
-			totalProfit += 10;
+			totalProfit += UNKNOWN_PROFIT;
 			(*numUnknown)++;
 		}
 		
@@ -461,24 +481,24 @@ int GridNav::findPathProfit(RelDir relDir, unsigned char *numUnknown)
 		if (gridMap.contains(rightPoint))
 		{
 			if (gridMap.isFlagSet(rightPoint, VISITED))
-				totalProfit += 1;
+				totalProfit += VISITED_PROFIT;
 			else if (gridMap.isFlagSet(rightPoint, SEEN))
-				totalProfit += 3;
+				totalProfit += SEEN_PROFIT;
 			else
 			{
-				totalProfit += 10;
+				totalProfit += UNKNOWN_PROFIT;
 				(*numUnknown)++;
 			}
 		}
 		if (gridMap.contains(leftPoint))
 		{
 			if (gridMap.isFlagSet(leftPoint, VISITED))
-				totalProfit += 1;
+				totalProfit += VISITED_PROFIT;
 			else if (gridMap.isFlagSet(leftPoint, SEEN))
-				totalProfit += 3;
+				totalProfit += SEEN_PROFIT;
 			else
 			{
-				totalProfit += 10;
+				totalProfit += UNKNOWN_PROFIT;
 				(*numUnknown)++;
 			}
 		}
@@ -522,6 +542,36 @@ Point GridNav::closestUnknown()
 	return closestPoint;
 }
 
+//Doesn't take current direction facing into account 
+Point GridNav::closestNonVisited()
+{
+	Point tempPoint, closestPoint = Point(-1, -1);
+	int tempDist, minDist = 100;
+	for (unsigned char x = 0; x <= GRID_MAX_X; ++x)
+	{
+		for (unsigned char y = 0; y <= GRID_MAX_Y; ++y)
+		{
+			tempPoint.x = x;
+			tempPoint.y = y;
+			if (!gridMap.isFlagSet(tempPoint, VISITED))
+			{
+				tempDist = (abs(tempPoint.y - currPoint.y) + abs(tempPoint.x - currPoint.x));
+				if (tempDist < minDist)
+				{
+					closestPoint = tempPoint;
+					minDist = tempDist;
+				}
+			}
+		}
+	}
+	#ifdef DEBUG
+		Serial.print("\t\t\t\t");
+		closestPoint.debug("Closest NonVisited Point");
+		Serial.println();
+	#endif
+	return closestPoint;
+}
+
 //TODO: Exact same as closestUnknown.  Should be combined.
 Point GridNav::closestBlock()
 {
@@ -554,6 +604,10 @@ Point GridNav::closestBlock()
 
 void GridNav::startNextPath()
 {
+	#ifdef DEBUG
+		Serial.println("Finding best path.");
+	#endif
+	
 	unsigned char numUnknownFront = 0,
 		numUnknownLeft = 0,
 		numUnknownRight = 0;
@@ -564,7 +618,15 @@ void GridNav::startNextPath()
 	
 	if ( (numUnknownFront + numUnknownLeft + numUnknownRight) == 0)
 	{
-		moveToPoint(closestUnknown() );
+		Point closestUnknownPoint = closestUnknown();
+		if (gridMap.contains(closestUnknownPoint))
+		{
+			moveToPoint(closestUnknownPoint);
+		}
+		else
+		{
+			moveToPoint( closestNonVisited() );
+		}
 	}
 	else
 	{
@@ -598,8 +660,8 @@ void GridNav::chooseNextPath()
 	}
 	else if (!gridMap.contains(pastFront) || gridMap.isFlagSet(pastFront, SEEN))
 	{
-		Point leftDiag = frontDiagPoint(currPoint, facing, LEFT);
-		Point rightDiag = frontDiagPoint(currPoint, facing, RIGHT);
+		Point leftDiag = adjacentPoint(frontPoint, facing, LEFT);
+		Point rightDiag = adjacentPoint(frontPoint, facing, RIGHT);
 		
 		if ( !gridMap.contains(leftDiag) || !gridMap.contains(rightDiag) || (gridMap.isFlagSet(leftDiag, SEEN) && gridMap.isFlagSet(rightDiag, SEEN)))
 		{
@@ -649,10 +711,16 @@ void GridNav::checkForBlocks()
 if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
 #endif
 	{
+		#ifdef DEBUG
+			printGrid();
+		#endif
 		haveBlock = obtainBlock(FRONT);
 	}
 	if (!haveBlock && gridMap.contains(rightPoint) && gridMap.isFlagSet(rightPoint, OCCUPIED))
 	{
+		#ifdef DEBUG
+			printGrid();
+		#endif
 		haveBlock = obtainBlock(RIGHT);
 		if (!haveBlock)		//Face original direction
 		{
@@ -663,6 +731,9 @@ if (gridMap.contains(frontPoint) && gridMap.isFlagSet(frontPoint, OCCUPIED))
 	}
 	if (!haveBlock && gridMap.contains(leftPoint) && gridMap.isFlagSet(leftPoint, OCCUPIED))
 	{
+		#ifdef DEBUG
+			printGrid();
+		#endif
 		haveBlock = obtainBlock(LEFT);
 		if (!haveBlock)		//Face original direction
 		{
@@ -693,6 +764,10 @@ void GridNav::findBlock()
 	printGrid();
 		
 #ifdef COLOURED_BLOCKS
+	if ( (gridMap.getBlockCount() == NUMBER_OF_BLOCKS) && (coloursScanned >= 2) )
+	{
+		setLastColour();
+	}
 	switch (attempt)
 	{
 		case 2:
@@ -703,8 +778,14 @@ void GridNav::findBlock()
 					(gridMap.getGreenPoint()).debug("");
 					Serial.println();
 				#endif
-				moveToBlock( gridMap.getGreenPoint() );
-				haveBlock = true;
+				grabBlockAtPoint( gridMap.getGreenPoint() );
+			}
+			else if (gridMap.getBlockCount() > coloursScanned)
+			{
+				#ifdef DEBUG
+					Serial.println("Sensing colour of closest block.");
+				#endif
+				moveNextToBlock(closestBlock());
 			}
 			break;
 		case 3:
@@ -715,15 +796,17 @@ void GridNav::findBlock()
 					(gridMap.getBluePoint()).debug("");
 					Serial.println();
 				#endif
-				moveToBlock( gridMap.getBluePoint() );
-				haveBlock = true;
+				grabBlockAtPoint( gridMap.getBluePoint() );
+			}
+			else
+			{
+				grabBlockAtPoint(closestBlock());
 			}
 			break;
 		default: break;
 	}
 #else
 #ifndef SIMULATION
-	Point invalidPt = Point(-1,-1);
 	Point closestOccupied = closestBlock();
 	
 	if (gridMap.contains(closestBlock()))
@@ -731,8 +814,7 @@ void GridNav::findBlock()
 		#ifdef DEBUG
 			Serial.println("Obtaining closest block");
 		#endif
-		moveToBlock(closestBlock());
-		haveBlock = true;
+		grabBlockAtPoint(closestBlock());
 	}
 #endif
 #endif
@@ -748,16 +830,100 @@ void GridNav::findBlock()
 		Serial.println();
 		Serial.println("-----\t\t\tReturning\t\t\t-----");
 	#endif
-	Point tempPoint = Point(GRID_MAX_X + 1, 0);
+	//Point tempPoint = Point(GRID_MAX_X + 1, 0);	//For facing the maze exit
 	moveToPoint(entrPoint);
-	CarDir newDir = carDirOfPoint(tempPoint);
+	claw->open();
+	/*CarDir newDir = carDirOfPoint(tempPoint);		//For facing the maze exit
 	mover->rotateDirection(dirCarToRel(newDir, facing), DEFAULT_SPEED);
 	facing = newDir;
 	#ifdef DEBUG
 		Serial.print("Done.\tFacing = ");
 		printCarDir(facing);
 		Serial.println();
-	#endif
+	#endif*/
+}
+
+//Use process of elimination if possible. NOTE: VERY poor mechanism.
+void GridNav::setLastColour()
+{
+	char redID = -1, 
+		greenID = -1,
+		blueID = -1;
+	
+	//Find which BlockPoint ID corresponds to which colour
+	for (int ii = 0; ii < NUMBER_OF_BLOCKS; ++ii)
+	{
+		if (gridMap.getRedPoint() == gridMap.getBlockPoint(ii))
+		{
+			redID = ii;
+		}
+	}
+	for (int ii = 0; ii < NUMBER_OF_BLOCKS; ++ii)
+	{
+		if (gridMap.getGreenPoint() == gridMap.getBlockPoint(ii))
+		{
+			greenID = ii;
+		}
+	}
+	for (int ii = 0; ii < NUMBER_OF_BLOCKS; ++ii)
+	{
+		if (gridMap.getBluePoint() == gridMap.getBlockPoint(ii))
+		{
+			blueID = ii;
+		}
+	}
+	
+	//(redID == -1) Should never occur
+	if (greenID == -1)
+	{
+		greenID = 3 - (redID + blueID);
+		#ifdef DEBUG
+			(gridMap.getBlockPoint(greenID)).debug("Green point");
+			Serial.println(" from elimination.");
+		#endif
+		gridMap.setGreenPoint( gridMap.getBlockPoint(greenID) );
+	}
+	else if (blueID == -1)
+	{
+		blueID = 3 - (redID + greenID);
+		#ifdef DEBUG
+			(gridMap.getBlockPoint(blueID)).debug("Blue point");
+			Serial.println(" from elimination.");
+		#endif
+		gridMap.setBluePoint( gridMap.getBlockPoint(blueID) );
+	}
+}
+
+void GridNav::moveNextToBlock(Point pt)
+{
+	if (gridMap.contains(pt))
+	{
+		router.generateRoute(currPoint, pt, facing, &path);
+		for (int ii = 0; ii < (path.length - 1); ++ii)
+		{
+			moveToAdjPoint(path.path[ii]);
+			
+			gridMap.setFlag(currPoint, VISITED);
+			
+			if (gridMap.contains( adjacentPoint(currPoint, facing, FRONT)))
+			{
+				mapFrontPoint();
+			}
+			if (gridMap.contains( adjacentPoint(currPoint, facing, RIGHT)))
+			{
+				mapRightPoint();
+			}
+			if (gridMap.contains( adjacentPoint(currPoint, facing, LEFT)))
+			{
+				mapLeftPoint();
+			}
+			
+			#ifdef DEBUG
+				printGrid();
+			#endif
+		}
+		checkForBlocks();
+	}
 }
 
 /////////////////////// DEBUG PRINTING FUNCTIONS ///////////////////////
