@@ -10,11 +10,10 @@
 
 #include "GridNav.h"
 
-#define SIMULATION
-#define DEBUG
-#define COLOURED_BLOCKS
+//#define SIMULATION
+//#define DEBUG
 
-GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw, Colour *inColour)
+GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw, Colour *inColour, bool isAvoidBlocks)
 {
 	motors = inMotor;
 	mover = inMovement;
@@ -22,16 +21,19 @@ GridNav::GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *i
 	claw = inClaw;
 	colourSensor = inColour;
 	gridMap = GridMap();
+	gridMap.setAvoidBlocks(isAvoidBlocks);
 	router = Routing(&gridMap);
 	
 	gridMap.setFlag(Point(GRID_MAX_X, 0), SEEN);
 	attempt = 0;
 	coloursScanned = 0;
 	
+	isColourMode = true; //default
+	
 #ifdef SIMULATION
-Point redPoint = Point(2, 2);
-Point greenPoint = Point(3, 3);
-Point bluePoint = Point(3, 1);
+Point redPoint = Point(6, 2);
+Point greenPoint = Point(5, 1);
+Point bluePoint = Point(4, 0);
 
 gridMap.setFlag(redPoint, OCCUPIED);
 gridMap.setFlag(greenPoint, OCCUPIED);
@@ -149,7 +151,8 @@ bool GridNav::obtainBlock(RelDir relDir)
 	}
 #endif
 	
-#ifdef COLOURED_BLOCKS
+if (isColourMode)
+{
 #ifndef SIMULATION
 	blockColour = colourSensor->senseColour();
 #else
@@ -225,7 +228,7 @@ else if (gridMap.isFlagSet(blockPoint, BLUE))
 			return false;
 			break;
 	}
-#endif
+}//end colourMode
 	
 	claw->close();
 #ifndef SIMULATION
@@ -301,9 +304,13 @@ void GridNav::moveToAdjPoint(Point pt)
 }
 
 //Travels the current least expensive route to specified point
-void GridNav::moveToPoint(Point pt)
+bool GridNav::moveToPoint(Point pt)
 {
 	router.generateRoute(currPoint, pt, facing, &path);
+	if (path.length == 0)
+	{
+		return false;
+	}
 	//TODO: Check next facing, turn and then scan. Then follow path
 	for (int ii = 0; ii < path.length; ++ii)
 	{
@@ -325,6 +332,7 @@ void GridNav::moveToPoint(Point pt)
 		#endif
 	}
 	motors->stop();
+	return true;
 }
 
 //TODO: Implement properly (using obtainBlock functionality)
@@ -621,7 +629,10 @@ void GridNav::startNextPath()
 		Point closestUnknownPoint = closestUnknown();
 		if (gridMap.contains(closestUnknownPoint))
 		{
-			moveToPoint(closestUnknownPoint);
+			if (!moveToPoint(closestUnknownPoint))
+			{
+				moveToPoint(Point(GRID_MAX_X, 0));
+			}
 		}
 		else
 		{
@@ -763,7 +774,8 @@ void GridNav::findBlock()
 	
 	printGrid();
 		
-#ifdef COLOURED_BLOCKS
+if (isColourMode)
+{
 	if ( (gridMap.getBlockCount() == NUMBER_OF_BLOCKS) && (coloursScanned >= 2) )
 	{
 		setLastColour();
@@ -805,7 +817,9 @@ void GridNav::findBlock()
 			break;
 		default: break;
 	}
-#else
+}
+else	//not colourMode
+{
 #ifndef SIMULATION
 	Point closestOccupied = closestBlock();
 	
@@ -817,7 +831,7 @@ void GridNav::findBlock()
 		grabBlockAtPoint(closestBlock());
 	}
 #endif
-#endif
+}//end colourMode
 
 	while (!haveBlock)
 	{
@@ -1033,4 +1047,96 @@ void GridNav::debugIrs()
 	Serial.print(irInMm.bck);
 	Serial.print("\tL: ");
 	Serial.println(irInMm.lft);
+}
+
+////// Block Avoiding ////////
+void GridNav::mapPoints(Point nextPoint)
+{
+	gridMap.setFlag(currPoint, VISITED);
+	
+	Point frontPoint = adjacentPoint(currPoint, facing, FRONT);
+	Point rightPoint = adjacentPoint(currPoint, facing, RIGHT);
+	Point leftPoint = adjacentPoint(currPoint, facing, LEFT);
+	
+	//Shouldn't need to reset irValues, if not on map should disregard
+	if (gridMap.contains(frontPoint))
+	{
+		mapFrontPoint();
+	}
+	if (gridMap.contains(rightPoint))
+	{
+		mapRightPoint();
+	}
+	if (gridMap.contains(leftPoint))
+	{
+		mapLeftPoint();
+	}
+	#ifdef DEBUG
+		printGrid();
+	#endif
+}
+
+void GridNav::avoidBlocks()
+{
+	Path path;
+	Point startPoint = Point(GRID_MAX_X, 0);
+	currPoint = startPoint;
+	Point goalPoint = Point(0, GRID_MAX_Y);
+	facing = WEST;
+	#ifdef DEBUG
+		printGrid();
+	#endif
+	mapPoints(currPoint);
+	while (currPoint != goalPoint)
+	{
+		router.generateRoute(currPoint, goalPoint, facing, &path);
+		for (int ii = 0; ii < path.length; ++ii)
+		{
+			if (gridMap.isFlagSet(path.path[ii], OCCUPIED))
+			{
+				#ifdef DEBUG
+					Serial.println("Finished Path:");
+					for (int ii = 0; ii < path.length; ++ii)
+					{
+						path.path[ii].debug("\tNode");
+						Serial.println();
+					}
+					Serial.println("Re-routing.");
+				#endif
+				break;
+			}
+			else
+			{
+				moveToAdjPoint(path.path[ii]);
+				mapPoints(path.path[ii]);
+			}
+		}
+	}
+	//motors->stop();
+	mapPoints(currPoint);
+	while (currPoint != startPoint)
+	{
+		router.generateRoute(currPoint, startPoint, facing, &path);
+		for (int ii = 0; ii < path.length; ++ii)
+		{
+			if (gridMap.isFlagSet(path.path[ii], OCCUPIED))
+			{
+				#ifdef DEBUG
+					Serial.println("Re-routing.");
+				#endif
+				break;
+			}
+			else
+			{
+				moveToAdjPoint(path.path[ii]);
+				mapPoints(path.path[ii]);
+			}
+		}
+	}
+	motors->stop();
+}
+
+void GridNav::setColourMode(bool inIsColourMode)
+{
+	isColourMode = inIsColourMode;
 }

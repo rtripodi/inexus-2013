@@ -2,7 +2,7 @@
 #include "Colour.h"
 
 //#define PRINT_RAW
-#define PRINT_PARSED
+//#define PRINT_PARSED
 #define MULTIPLE_READINGS
 //#define CALIBRATED
 

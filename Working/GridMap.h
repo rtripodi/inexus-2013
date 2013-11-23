@@ -51,6 +51,8 @@ class GridMap : public Maze
 		void setBlockPoint(Point inPoint);
 		unsigned char getBlockCount();
 		
+		void setAvoidBlocks(bool inIsAvoidBlocks);
+		
 	private:
 		unsigned char status[GRID_MAX_X + 1][GRID_MAX_Y + 1];
 		
@@ -59,6 +61,8 @@ class GridMap : public Maze
 		Point blockPoints[NUMBER_OF_BLOCKS];
 		
 		unsigned char blockCount;
+		
+		bool isAvoidBlocks;
 };
 
 #endif

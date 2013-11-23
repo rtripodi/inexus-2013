@@ -13,8 +13,8 @@
 #include "Routing.h"
 #include "Colour.h"
 
-#define SIMULATION
-#define DEBUG
+//#define SIMULATION
+//#define DEBUG
 
 Motor motors;
 LineSensors ls;
@@ -39,8 +39,6 @@ IrSensors irs = {
 
 Claw claw(CLAW_LEFT_PIN, CLAW_RIGHT_PIN);
 
-GridNav gridNav(&motors, &mover, &irs, &claw, &colourSensor);
-
 void delayTillButton()
 {
 	pinMode(LED_PIN, OUTPUT);
@@ -54,36 +52,10 @@ void delayTillButton()
 	digitalWrite(LED_PIN, LOW);
 }
 
-void gridTest()
+/*void gridTest()
 {
-#ifdef DEBUG
-	Serial.println("\t\t\t\t\t............");
-	Serial.println("\t\t\t\t\tFIRST BLOCK");
-	Serial.println("\t\t\t\t\t............");
-#endif
-#ifndef SIMULATION
-	delayTillButton();
-#endif
-	gridNav.findBlock();
-#ifdef DEBUG
-	Serial.println("\t\t\t\t\t............");
-	Serial.println("\t\t\t\t\tSECOND BLOCK");
-	Serial.println("\t\t\t\t\t............");
-#endif
-#ifndef SIMULATION
-	delayTillButton();
-#endif
-	gridNav.findBlock();
-#ifdef DEBUG
-	Serial.println("\t\t\t\t\t............");
-	Serial.println("\t\t\t\t\tTHIRD BLOCK");
-	Serial.println("\t\t\t\t\t............");
-#endif
-#ifndef SIMULATION
-	delayTillButton();
-#endif
-	gridNav.findBlock();
-}
+
+}*/
 
 void calibrateColour()
 {
@@ -101,7 +73,7 @@ void grabBlock()
 	claw.open();
 	
 	bool reachedCross = false;
-	while (frntIr.getDist() > ticks && !reachedCross)
+	while (frntIr.getDist() > BLOCK_STOP && !reachedCross)
 	{
 		reachedCross = mover.moveForward(DEFAULT_SPEED);
 	}
@@ -121,21 +93,6 @@ void testStraightMovement()
 	motors.stop();
 }
 
-void testRotate()
-{
-	delayTillButton();
-	pinMode(OPENDAY_MODE_SWITCH, INPUT);
-	pinMode(OPENDAY_IR_SWITCH, INPUT);
-	digitalWrite(OPENDAY_MODE_SWITCH, HIGH);
-	digitalWrite(OPENDAY_IR_SWITCH, HIGH);
-	if (digitalRead(OPENDAY_MODE_SWITCH))
-		ticks--;
-	if (digitalRead(OPENDAY_IR_SWITCH))
-		ticks++;
-	Serial.println(ticks);
-	mover.rotateTicks(ticks);
-}
-
 void setup()
 {  
 	Serial.begin(9600);
@@ -144,6 +101,10 @@ void setup()
 	claw.open();
 	motors.setup();
 	colourSensor.setup();
+	pinMode(AVOID_MODE_SWITCH, INPUT);
+	pinMode(COLOUR_MODE_SWITCH, INPUT);
+	digitalWrite(AVOID_MODE_SWITCH, HIGH);
+	digitalWrite(COLOUR_MODE_SWITCH, HIGH);
 	delayTillButton();
 	for (int ii = 0; ii <= 100; ii++)
 	{
@@ -152,13 +113,55 @@ void setup()
 	}
 	delayTillButton();
 #endif
-	gridTest();
 }
 
 void loop()
 {
-	//delayTillButton();
-	//grabBlock();
+	bool isAvoidBlocks = digitalRead(AVOID_MODE_SWITCH);
+	bool isColourMode = digitalRead(COLOUR_MODE_SWITCH);
+	GridNav gridNav = GridNav(&motors, &mover, &irs, &claw, &colourSensor, isAvoidBlocks);
+	gridNav.setColourMode(isColourMode);
+	#ifdef DEBUG
+		Serial.print("AvoidBlocks = ");
+		Serial.println(isAvoidBlocks);
+		Serial.print("ColourMode = ");
+		Serial.println(isColourMode);
+	#endif
+	if (isAvoidBlocks)
+	{
+		gridNav.avoidBlocks();
+	}
+	else
+	{
+	#ifdef DEBUG
+		Serial.println("\t\t\t\t\t............");
+		Serial.println("\t\t\t\t\tFIRST BLOCK");
+		Serial.println("\t\t\t\t\t............");
+	#endif
+	#ifndef SIMULATION
+		delayTillButton();
+	#endif
+		gridNav.findBlock();
+	#ifdef DEBUG
+		Serial.println("\t\t\t\t\t............");
+		Serial.println("\t\t\t\t\tSECOND BLOCK");
+		Serial.println("\t\t\t\t\t............");
+	#endif
+	#ifndef SIMULATION
+		delayTillButton();
+	#endif
+		gridNav.findBlock();
+	#ifdef DEBUG
+		Serial.println("\t\t\t\t\t............");
+		Serial.println("\t\t\t\t\tTHIRD BLOCK");
+		Serial.println("\t\t\t\t\t............");
+	#endif
+	#ifndef SIMULATION
+		delayTillButton();
+	#endif
+		gridNav.findBlock();
+	}
+	delayTillButton();
 }
 
 float diffs=0;

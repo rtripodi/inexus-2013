@@ -17,8 +17,8 @@
  ********************************************/
  //Those buttons labeled UNASSIGNED_SWITCH_n should be renamed
  //when a purpose has been assigned to them
-#define OPENDAY_MODE_SWITCH 52 //Closest switch to the edge of the shield
-#define OPENDAY_IR_SWITCH 50
+#define AVOID_MODE_SWITCH 52 //Closest switch to the edge of the shield
+#define COLOUR_MODE_SWITCH 50
 #define OPENDAY_ALT_SWITCH 48
 #define UNASSIGNED_SWITCH_4 46
 #define UNASSIGNED_SWITCH_5 44
@@ -189,7 +189,7 @@
 
 //Grid dimensions
 #define GRID_MAX_X (7)
-#define GRID_MAX_Y (7)
+#define GRID_MAX_Y (3)
 
 //Known locations
 #define ENTRANCE_X (GRID_MAX_X)

@@ -24,11 +24,15 @@ class GridNav
 		Claw *claw;
 		Colour *colourSensor;
 		
-		GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw, Colour *inColour);
+		GridNav(Motor *inMotor, Movement *inMovement, IrSensors *inIrs, Claw *inClaw, Colour *inColour, bool isAvoidBlocks);
 		
 		void findBlock();
 		
+		void avoidBlocks();
+		
 		void debugIrs();
+		
+		void setColourMode(bool inIsColourMode);
 		
 	private:
 		GridMap gridMap;
@@ -36,6 +40,7 @@ class GridNav
 		Path path;
 		unsigned char attempt;
 		unsigned char coloursScanned;
+		bool isColourMode;
 		
 		//Current point on grid
 		Point currPoint;
@@ -73,7 +78,7 @@ class GridNav
 		void moveToAdjPoint(Point pt);
 		
 		//Travels the current least expensive route to specified point
-		void moveToPoint(Point pt);
+		bool moveToPoint(Point pt);
 		
 		//Scan front point and set seen flag
 		void mapFrontPoint();
@@ -110,6 +115,8 @@ class GridNav
 		void setLastColour();
 		
 		void moveNextToBlock(Point pt);
+		
+		void mapPoints(Point nextPoint);
 };
 
 #endif

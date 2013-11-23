@@ -17,6 +17,7 @@ GridMap::GridMap()
 	{
 		blockPoints[ii] = Point(-1, -1);
 	}
+	isAvoidBlocks = false;	//default
 }
 
 //Change desired flag(s) to 1 for passed point
@@ -53,7 +54,14 @@ bool GridMap::joined(Point pt1, Point pt2)
 //Returns true if point is not occupied or unknown
 bool GridMap::isPassable(Point point)
 {
-	return (!isFlagSet(point, OCCUPIED) && status[point.x][point.y] != 0x00);
+	if (isAvoidBlocks)
+	{
+		return (!isFlagSet(point, OCCUPIED));
+	}
+	else
+	{
+		return (!isFlagSet(point, OCCUPIED) && status[point.x][point.y] != 0x00);
+	}
 }
 
 //DEBUG: Returns flags for give point
@@ -135,4 +143,9 @@ char GridMap::getFlagsAsChar(Point point)
 		return 'S';
 	else
 		return ' ';
+}
+
+void GridMap::setAvoidBlocks(bool inIsAvoidBlocks)
+{
+	isAvoidBlocks = inIsAvoidBlocks;
 }

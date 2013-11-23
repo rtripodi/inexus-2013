@@ -1,6 +1,6 @@
 #include "Movement.h"
 
-#define SIMULATION
+//#define SIMULATION
 //#define DEBUG
 
 Movement::Movement(Motor * inMotors, LineSensors * inSensors)
@@ -75,22 +75,43 @@ void Movement::lineCorrection(int speed)
 		linePos = ls->readLine(ls->reading, QTR_EMITTERS_ON, 1);
 		difference = linePos-lastLinePos;
 		//If the line is within a margin of EDGE_SENSITIVITY
-		if (abs(linePos-3500)<EDGE_SENSITIVITY)
+		int leftPos = 0;
+		int rightPos = 0;
+		if ((linePos-3500)>2500)
 		{
+		leftPos = -7;
+		rightPos = 0;
+		}
+		else if ((3500-linePos)>2500)
+		{
+		leftPos = 0;
+		rightPos = -7;
+		}
+		else
+		{
+		leftPos = 0;
+		rightPos = 0;
+		}
+		if ((abs(linePos-3500)<EDGE_SENSITIVITY)||speed<0)
+		{
+			float linefactor = 0;//(linePos-3500)/((float)(3500));
 			if (difference<-CORRECTION_ANGLE)
 			{
-				motors->left(speed);
-				motors->right(speed-speed/4);
+				motors->left(speed-leftPos);
+				motors->right(speed-rightPos-(speed/abs(speed))*constrain(abs(int((difference/((float)10))*speed/2)),0,abs(speed)/3));
 			}
 			if (difference>CORRECTION_ANGLE)
 			{
-				motors->right(speed);
-				motors->left(speed-speed/4);
+				motors->right(speed-rightPos);
+				motors->left(speed-leftPos-(speed/abs(speed))*constrain(abs(int((difference/((float)10))*speed/2)),0,abs(speed)/3));
 			}
 			if (abs(difference)<CORRECTION_ANGLE)
 			{
 				motors->both(speed);
 			}
+			#ifdef DEBUG
+				Serial.println((speed/abs(speed))*constrain(abs(int(((float)difference/10)*speed/3)),10,25)-(int)(50*linefactor));
+			#endif
 		}
 		//Otherwise, if it's right on the edge of the sensors
 		else if (speed>0)
@@ -99,11 +120,13 @@ void Movement::lineCorrection(int speed)
 			{
 				motors->left(speed/4);
 				motors->right(speed);
+
 			}
 			else if (linePos<1000)
 			{
 				motors->left(speed);
 				motors->right(speed/4);
+
 			}
 			//Else if it's off center but not too bad
 			else if (linePos-3500>EDGE_SENSITIVITY)
@@ -123,11 +146,19 @@ void Movement::lineCorrection(int speed)
 			{
 				motors->left(speed/4);
 				motors->right(speed);
+				delay(100);
+				motors->left(speed);
+				motors->right(speed);
+				delay(100);
 			}
 			else if (linePos<1000)
 			{
 				motors->left(speed);
 				motors->right(speed/4);
+				delay(100);
+				motors->left(speed);
+				motors->right(speed);
+				delay(100);
 			}
 			//Else if it's off center but not too bad
 			else if (linePos-3500>EDGE_SENSITIVITY)
@@ -155,11 +186,11 @@ void Movement::moveTillPoint(int speed)
 	moveOffCross(speed);
 }
 
-void Movement::moveOffCross(int speed)
+void Movement::moveOffCross(int speed) //Moves forward now
 {
 	while(onCross())
 	{
-		motors->both(speed, tickError());
+		motors->both(abs(speed), tickError());
 	}
 	motors->stop();
 }
@@ -299,6 +330,7 @@ void Movement::rotateAngle(int angle, int speed)
 void Movement::rotateDirection(RelDir relDir, int speed)
 {
 #ifndef SIMULATION
+	delay(50);
 	switch (relDir)
 	{
 	case FRONT:
@@ -313,6 +345,7 @@ void Movement::rotateDirection(RelDir relDir, int speed)
 		oldRotateTicks(TICKS_LEFT);
 		break;
 	}
+	delay(50);
 #endif
 }
 
